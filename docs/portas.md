@@ -17,8 +17,10 @@
 - **logistica-service:** `5008`
 - **transportadoras-service:** `5009`
 
-## Acesso Público
-- **API Gateway:** `80`
+## Acesso Público e Segurança
+Somente o **API Gateway (Porta 80)** deve ser exposto publicamente para acesso aos serviços. 
 
-## Acesso Privado
-Somente o **API Gateway** deve ser exposto publicamente para acesso aos serviços. As demais portas (como Banco de Dados, Kafka, interfaces de gerência e microsserviços diretos) devem permanecer em rede privada ou protegidas por firewall.
+**ATENÇÃO À SEGURANÇA EM VM CENTRAL:**
+- Em ambiente local, as portas podem ficar abertas no `localhost`.
+- Em uma VM pública, **NÃO EXPONHA** as portas de banco de dados, Kafka e interfaces visuais (5432, 9092, 5050, 8080) diretamente para a internet.
+- Use Firewall, Security Groups ou uma rede VPN privada como **Tailscale** ou **ZeroTier** para garantir que apenas os colegas autorizados tenham acesso a essas ferramentas da infraestrutura.

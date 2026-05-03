@@ -50,7 +50,7 @@ services:
       - --overprovisioned
       - --node-id 0
       - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
-      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:${REDPANDA_PORT:-9092}
+      - --advertise-kafka-addr internal://redpanda:9092,external://${REDPANDA_EXTERNAL_HOST:-localhost}:${REDPANDA_PORT:-9092}
       - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
       - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
       - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081

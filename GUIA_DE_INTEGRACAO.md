@@ -99,22 +99,35 @@ O Gateway roda na **Porta 80**. O mapeamento já foi feito:
 - `/api/fornecimentos/` -> Roteia para quem estiver rodando na porta 5003.
 - *(E assim por diante, veja a tabela de portas)*.
 
-**O que você precisa fazer?**
-Nada de especial! Apenas garanta que a API REST do seu microsserviço comece sempre pelo `/api/...` correspondente e rode na porta listada na tabela do passo 2. O Nginx fará a mágica de pegar a requisição do usuário na porta 80 e enviar pra você!
+**Atenção ao Mapeamento (Remoção do Prefixo):**
+O Nginx está configurado para **remover o prefixo** `/api/{dominio}/` quando envia a requisição para você.
+
+**Este é o padrão oficial:**
+- Cliente chama o Gateway: `GET /api/produtos/health`
+- O `produtos-service` recebe: `GET /health`
+
+Portanto, o seu microsserviço **não deve** incluir `/api/...` nas rotas internas dele. Ele deve expor apenas as rotas diretas (ex: `/health`, `/listar`, `/criar`), e o Nginx fará a tradução.
 
 ---
 
-## 5. Visualizando seus Dados (PgAdmin)
+## 5. Visualizando seus Dados (PgAdmin e Clientes Externos)
 
-Você pode acessar o banco de dados visualmente para debugar sua aplicação pelo **PgAdmin**:
+Você pode acessar o banco de dados visualmente para debugar sua aplicação pelo **PgAdmin** que já vem junto com a infra:
 - **Acesso:** `http://IP_DA_VM:5050`
 - **Login:** `admin@portalb2b.com`
 - **Senha:** `admin`
 
-Para adicionar o banco de dados dentro do PgAdmin:
-- **Host:** `IP_DA_VM` (ou `postgres` se estiver rodando local no seu PC via docker compose)
+Para adicionar o banco de dados **dentro da interface web do PgAdmin**:
+- **Host:** `postgres` *(Atenção: como o PgAdmin roda dentro do Docker, ele enxerga o banco pelo nome interno do container)*
 - **Port:** `5432`
-- **User / Password:** O usuário e a senha do **seu** grupo (ex: `svc_produtos` / `senha_produtos`).
+- **User / Password:** O usuário e a senha do **seu** grupo.
+- **Database:** `portal_b2b`
+
+**Se for usar o DBeaver, DataGrip ou `psql` direto no seu computador:**
+Neste caso, a sua ferramenta está fora do Docker, então o host será o IP da máquina central:
+- **Host:** `IP_DA_VM` (ou IP da sua VPN Tailscale/ZeroTier)
+- **Port:** `5432`
+- **User / Password:** O usuário e a senha do **seu** grupo.
 - **Database:** `portal_b2b`
 
 ---
