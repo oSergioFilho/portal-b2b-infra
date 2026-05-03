@@ -1,0 +1,14 @@
+# Docker e arquivos locais
+.env
+*.log
+docker-compose.override.yml
+
+# IDEs e Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# SO
+.DS_Store
+Thumbs.db
