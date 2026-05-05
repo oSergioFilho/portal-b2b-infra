@@ -9,6 +9,10 @@ A divisão de responsabilidades é muito clara:
 - A **equipe de banco de dados** cria as tabelas e o modelo relacional centralizado.
 - As **equipes de microsserviços** (você) implementam as APIs, as regras de negócio e a publicação/consumo de eventos.
 
+## Regra principal de integração
+
+Cada equipe é responsável por entregar o próprio microsserviço dockerizado. A equipe de infraestrutura mantém PostgreSQL, Kafka/Redpanda, Kafka UI, PgAdmin, API Gateway e a rede Docker compartilhada. A infraestrutura não instalará dependências manualmente de cada projeto.
+
 ---
 
 ## 2. Visão geral da arquitetura
@@ -115,86 +119,38 @@ Absolutamente tudo roda na VM central:
 
 ## 7. Como cada equipe deve configurar o .env
 
-Todo microsserviço deve conter um arquivo `.env` para carregar as configurações dinamicamente. O esquema de banco é o mesmo para todos: `portal_b2b`.
+Todo microsserviço deve conter um arquivo `.env` para carregar as configurações dinamicamente. Como o padrão oficial é rodar em container, as conexões de banco e mensageria devem apontar para os nomes dos serviços na rede Docker.
 
-**Padrão para rodar o serviço DENTRO da VM:**
-```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
-DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-SERVICE_NAME=nome-do-servico
-PORT=porta-do-servico
-```
-
-**Padrão para testar o serviço DE FORA da VM (no seu PC):**
-```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@IP_DA_VM:5432/portal_b2b
-DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=IP_DA_VM:9092
-SERVICE_NAME=nome-do-servico
-PORT=porta-do-servico
-```
-
-### Exemplos completos
-
-**usuarios-service:**
-```env
-SERVICE_NAME=usuarios-service
-PORT=5001
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
-DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-```
-
-**produtos-service:**
+**Padrão OBRIGATÓRIO (Microsserviço em Container):**
 ```env
 SERVICE_NAME=produtos-service
 PORT=5002
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+
+KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-**demanda-service:**
-```env
-SERVICE_NAME=demanda-service
-PORT=5004
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
-DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-```
-
-**pedidos-service:**
-```env
-SERVICE_NAME=pedidos-service
-PORT=5007
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
-DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-```
+*(Nota: Se precisar testar rodando localmente no seu PC sem Docker, troque `postgres` e `redpanda` pelo IP da VM).*
 
 ---
 
 ## 8. Como rodar o microsserviço na VM
 
-Cada equipe é responsável por subir e deixar o seu serviço rodando na VM.
-O seu serviço **precisa escutar obrigatoriamente em `0.0.0.0`** (todos os IPs). Não pode escutar apenas em `127.0.0.1`, caso contrário o Gateway não o encontrará.
+A execução do microsserviço é **estritamente via Docker**. A execução direta na VM (com `uvicorn`, `npm start`, `java -jar`) deve ficar apenas como alternativa emergencial.
 
-**Exemplo FastAPI / Python:**
-```bash
-uvicorn main:app --host 0.0.0.0 --port 5002
-```
+- **Docker é obrigatório para integração.**
+- Cada equipe deve entregar `Dockerfile`.
+- Cada equipe deve entregar `docker-compose.yml`.
+- Cada equipe deve entregar `.env.example`.
+- Cada equipe deve subir seu próprio container na VM.
+- A infraestrutura **não instala dependências manualmente**.
+- A infraestrutura **não roda** `pip install`, `npm install`, `maven`, `gradle` etc. para cada equipe.
+- A infraestrutura **não corrige código de microsserviço**.
+- Sem `Dockerfile`, `docker-compose.yml`, `.env.example` e endpoint `/health` funcionando, o serviço não será aceito para integração.
 
-**Exemplo Node.js / Express:**
-```javascript
-app.listen(process.env.PORT || 5002, "0.0.0.0")
-```
-
-**Exemplo Spring Boot:**
-```properties
-server.address=0.0.0.0
-server.port=5002
-```
+Ao subir seu `docker-compose.yml`, seu container será anexado à rede `portal-b2b-network` e estará pronto para responder ao Gateway e se conectar ao PostgreSQL e Kafka.
 
 ---
 
