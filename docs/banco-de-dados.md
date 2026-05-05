@@ -32,7 +32,7 @@ Esta organização permite que o banco permaneça estruturado em um modelo únic
 
 A equipe de banco utiliza o usuário administrador do schema para gerenciar a estrutura das tabelas:
 
-- **Host:** `IP_DA_VM`
+- **Host:** `34.29.84.207`
 - **Porta:** `5432`
 - **Banco:** `portal_b2b`
 - **Schema:** `portal_b2b`

@@ -51,8 +51,8 @@ Este é o **padrão oficial**:
 - Microsserviço recebe a rota **sem** o prefixo `/api/{dominio}`.
 
 **Exemplos de Roteamento:**
-- `GET http://IP_DA_VM/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
-- `GET http://IP_DA_VM/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
+- `GET http://34.29.84.207/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
+- `GET http://34.29.84.207/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
 
 ## Evolução futura (opcional)
 

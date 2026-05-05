@@ -105,17 +105,17 @@ Acessos principais:
 | PgAdmin | http://34.29.84.207:5050 |
 | Kafka UI | http://34.29.84.207:8080 |
 
-> **Observação:** Este é o IP atual da VM de integração. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada. Nos demais exemplos da documentação, `IP_DA_VM` continua sendo usado como placeholder genérico.
+> **Observação:** Este é o IP atual da VM de integração. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada. Nos demais exemplos da documentação, `34.29.84.207` continua sendo usado como placeholder genérico.
 
 ## Acessos e Validação
 
 | Componente | URL / Conexão | Credenciais / Notas |
 |------------|---------------|---------------------|
-| API Gateway | http://IP_DA_VM | Retorna `API Gateway do Portal B2B ativo` em `/health` |
-| PgAdmin | http://IP_DA_VM:5050 | `admin@portalb2b.com` / `admin`. Permite visualizar as tabelas do PostgreSQL. |
-| Kafka UI | http://IP_DA_VM:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
-| PostgreSQL | `IP_DA_VM:5432` | `postgres` (Admin), `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação) |
-| Redpanda/Kafka| `IP_DA_VM:9092` | Broker Kafka principal |
+| API Gateway | http://34.29.84.207 | Retorna `API Gateway do Portal B2B ativo` em `/health` |
+| PgAdmin | http://34.29.84.207:5050 | `admin@portalb2b.com` / `admin`. Permite visualizar as tabelas do PostgreSQL. |
+| Kafka UI | http://34.29.84.207:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
+| PostgreSQL | `34.29.84.207:5432` | `postgres` (Admin), `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação) |
+| Redpanda/Kafka| `34.29.84.207:9092` | Broker Kafka principal |
 
 **Acesso da Equipe de Banco:**
 
@@ -127,7 +127,7 @@ Se usar o **PgAdmin web (já incluso na infra)**:
 - Password: `senha_db_portal_b2b`
 
 Se usar **Ferramenta Externa (DBeaver, DataGrip, psql no seu PC)**:
-- Host: `IP_DA_VM` (Ou `localhost` se estiver rodando a infra na sua própria máquina).
+- Host: `34.29.84.207` (Ou `localhost` se estiver rodando a infra na sua própria máquina).
 - Port: `5432`
 - Database: `portal_b2b`
 - User: `db_portal_b2b`

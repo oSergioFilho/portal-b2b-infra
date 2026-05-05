@@ -21,7 +21,7 @@ Este guia descreve o passo a passo para subir e configurar a infraestrutura cent
 ### 1. Acesso à VM
 Acesse a VM via SSH:
 ```bash
-ssh usuario@IP_DA_VM
+ssh usuario@34.29.84.207
 ```
 
 ### 2. Instalação do Docker e Docker Compose
@@ -58,7 +58,7 @@ REDPANDA_EXTERNAL_HOST=localhost
 ```
 Para:
 ```env
-REDPANDA_EXTERNAL_HOST=IP_DA_VM
+REDPANDA_EXTERNAL_HOST=34.29.84.207
 ```
 
 ### 5. Iniciar a Infraestrutura
@@ -75,9 +75,9 @@ bash scripts/check-infra.sh
 
 ### 7. Acessar os Serviços Externamente
 Você pode acessar os serviços da infraestrutura usando o IP da VM no navegador:
-- **API Gateway:** `http://IP_DA_VM`
-- **PgAdmin:** `http://IP_DA_VM:5050`
-- **Kafka UI:** `http://IP_DA_VM:8080`
+- **API Gateway:** `http://34.29.84.207`
+- **PgAdmin:** `http://34.29.84.207:5050`
+- **Kafka UI:** `http://34.29.84.207:8080`
 
 ### 8. Conferir Logs e Status dos Containers
 Para ver o status atual dos containers:
@@ -104,7 +104,7 @@ Uma vez que o microsserviço está rodando, teste o acesso através do Gateway:
 ```bash
 curl http://localhost/api/produtos/health
 ```
-*(Substitua `localhost` por `IP_DA_VM` se estiver testando fora da VM).*
+*(Substitua `localhost` por `34.29.84.207` se estiver testando fora da VM).*
 
 ## Checklist Final da VM
 - [ ] PostgreSQL ativo (porta 5432)

@@ -93,15 +93,15 @@ Absolutamente tudo roda na VM central:
 
 | Recurso | URL/Host | Porta | Uso |
 |---|---|---|---|
-| API Gateway | `http://IP_DA_VM` | 80 | Entrada para APIs REST |
-| PostgreSQL | `postgres` (container) / `IP_DA_VM` (externo) | 5432 | Banco central |
-| PgAdmin | `http://IP_DA_VM:5050` | 5050 | Administração visual do banco |
-| Kafka/Redpanda | `redpanda` (container) / `IP_DA_VM` (externo) | 9092 | Broker de eventos |
-| Kafka UI | `http://IP_DA_VM:8080` | 8080 | Visualizar tópicos e mensagens |
+| API Gateway | `http://34.29.84.207` | 80 | Entrada para APIs REST |
+| PostgreSQL | `postgres` (container) / `34.29.84.207` (externo) | 5432 | Banco central |
+| PgAdmin | `http://34.29.84.207:5050` | 5050 | Administração visual do banco |
+| Kafka/Redpanda | `redpanda` (container) / `34.29.84.207` (externo) | 9092 | Broker de eventos |
+| Kafka UI | `http://34.29.84.207:8080` | 8080 | Visualizar tópicos e mensagens |
 
 **Atenção:**
 - Se o seu microsserviço roda **em container na VM** (padrão obrigatório), aponte para `postgres` e `redpanda` — os nomes dos serviços na rede Docker.
-- Se estiver acessando visualmente **de fora** da VM (ex: DBeaver no seu PC), use o `IP_DA_VM`.
+- Se estiver acessando visualmente **de fora** da VM (ex: DBeaver no seu PC), use o `34.29.84.207`.
 
 ---
 
@@ -354,7 +354,7 @@ curl http://localhost/api/produtos/health
 
 **Teste externo:**
 ```bash
-curl http://IP_DA_VM/api/produtos/health
+curl http://34.29.84.207/api/produtos/health
 ```
 
 O Gateway continua encaminhando pelo Nginx para a porta oficial publicada no host. O retorno esperado deve ser:
@@ -406,7 +406,7 @@ Os microsserviços **não devem fazer DDL**. Você deve **desativar** qualquer f
 
 O PgAdmin é a interface web de banco providenciada pela infraestrutura.
 
-- **URL:** `http://IP_DA_VM:5050`
+- **URL:** `http://34.29.84.207:5050`
 - **Login:** `admin@portalb2b.com`
 - **Senha:** `admin`
 
@@ -423,7 +423,7 @@ Para cadastrar a conexão com o banco de dados **dentro do PgAdmin**:
 
 Se preferir usar sua ferramenta favorita instalada no seu PC:
 
-- **Host:** `IP_DA_VM`
+- **Host:** `34.29.84.207`
 - **Port:** `5432`
 - **Database:** `portal_b2b`
 - **User:** `db_portal_b2b` ou `svc_portal_b2b`
@@ -431,7 +431,7 @@ Se preferir usar sua ferramenta favorita instalada no seu PC:
 
 Exemplo de string de conexão para `psql`:
 ```bash
-psql "postgresql://svc_portal_b2b:senha_portal_b2b@IP_DA_VM:5432/portal_b2b"
+psql "postgresql://svc_portal_b2b:senha_portal_b2b@34.29.84.207:5432/portal_b2b"
 ```
 
 ---
@@ -452,11 +452,11 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 
 **Para ferramentas rodando de fora da VM:**
 ```env
-KAFKA_BOOTSTRAP_SERVERS=IP_DA_VM:9092
+KAFKA_BOOTSTRAP_SERVERS=34.29.84.207:9092
 ```
 
 Para monitorar tópicos e mensagens em tempo real, utilize a interface do **Kafka UI**:
-- URL: `http://IP_DA_VM:8080`
+- URL: `http://34.29.84.207:8080`
 
 ---
 
