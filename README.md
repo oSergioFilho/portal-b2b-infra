@@ -49,7 +49,7 @@ A infraestrutura fornece:
 
 ## O que é a VM Central?
 O ambiente do projeto funcionará em uma **VM Central** (Máquina Virtual em nuvem ou um servidor dedicado).
-- **O que roda na VM central?** Tudo. A infraestrutura (via Docker Compose) e todos os microsserviços das equipes (via execução direta no host ou container adicional na mesma rede).
+- **O que roda na VM central?** Tudo. A infraestrutura (via Docker Compose) e todos os microsserviços das equipes devem rodar como containers próprios, usando a rede Docker compartilhada `portal-b2b-network`. A execução direta no host da VM fica apenas como alternativa emergencial.
 - **Banco de Dados Único:** Ao invés de um schema por microsserviço, todos compartilharão o schema `portal_b2b`.
 
 *Observação opcional:* Dependendo das limitações acadêmicas, desenvolvedores podem testar localmente usando Tailscale/ZeroTier antes de implantar na VM Central, mas o foco da arquitetura é rodar na VM.

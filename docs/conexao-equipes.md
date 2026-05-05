@@ -1,6 +1,6 @@
 # Como as equipes se conectam
 
-Na arquitetura atual, todos os microsserviços devem rodar na **VM Central** do projeto, compartilhando os mesmos recursos de banco de dados e mensageria.
+Na arquitetura atual, todos os microsserviços devem rodar como **containers Docker** na **VM Central** do projeto, compartilhando os mesmos recursos de banco de dados e mensageria através da rede `portal-b2b-network`.
 
 ## Tabela de Conexões e Responsabilidades
 
@@ -18,9 +18,9 @@ Cada equipe é responsável por um serviço que escuta em uma porta específica 
 | Logística | logistica-service | 5008 | `/api/logistica/` | `solicitacao_frete_criada`, `frete_selecionado` |
 | Transportadoras | transportadoras-service | 5009 | `/api/transportadoras/` | `cotacao_frete_enviada` |
 
-## Conexão padrão em container
+## Conexão padrão em container (obrigatório)
 
-O padrão obrigatório de execução na infraestrutura é via Docker (container). Utilize a configuração abaixo:
+O padrão oficial de execução é via Docker (container). O microsserviço roda dentro da rede `portal-b2b-network` e acessa banco e mensageria pelos nomes dos serviços Docker:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
@@ -28,15 +28,19 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-## Alternativa: rodar direto na VM
+**Importante:** Dentro de um container, `localhost` aponta para o próprio container, não para o host ou para outros serviços. Por isso, o host do banco é `postgres` e o host do Kafka é `redpanda`.
 
-Caso ainda precise rodar seu microsserviço emergencialmente via terminal (sem container), escutando direto na VM:
+## Alternativa emergencial: rodar direto no host da VM (sem Docker)
+
+Apenas em situações emergenciais justificadas, caso o microsserviço precise rodar diretamente no host da VM sem container:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ```
+
+**Este não é o padrão oficial.** A entrega final deve ser dockerizada.
 
 ## Requisitos de Implementação
 

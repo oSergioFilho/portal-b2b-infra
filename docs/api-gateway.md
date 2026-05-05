@@ -4,11 +4,31 @@
 O API Gateway funciona como ponto único de entrada (Porta `80`) para todas as APIs REST dos microsserviços do Portal B2B. O Nginx atua como proxy reverso, recebendo requisições externas e encaminhando-as para o serviço adequado rodando na VM.
 
 ## Padrão Oficial de Infraestrutura
-O padrão definido para a arquitetura é:
-- **Todos os microsserviços rodam na VM central.**
-- O API Gateway Nginx roda em um container Docker na mesma VM.
-- O Gateway acessa os microsserviços pela máquina host usando `host.docker.internal`.
-- Cada serviço deve escutar em sua porta oficial.
+
+O padrão atual definido para a arquitetura é:
+- O API Gateway Nginx roda em container Docker na VM central.
+- Todos os microsserviços também devem rodar em containers próprios na VM central.
+- Cada microsserviço publica sua porta oficial no host da VM (ex: `5002:5002`).
+- O Gateway acessa os microsserviços pela máquina host usando `host.docker.internal:PORTA`.
+- Cada container de microsserviço deve estar na rede `portal-b2b-network` para acessar PostgreSQL (`postgres:5432`) e Kafka (`redpanda:9092`).
+
+### Caminho da requisição
+
+```text
+Cliente (Browser/Frontend)
+    ↓
+API Gateway (Nginx) — porta 80
+    ↓
+host.docker.internal:5002 (porta publicada no host)
+    ↓
+Container produtos-service — porta 5002
+```
+
+**Exemplo:** `GET /api/produtos/health` → Gateway encaminha para `host.docker.internal:5002` → chega no container `produtos-service` como `GET /health`.
+
+### Por que `host.docker.internal`?
+
+O Nginx do Gateway roda em seu próprio container. Como cada microsserviço publica sua porta no host da VM, o Gateway utiliza `host.docker.internal` para alcançar essas portas publicadas.
 
 ## Rotas e Remoção de Prefixo
 
@@ -23,14 +43,13 @@ Este é o **padrão oficial**:
 - `GET http://IP_DA_VM/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
 - `GET http://IP_DA_VM/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
 
-## Observações Futuras (Dockerização/VPNs)
+## Evolução futura (opcional)
 
-**Containers no mesmo Docker Compose:**
-Se futuramente os microsserviços forem containerizados dentro do mesmo Docker Compose (e não mais rodando via processo na VM), o `nginx.conf` poderá ser alterado para usar o nome dos containers na rede Docker, substituindo `host.docker.internal` por:
+Se no futuro todos os microsserviços passarem a rodar no **mesmo Docker Compose** da infraestrutura, o `nginx.conf` poderá ser alterado para usar o nome dos containers diretamente:
 ```nginx
 proxy_pass http://produtos-service:5002/;
 ```
-Mas nesta etapa atual, manteremos `host.docker.internal` porque os serviços podem rodar diretamente no host da VM.
+Essa mudança é opcional e não é necessária na arquitetura atual, onde cada microsserviço tem seu próprio `docker-compose.yml`.
 
 **VPN (Tailscale/ZeroTier):**
-A arquitetura anterior considerava cada desenvolvedor rodando seu microsserviço em sua própria máquina, conectados à VM através de VPN (Tailscale/ZeroTier). Esse modelo não é mais o padrão, mas se necessário academicamente, o `nginx.conf` precisaria ser alterado para apontar para o IP privado da VPN do desenvolvedor ao invés de `host.docker.internal`.
+A arquitetura anterior considerava cada desenvolvedor rodando seu microsserviço em sua própria máquina via VPN. Esse modelo não é mais o padrão.

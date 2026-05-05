@@ -68,14 +68,14 @@ Absolutamente tudo roda na VM central:
 | Recurso | URL/Host | Porta | Uso |
 |---|---|---|---|
 | API Gateway | `http://IP_DA_VM` | 80 | Entrada para APIs REST |
-| PostgreSQL | `IP_DA_VM` (ou `localhost` na VM) | 5432 | Banco central |
+| PostgreSQL | `postgres` (container) / `IP_DA_VM` (externo) | 5432 | Banco central |
 | PgAdmin | `http://IP_DA_VM:5050` | 5050 | Administração visual do banco |
-| Kafka/Redpanda | `IP_DA_VM` (ou `localhost` na VM) | 9092 | Broker de eventos |
+| Kafka/Redpanda | `redpanda` (container) / `IP_DA_VM` (externo) | 9092 | Broker de eventos |
 | Kafka UI | `http://IP_DA_VM:8080` | 8080 | Visualizar tópicos e mensagens |
 
-**Atenção:** 
-- Se você está rodando seu código **dentro** da VM, aponte as credenciais do `.env` para `localhost`. 
-- Se estiver rodando o código ou acessando visualmente **de fora** da VM, use o `IP_DA_VM`.
+**Atenção:**
+- Se o seu microsserviço roda **em container na VM** (padrão obrigatório), aponte para `postgres` e `redpanda` — os nomes dos serviços na rede Docker.
+- Se estiver acessando visualmente **de fora** da VM (ex: DBeaver no seu PC), use o `IP_DA_VM`.
 
 ---
 
@@ -123,13 +123,13 @@ Absolutamente tudo roda na VM central:
 
 Todo microsserviço deve conter um arquivo `.env` para carregar as configurações dinamicamente. Como o padrão oficial é rodar em container, as conexões de banco e mensageria devem apontar para os nomes dos serviços na rede Docker.
 
-Explicar claramente:
-- Dentro de container, **NÃO usar localhost** para PostgreSQL.
-- Dentro de container, **NÃO usar localhost** para Kafka.
-- Dentro da rede Docker, o host do banco é `postgres`.
-- Dentro da rede Docker, o host do Kafka é `redpanda`.
+Regras importantes:
+- Dentro de container, **NÃO usar localhost** para PostgreSQL. O host correto é `postgres`.
+- Dentro de container, **NÃO usar localhost** para Kafka. O host correto é `redpanda`.
+- O `localhost` só resolve dentro do próprio container, não alcança os outros serviços da rede Docker.
 
-**Padrão OBRIGATÓRIO (Microsserviço em Container):**
+### Padrão OBRIGATÓRIO (Microsserviço em Container)
+
 ```env
 SERVICE_NAME=produtos-service
 PORT=5002
@@ -140,16 +140,16 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-### Alternativa emergencial: rodar direto na VM
+### Alternativa emergencial: rodar direto no host da VM (sem Docker)
 
-Se o serviço for rodar sem Docker, aí sim usa:
+Se por algum motivo emergencial o serviço precisar rodar diretamente no host da VM, sem Docker, as conexões mudam para `localhost` porque nesse caso o processo está no mesmo host que o PostgreSQL e o Redpanda:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ```
 
-Mas deixe claro que **esse não é o padrão recomendado**.
+**Este não é o padrão oficial.** A entrega sem Docker será aceita apenas em situações emergenciais justificadas.
 
 ---
 
@@ -171,8 +171,6 @@ Ao subir seu `docker-compose.yml`, seu container será anexado à rede `portal-b
 
 ### Padrão obrigatório de docker-compose.yml do microsserviço
 
-Inclua este exemplo:
-
 ```yaml
 services:
   produtos-service:
@@ -191,7 +189,7 @@ networks:
     external: true
 ```
 
-**Explicar:**
+**Observações importantes:**
 - `container_name` deve ser igual ao nome do serviço.
 - A porta deve ser a porta oficial.
 - Não subir outro PostgreSQL no compose do microsserviço.
@@ -241,7 +239,8 @@ EXPOSE 5002
 
 CMD ["npm", "start"]
 ```
-Adicionar exemplo de Express escutando em `0.0.0.0`:
+
+**Exemplo de Express escutando em `0.0.0.0`:**
 ```javascript
 const port = process.env.PORT || 5002;
 
@@ -263,7 +262,7 @@ docker ps
 docker logs -f nome-service
 ```
 
-**Adicionar exemplo para produtos-service:**
+**Exemplo completo para produtos-service:**
 ```bash
 cd /opt/portal-b2b/services
 git clone LINK_DO_REPOSITORIO produtos-service
@@ -405,11 +404,20 @@ psql "postgresql://svc_portal_b2b:senha_portal_b2b@IP_DA_VM:5432/portal_b2b"
 
 A mensageria utiliza Redpanda (100% compatível com a API do Apache Kafka).
 
-**Para aplicações rodando na VM:**
-`KAFKA_BOOTSTRAP_SERVERS=localhost:9092`
+**Para microsserviços rodando em container na VM (padrão obrigatório):**
+```env
+KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+```
 
-**Para aplicações rodando de fora da VM:**
-`KAFKA_BOOTSTRAP_SERVERS=IP_DA_VM:9092`
+**Para microsserviços rodando direto no host da VM (alternativa emergencial):**
+```env
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+**Para ferramentas rodando de fora da VM:**
+```env
+KAFKA_BOOTSTRAP_SERVERS=IP_DA_VM:9092
+```
 
 Para monitorar tópicos e mensagens em tempo real, utilize a interface do **Kafka UI**:
 - URL: `http://IP_DA_VM:8080`
@@ -502,18 +510,19 @@ Os eventos consumidos devem ser confirmados entre as equipes de acordo com o map
 
 Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou esta **lista obrigatória**:
 
-- [ ] repositório do microsserviço;
-- [ ] comando de instalação (ex: `npm install`);
-- [ ] comando para rodar (ex: `npm start`);
-- [ ] porta oficial configurada para rodar e escutar em `0.0.0.0`;
-- [ ] arquivo `.env.example`;
-- [ ] endpoint `GET /health`;
+- [ ] Repositório do microsserviço;
+- [ ] `Dockerfile` (obrigatório);
+- [ ] `docker-compose.yml` (obrigatório);
+- [ ] `.env.example` (obrigatório);
+- [ ] Porta oficial configurada para rodar e escutar em `0.0.0.0`;
+- [ ] Serviço publica a porta oficial no host da VM;
+- [ ] Serviço entra na rede `portal-b2b-network`;
+- [ ] Endpoint `GET /health` funcionando;
 - [ ] Swagger/OpenAPI funcionando (ex: `/docs` ou `/api-docs`);
-- [ ] lista de endpoints REST mapeados;
-- [ ] eventos Kafka que publica programados;
-- [ ] eventos Kafka que consome programados;
-- [ ] tabelas que usa acordadas com equipe de DB;
-- [ ] Dockerfile se tiver (opcional, mas recomendado).
+- [ ] Lista de endpoints REST mapeados;
+- [ ] Eventos Kafka que publica programados;
+- [ ] Eventos Kafka que consome programados;
+- [ ] Tabelas que usa acordadas com equipe de DB.
 
 ---
 
