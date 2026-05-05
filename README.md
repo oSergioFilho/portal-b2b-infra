@@ -73,8 +73,17 @@ bash scripts/check-infra.sh
 | PostgreSQL | `IP_DA_VM:5432` | `postgres` (Admin), `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação) |
 | Redpanda/Kafka| `IP_DA_VM:9092` | Broker Kafka principal |
 
-**Acesso da Equipe de Banco via PgAdmin/Ferramenta Externa:**
-- Host: `IP_DA_VM`
+**Acesso da Equipe de Banco:**
+
+Se usar o **PgAdmin web (já incluso na infra)**:
+- Host: `postgres` (Pois o PgAdmin roda dentro do Docker e acessa o banco pelo nome interno).
+- Port: `5432`
+- Database: `portal_b2b`
+- User: `db_portal_b2b`
+- Password: `senha_db_portal_b2b`
+
+Se usar **Ferramenta Externa (DBeaver, DataGrip, psql no seu PC)**:
+- Host: `IP_DA_VM` (Ou `localhost` se estiver rodando a infra na sua própria máquina).
 - Port: `5432`
 - Database: `portal_b2b`
 - User: `db_portal_b2b`

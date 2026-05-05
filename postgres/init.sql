@@ -14,6 +14,8 @@ BEGIN
 END $$;
 
 -- Permissões do schema
+GRANT CONNECT ON DATABASE portal_b2b TO db_portal_b2b;
+GRANT CONNECT ON DATABASE portal_b2b TO svc_portal_b2b;
 GRANT USAGE, CREATE ON SCHEMA portal_b2b TO db_portal_b2b;
 GRANT USAGE ON SCHEMA portal_b2b TO svc_portal_b2b;
 
@@ -21,11 +23,17 @@ GRANT USAGE ON SCHEMA portal_b2b TO svc_portal_b2b;
 ALTER ROLE db_portal_b2b SET search_path TO portal_b2b;
 ALTER ROLE svc_portal_b2b SET search_path TO portal_b2b;
 
--- Permissões padrão para que tabelas criadas pela equipe de banco possam ser acessadas pelo usuário svc_portal_b2b
-ALTER DEFAULT PRIVILEGES FOR ROLE db_portal_b2b IN SCHEMA portal_b2b
+-- Permissões explícitas em objetos atuais e futuros
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA portal_b2b TO db_portal_b2b;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA portal_b2b TO db_portal_b2b;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA portal_b2b TO svc_portal_b2b;
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA portal_b2b TO svc_portal_b2b;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA portal_b2b 
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO svc_portal_b2b;
 
-ALTER DEFAULT PRIVILEGES FOR ROLE db_portal_b2b IN SCHEMA portal_b2b
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA portal_b2b 
 GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO svc_portal_b2b;
 
 -- Criar tabela de health check e inserir registros

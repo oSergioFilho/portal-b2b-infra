@@ -47,6 +47,11 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 
 ## Requisitos de Implementação
 
+- **Rodar escutando em todos os IPs (0.0.0.0):** Para que o API Gateway consiga alcançar o seu microsserviço na VM, você DEVE subir o servidor web escutando em `0.0.0.0` (todos os endereços), e não apenas em `127.0.0.1` ou `localhost`.
+  Exemplo (FastAPI/Uvicorn):
+  ```bash
+  uvicorn main:app --host 0.0.0.0 --port 5002
+  ```
 - **Endpoint de Health:** Todos os serviços **precisam** ter um endpoint `GET /health` operante.
   O Gateway Nginx deve conseguir acessar:
   - `GET http://IP_DA_VM/api/produtos/health`
