@@ -697,3 +697,16 @@ curl http://localhost/api/DOMINIO/health
 ```bash
 bash scripts/check-services.sh
 ```
+
+---
+
+## 27. Redundância e plano de recuperação
+
+A infraestrutura possui mecanismos básicos de resiliência e um plano de recuperação documentado:
+
+- **Se um container cair**, o Docker tenta reiniciar automaticamente (política `restart: unless-stopped`).
+- **O banco possui backup via script.** O responsável pela infraestrutura pode gerar backups com `bash scripts/backup-postgres.sh` e restaurar com `bash scripts/restore-postgres.sh`.
+- **Existe um plano de VM standby** para recuperação em caso de queda completa da VM principal. A VM standby pode ser ativada com a infraestrutura clonada e o último backup do banco.
+- **Isso não substitui alta disponibilidade real**, mas atende ao plano acadêmico de recuperação com procedimentos documentados e testáveis.
+
+Para o plano completo, consulte: [docs/redundancia-e-recuperacao.md](./docs/redundancia-e-recuperacao.md)

@@ -31,3 +31,6 @@ docker compose exec -T redpanda rpk topic list --brokers redpanda:9092 || echo "
 echo ""
 
 echo "Verificação concluída."
+echo ""
+echo "Para gerar backup do banco:"
+echo "  bash scripts/backup-postgres.sh"

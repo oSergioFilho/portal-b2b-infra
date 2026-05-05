@@ -150,6 +150,33 @@ Esse script testa:
 - logistica-service
 - transportadoras-service
 
+## Redundância e recuperação
+
+A infraestrutura possui mecanismos de resiliência e um plano de recuperação para lidar com falhas:
+
+- **Restart automático:** Todos os containers utilizam `restart: unless-stopped`. Se um container cair, o Docker reinicia automaticamente.
+- **Health checks:** PostgreSQL e Redpanda possuem health checks configurados para detectar estados degradados.
+- **Backup do PostgreSQL:** Scripts para gerar e restaurar backups do banco `portal_b2b`.
+- **VM Standby:** Estratégia acadêmica recomendada de manter uma segunda VM preparada para assumir em caso de falha da VM principal.
+
+Em caso de falha da VM principal, a infraestrutura pode ser restaurada na VM standby seguindo o procedimento documentado.
+
+### Gerar backup do banco
+
+```bash
+bash scripts/backup-postgres.sh
+```
+
+### Restaurar backup do banco
+
+```bash
+bash scripts/restore-postgres.sh backups/postgres/NOME_DO_BACKUP.sql
+```
+
+Para o plano completo de redundância e recuperação, consulte:
+
+[docs/redundancia-e-recuperacao.md](./docs/redundancia-e-recuperacao.md)
+
 ## Estrutura recomendada da VM
 
 ```text
