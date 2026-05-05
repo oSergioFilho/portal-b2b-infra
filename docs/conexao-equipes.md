@@ -7,6 +7,20 @@ Todas as equipes devem usar o template como base mínima para Dockerfile, docker
 
 Na arquitetura atual, todos os microsserviços devem rodar como **containers Docker** na **VM Central** do projeto, compartilhando os mesmos recursos de banco de dados e mensageria através da rede `portal-b2b-network`.
 
+## IP atual da VM de integração
+
+- IP atual: 34.29.84.207
+- API Gateway: http://34.29.84.207
+- PgAdmin: http://34.29.84.207:5050
+- Kafka UI: http://34.29.84.207:8080
+
+> **Aviso:** Para microsserviços rodando em container, manter:
+> ```env
+> DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
+> KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+> ```
+> Não trocar `postgres` ou `redpanda` pelo IP público dentro do container.
+
 ## Tabela de Conexões e Responsabilidades
 
 Cada equipe é responsável por um serviço que escuta em uma porta específica e responde atrás do API Gateway:

@@ -86,6 +86,25 @@ Você pode validar os serviços essenciais de infraestrutura através do comando
 bash scripts/check-infra.sh
 ```
 
+## Ambiente atual de integração
+
+A infraestrutura está atualmente disponível na VM do Google Cloud Platform com o seguinte IP público:
+
+```text
+34.29.84.207
+```
+
+Acessos principais:
+
+| Recurso | URL |
+|---|---|
+| API Gateway | http://34.29.84.207 |
+| Health do Gateway | http://34.29.84.207/health |
+| PgAdmin | http://34.29.84.207:5050 |
+| Kafka UI | http://34.29.84.207:8080 |
+
+> **Observação:** Este é o IP atual da VM de integração. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada. Nos demais exemplos da documentação, `IP_DA_VM` continua sendo usado como placeholder genérico.
+
 ## Acessos e Validação
 
 | Componente | URL / Conexão | Credenciais / Notas |

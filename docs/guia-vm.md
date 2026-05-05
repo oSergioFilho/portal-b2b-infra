@@ -2,6 +2,20 @@
 
 Este guia descreve o passo a passo para subir e configurar a infraestrutura central do Portal B2B na Máquina Virtual (VM) principal.
 
+## VM atual no GCP
+
+- IP público atual: 34.29.84.207
+- API Gateway: http://34.29.84.207
+- Health: http://34.29.84.207/health
+- PgAdmin: http://34.29.84.207:5050
+- Kafka UI: http://34.29.84.207:8080
+
+> **Observação importante:** No arquivo `.env` da VM, a variável `REDPANDA_EXTERNAL_HOST` deve estar configurada como:
+> ```env
+> REDPANDA_EXTERNAL_HOST=34.29.84.207
+> ```
+> Atenção: isso deve ser feito no `.env` da VM, não no `.env.example`.
+
 ## Passo a Passo
 
 ### 1. Acesso à VM

@@ -79,6 +79,8 @@ Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **
 - Recebe as chamadas do grupo.
 - É o ambiente de produção acadêmica.
 
+> **Aviso:** A VM principal atual está no Google Cloud Platform e usa o IP público: `34.29.84.207`. Em caso de troca para VM standby, o IP/DNS informado às equipes deverá ser atualizado.
+
 ### VM Standby
 
 - Tem **Docker** e **Docker Compose** instalados.

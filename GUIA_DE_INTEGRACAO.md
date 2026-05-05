@@ -6,6 +6,27 @@ Cada equipe é responsável por entregar o próprio microsserviço dockerizado. 
 
 ---
 
+## Ambiente atual da VM
+
+A VM de integração já está disponível no Google Cloud Platform.
+
+IP público atual:
+
+```text
+34.29.84.207
+```
+
+Acessos:
+
+- API Gateway: http://34.29.84.207
+- Health do Gateway: http://34.29.84.207/health
+- PgAdmin: http://34.29.84.207:5050
+- Kafka UI: http://34.29.84.207:8080
+
+> **Observação:** Esse IP deve ser usado pelas equipes para acessar o Gateway, PgAdmin e Kafka UI durante a integração. Dentro dos containers dos microsserviços, o banco e o Kafka continuam sendo acessados por `postgres:5432` e `redpanda:9092`, não pelo IP público.
+
+---
+
 ## 1. Objetivo do guia
 
 Este documento é o **guia oficial** para as equipes conectarem seus microsserviços à infraestrutura central do Portal B2B. Ele foi projetado para que você consiga conectar, rodar e testar seu serviço sem precisar perguntar ao responsável pela infraestrutura.
