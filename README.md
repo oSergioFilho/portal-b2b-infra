@@ -106,7 +106,20 @@ Se usar **Ferramenta Externa (DBeaver, DataGrip, psql no seu PC)**:
 - Password: `senha_db_portal_b2b`
 
 **Acesso das Equipes de Microsserviços (.env):**
-- URL do Banco: `postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b` (Se rodando na VM).
-- Schema: `portal_b2b`
+
+**Padrão em container (Obrigatório):**
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+```
+
+*(Se rodar direto na VM sem Docker, use `localhost` no lugar de `postgres` e `redpanda`).*
+
+**Regras de Integração:**
+- `Dockerfile` é obrigatório.
+- `docker-compose.yml` é obrigatório.
+- A rede externa obrigatória é `portal-b2b-network`.
+- A infraestrutura **não** instalará dependências manualmente.
 
 Veja os arquivos na pasta `docs/` para mais detalhes de portas e integrações.

@@ -18,9 +18,9 @@ Cada equipe é responsável por um serviço que escuta em uma porta específica 
 | Logística | logistica-service | 5008 | `/api/logistica/` | `solicitacao_frete_criada`, `frete_selecionado` |
 | Transportadoras | transportadoras-service | 5009 | `/api/transportadoras/` | `cotacao_frete_enviada` |
 
-## Conexão quando o microsserviço roda em container (Recomendado)
+## Conexão padrão em container
 
-A partir de agora, o padrão é entregar o microsserviço dockerizado. Quando rodando dentro de container na mesma rede da infraestrutura, utilize:
+O padrão obrigatório de execução na infraestrutura é via Docker (container). Utilize a configuração abaixo:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
@@ -28,9 +28,9 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-## Conexão quando o microsserviço roda direto na VM
+## Alternativa: rodar direto na VM
 
-Caso ainda precise rodar seu microsserviço via terminal, escutando direto na VM:
+Caso ainda precise rodar seu microsserviço emergencialmente via terminal (sem container), escutando direto na VM:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
@@ -51,4 +51,3 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9092
   - `GET http://IP_DA_VM/api/demandas/health`
   - `GET http://IP_DA_VM/api/pedidos/health`
   - *(e assim por diante)*
-- **Ambiente de Docker:** Caso os serviços futuramente também rodem em Docker na mesma máquina, o `localhost` no `.env` precisará ser atualizado para os IPs corretos da rede Docker (ou variáveis correspondentes). No entanto, para rodar via processo direto na VM, as configurações acima com `localhost` são as esperadas.

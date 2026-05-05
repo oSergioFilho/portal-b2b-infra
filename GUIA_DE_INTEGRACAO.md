@@ -1,5 +1,11 @@
 # Guia Oficial de Integração
 
+## Regra principal de integração
+
+Cada equipe é responsável por entregar o próprio microsserviço dockerizado. A equipe de infraestrutura mantém PostgreSQL, Kafka/Redpanda, Kafka UI, PgAdmin, API Gateway e a rede Docker compartilhada. A infraestrutura não instalará dependências manualmente de cada projeto.
+
+---
+
 ## 1. Objetivo do guia
 
 Este documento é o **guia oficial** para as equipes conectarem seus microsserviços à infraestrutura central do Portal B2B. Ele foi projetado para que você consiga conectar, rodar e testar seu serviço sem precisar perguntar ao responsável pela infraestrutura.
@@ -8,10 +14,6 @@ A divisão de responsabilidades é muito clara:
 - A **equipe de infraestrutura** entrega a VM central, Banco de Dados, Kafka, Gateway, PgAdmin e Kafka UI já configurados e rodando.
 - A **equipe de banco de dados** cria as tabelas e o modelo relacional centralizado.
 - As **equipes de microsserviços** (você) implementam as APIs, as regras de negócio e a publicação/consumo de eventos.
-
-## Regra principal de integração
-
-Cada equipe é responsável por entregar o próprio microsserviço dockerizado. A equipe de infraestrutura mantém PostgreSQL, Kafka/Redpanda, Kafka UI, PgAdmin, API Gateway e a rede Docker compartilhada. A infraestrutura não instalará dependências manualmente de cada projeto.
 
 ---
 
@@ -121,6 +123,12 @@ Absolutamente tudo roda na VM central:
 
 Todo microsserviço deve conter um arquivo `.env` para carregar as configurações dinamicamente. Como o padrão oficial é rodar em container, as conexões de banco e mensageria devem apontar para os nomes dos serviços na rede Docker.
 
+Explicar claramente:
+- Dentro de container, **NÃO usar localhost** para PostgreSQL.
+- Dentro de container, **NÃO usar localhost** para Kafka.
+- Dentro da rede Docker, o host do banco é `postgres`.
+- Dentro da rede Docker, o host do Kafka é `redpanda`.
+
 **Padrão OBRIGATÓRIO (Microsserviço em Container):**
 ```env
 SERVICE_NAME=produtos-service
@@ -132,7 +140,16 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-*(Nota: Se precisar testar rodando localmente no seu PC sem Docker, troque `postgres` e `redpanda` pelo IP da VM).*
+### Alternativa emergencial: rodar direto na VM
+
+Se o serviço for rodar sem Docker, aí sim usa:
+
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+Mas deixe claro que **esse não é o padrão recomendado**.
 
 ---
 
@@ -151,6 +168,110 @@ A execução do microsserviço é **estritamente via Docker**. A execução dire
 - Sem `Dockerfile`, `docker-compose.yml`, `.env.example` e endpoint `/health` funcionando, o serviço não será aceito para integração.
 
 Ao subir seu `docker-compose.yml`, seu container será anexado à rede `portal-b2b-network` e estará pronto para responder ao Gateway e se conectar ao PostgreSQL e Kafka.
+
+### Padrão obrigatório de docker-compose.yml do microsserviço
+
+Inclua este exemplo:
+
+```yaml
+services:
+  produtos-service:
+    build: .
+    container_name: produtos-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5002:5002"
+    networks:
+      - portal-b2b-network
+
+networks:
+  portal-b2b-network:
+    external: true
+```
+
+**Explicar:**
+- `container_name` deve ser igual ao nome do serviço.
+- A porta deve ser a porta oficial.
+- Não subir outro PostgreSQL no compose do microsserviço.
+- Não subir outro Kafka no compose do microsserviço.
+- A rede `portal-b2b-network` já é criada pela infraestrutura.
+- O serviço precisa expor `/health`.
+
+**Exemplos rápidos de portas:**
+- `usuarios-service`: porta 5001
+- `produtos-service`: porta 5002
+- `demanda-service`: porta 5004
+- `pedidos-service`: porta 5007
+
+### Exemplos de Dockerfile
+
+**Exemplo de Dockerfile para FastAPI**
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5002
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5002"]
+```
+*(A porta deve ser trocada conforme o seu serviço).*
+
+**Exemplo de Dockerfile para Node.js/Express**
+```dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 5002
+
+CMD ["npm", "start"]
+```
+Adicionar exemplo de Express escutando em `0.0.0.0`:
+```javascript
+const port = process.env.PORT || 5002;
+
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Service running on port ${port}`);
+});
+```
+
+### Como subir seu microsserviço na VM
+
+Passo a passo:
+```bash
+cd /opt/portal-b2b/services
+git clone LINK_DO_REPOSITORIO nome-service
+cd nome-service
+cp .env.example .env
+docker compose up -d --build
+docker ps
+docker logs -f nome-service
+```
+
+**Adicionar exemplo para produtos-service:**
+```bash
+cd /opt/portal-b2b/services
+git clone LINK_DO_REPOSITORIO produtos-service
+cd produtos-service
+cp .env.example .env
+docker compose up -d --build
+docker logs -f produtos-service
+```
 
 ---
 
@@ -182,23 +303,26 @@ O seu microsserviço **NÃO DEVE** criar rotas internas começando com `/api/pro
 
 ---
 
-## 10. Como testar o /health pelo Gateway
+## 10. Como testar seu serviço
 
-Uma vez que seu serviço está rodando, teste se o Gateway o reconhece.
+Uma vez que seu serviço está rodando em container, teste:
 
-Se você está na VM, rode no terminal:
+**Teste direto:**
 ```bash
-curl http://localhost/api/produtos/health
-curl http://localhost/api/demandas/health
-curl http://localhost/api/pedidos/health
+curl http://localhost:5002/health
 ```
 
-Se estiver testando de fora da VM (no seu computador local):
+**Teste pelo Gateway:**
+```bash
+curl http://localhost/api/produtos/health
+```
+
+**Teste externo:**
 ```bash
 curl http://IP_DA_VM/api/produtos/health
 ```
 
-O retorno esperado deve ser um JSON padrão de saúde. Exemplo:
+O Gateway continua encaminhando pelo Nginx para a porta oficial publicada no host. O retorno esperado deve ser:
 ```json
 {
   "status": "ok",
@@ -395,16 +519,15 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 
 ## 21. Erros comuns e como resolver
 
-| Erro | Causa provável | Como resolver |
+| Erro | Causa provável | Solução |
 |---|---|---|
-| `Connection refused` no banco | PostgreSQL não está acessível ou host errado. | Verificar se usou `IP_DA_VM`, porta `5432` e se a infra está de pé. |
-| `permission denied for schema` | Usando usuário errado ou tentando criar tabela com `svc_portal_b2b`. | Usar `db_portal_b2b` para DDL ou pedir à equipe de banco. |
-| Gateway retorna `502` | Microsserviço não está rodando ou está na porta errada. | Subir serviço na porta oficial com `0.0.0.0`. |
-| Kafka não conecta | Bootstrap server errado. | Usar `localhost:9092` na VM ou `IP_DA_VM:9092` fora da VM. |
-| Swagger não abre pelo Gateway | Rota interna incompatível. | Lembrar que o Gateway remove `/api/{dominio}/` da rota. |
-| Serviço funciona local, mas Gateway não vê | O serviço está escutando em `127.0.0.1`. | Rodar o servidor web com binding para `0.0.0.0`. |
-| ORM tentou criar tabela na inicialização | `auto-migrate`/`sync` ativado no código. | Desativar DDL automático na aplicação; isso é dever do DB Admin. |
-| Porta já em uso ao iniciar | Outro serviço travou segurando a porta. | Verificar com `lsof -i :PORT` (Linux) ou `docker ps` e matar o processo. |
+| `connection refused` no PostgreSQL | usou `localhost` dentro do container | usar `postgres:5432` |
+| `connection refused` no Kafka | usou `localhost` dentro do container | usar `redpanda:9092` |
+| `network portal-b2b-network not found` | infra não foi subida | subir infra primeiro |
+| Gateway `502` | container não está rodando ou porta errada | verificar `docker ps`, logs e ports |
+| `permission denied` no banco | aplicação tentou criar tabela | desativar auto-migrate/sync |
+| porta já em uso | outro container está usando a porta | verificar `docker ps` |
+| Swagger não abre | rota não exposta | testar primeiro direto na porta |
 
 ---
 
