@@ -168,7 +168,6 @@ Esse script testa:
     └── transportadoras-service/
 ```
 
-Explicar:
 - `portal-b2b-infra` guarda a infraestrutura.
 - `services` guarda os repositórios dos microsserviços das equipes.
-- cada equipe deve subir seu container dentro da própria pasta de serviço.
+- Cada equipe deve subir seu container dentro da própria pasta de serviço.

@@ -23,7 +23,7 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-Explicar que cada equipe deve trocar:
+Cada equipe deve trocar:
 - `SERVICE_NAME`
 - `PORT`
 
@@ -53,16 +53,16 @@ networks:
     external: true
 ```
 
-Explicar:
-- trocar `nome-service` pelo nome oficial;
-- trocar `5000` pela porta oficial;
-- manter `portal-b2b-network` como external;
-- não subir outro PostgreSQL;
-- não subir outro Kafka.
+Observações:
+- Trocar `nome-service` pelo nome oficial.
+- Trocar `5000` pela porta oficial.
+- Manter `portal-b2b-network` como external.
+- Não subir outro PostgreSQL.
+- Não subir outro Kafka.
 
 ## Exemplo FastAPI
 
-Incluir Dockerfile:
+Dockerfile de exemplo:
 
 ```dockerfile
 FROM python:3.11-slim
@@ -80,7 +80,7 @@ EXPOSE 5000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
 ```
 
-Incluir exemplo mínimo de `/health` em FastAPI:
+Exemplo mínimo de `/health` em FastAPI:
 
 ```python
 from fastapi import FastAPI
@@ -100,7 +100,7 @@ def health():
 
 ## Exemplo Node.js/Express
 
-Incluir Dockerfile:
+Dockerfile de exemplo:
 
 ```dockerfile
 FROM node:20-alpine
@@ -118,7 +118,7 @@ EXPOSE 5000
 CMD ["npm", "start"]
 ```
 
-Incluir exemplo mínimo de `/health` em Express:
+Exemplo mínimo de `/health` em Express:
 
 ```javascript
 const express = require("express");
