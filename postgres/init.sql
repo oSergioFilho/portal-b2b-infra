@@ -31,9 +31,15 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA portal_b2b TO svc_p
 GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA portal_b2b TO svc_portal_b2b;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA portal_b2b 
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO svc_portal_b2b;
+GRANT ALL PRIVILEGES ON TABLES TO db_portal_b2b;
 
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA portal_b2b 
+GRANT ALL PRIVILEGES ON SEQUENCES TO db_portal_b2b;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE db_portal_b2b IN SCHEMA portal_b2b
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO svc_portal_b2b;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE db_portal_b2b IN SCHEMA portal_b2b
 GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO svc_portal_b2b;
 
 -- Criar tabela de health check e inserir registros
@@ -83,3 +89,10 @@ WHERE NOT EXISTS (SELECT 1 FROM portal_b2b.health_check WHERE service_name = 'lo
 INSERT INTO portal_b2b.health_check (service_name)
 SELECT 'transportadoras-service'
 WHERE NOT EXISTS (SELECT 1 FROM portal_b2b.health_check WHERE service_name = 'transportadoras-service');
+
+-- Garantir privilégios na tabela health_check (e em possíveis tabelas recriadas)
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA portal_b2b TO db_portal_b2b;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA portal_b2b TO db_portal_b2b;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA portal_b2b TO svc_portal_b2b;
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA portal_b2b TO svc_portal_b2b;
