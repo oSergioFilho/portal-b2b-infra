@@ -2,37 +2,51 @@
 
 ## Regras e Arquitetura
 
-1. O PostgreSQL é **centralizado fisicamente** (uma única instância Docker).
-2. Cada microsserviço tem **schema próprio**.
-3. Cada microsserviço tem **usuário próprio**.
-4. Nenhum serviço deve acessar diretamente o schema de outro serviço (permissões limitadas em nível de banco).
-5. Quando um serviço precisar de informação de outro domínio, deve usar **API REST ou eventos Kafka**.
-6. Essa abordagem preserva o isolamento lógico em um ambiente acadêmico, simulando o modelo "database per service".
+1. O banco de dados (`portal_b2b`) é **centralizado**.
+2. Existe um **schema único** chamado `portal_b2b` que todas as equipes utilizarão.
+3. Existem duas credenciais separadas por responsabilidade:
+   - **`db_portal_b2b`**: Usuário exclusivo da equipe de Banco de Dados. Responsável por DDL (Data Definition Language). Cria e altera tabelas, relacionamentos, constraints, etc.
+   - **`svc_portal_b2b`**: Usuário para os Microsserviços. Responsável por DML (Data Manipulation Language). Apenas lê, insere, atualiza e exclui dados das tabelas, mas não altera a estrutura do banco.
 
-## Por que um serviço não pode acessar o schema de outro?
+Embora todos os serviços usem o mesmo schema e o mesmo banco, a separação de responsabilidades e o isolamento de domínio devem ser respeitados logicamente (e não mais fisicamente com schemas isolados).
 
-- **Acoplamento forte:** Se `pedidos-service` fizer um `SELECT` direto na tabela do `produtos-service`, qualquer mudança na tabela de produtos quebrará o sistema de pedidos.
-- **Dona do domínio:** O serviço de produtos é o único responsável por ditar como os produtos são armazenados.
-- **Escalabilidade:** Em um cenário real, o banco de produtos poderia estar em um servidor diferente ou usar um banco NoSQL. O acesso direto impede essa evolução.
-- **Contrato claro:** A comunicação via APIs REST ou Kafka garante que apenas informações públicas e validadas sejam compartilhadas entre os domínios.
+## Alinhamento e Organização
 
-## O que NÃO PODE acontecer (Anti-patterns)
+Como todos usam o mesmo schema, deve haver alinhamento rigoroso na nomenclatura das tabelas para evitar conflitos. A recomendação é o uso de prefixos por domínio.
 
-- **Consultas cruzadas:** `pedidos-service` fazendo um `SELECT` direto em `schema_fornecimentos` ou `demanda-service` acessando a tabela de produtos diretamente.
-- **Credenciais globais:** Um serviço utilizando o usuário administrador `postgres` ou todos os serviços usando a mesma senha no `DATABASE_URL`.
+### Sugestão de Nomes de Tabelas por Domínio:
 
-## Estrutura de Schemas
+- **Usuários:** `usuarios_empresa`, `usuarios_perfil`, `usuarios_empresa_perfil`, `usuarios_endereco`
+- **Produtos:** `produtos_produto`, `produtos_categoria`, `produtos_unidade_medida`
+- **Fornecimentos:** `fornecimentos_fornecimento`, `fornecimentos_estoque`
+- **Demanda:** `demanda_demanda`, `demanda_recorrencia`
+- **Mercado:** `mercado_processo_negociacao`, `mercado_modo_negociacao`
+- **Negociação:** `negociacao_lance`, `negociacao_resultado`
+- **Pedidos:** `pedidos_pedido`, `pedidos_item_pedido`
+- **Logística:** `logistica_solicitacao_frete`, `logistica_frete_selecionado`
+- **Transportadoras:** `transportadoras_cotacao_frete`, `transportadoras_area_atuacao`
 
-```text
-PostgreSQL Central
-│
-├── schema_usuarios
-├── schema_produtos
-├── schema_fornecimentos
-├── schema_demanda
-├── schema_mercado
-├── schema_negociacao
-├── schema_pedidos
-├── schema_logistica
-└── schema_transportadoras
+Esta organização permite que o banco permaneça estruturado em um modelo único sem que tabelas de domínios diferentes se misturem.
+
+## Acesso da equipe de banco
+
+A equipe de banco utiliza o usuário administrador do schema para gerenciar a estrutura das tabelas:
+
+- **Host:** `IP_DA_VM`
+- **Porta:** `5432`
+- **Banco:** `portal_b2b`
+- **Schema:** `portal_b2b`
+- **Usuário:** `db_portal_b2b`
+- **Senha:** `senha_db_portal_b2b`
+
+*A equipe pode usar o PgAdmin disponibilizado pela infraestrutura ou uma ferramenta local conectando no IP da VM.*
+
+## Acesso dos microsserviços
+
+As equipes de desenvolvimento dos microsserviços configuram suas aplicações para conectar usando o usuário de aplicação:
+
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DB_SCHEMA=portal_b2b
 ```
+*(Nota: Substitua `localhost` pelo IP da VM caso esteja rodando o microsserviço fora da VM).*

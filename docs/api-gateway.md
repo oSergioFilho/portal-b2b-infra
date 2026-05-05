@@ -1,7 +1,14 @@
 # API Gateway
 
 ## O Papel do Gateway
-O API Gateway funciona como ponto único de entrada (Porta `80`) para todas as APIs REST dos microsserviços. O Nginx atua como proxy reverso, recebendo requisições externas e encaminhando-as para o serviço adequado.
+O API Gateway funciona como ponto único de entrada (Porta `80`) para todas as APIs REST dos microsserviços do Portal B2B. O Nginx atua como proxy reverso, recebendo requisições externas e encaminhando-as para o serviço adequado rodando na VM.
+
+## Padrão Oficial de Infraestrutura
+O padrão definido para a arquitetura é:
+- **Todos os microsserviços rodam na VM central.**
+- O API Gateway Nginx roda em um container Docker na mesma VM.
+- O Gateway acessa os microsserviços pela máquina host usando `host.docker.internal`.
+- Cada serviço deve escutar em sua porta oficial.
 
 ## Rotas e Remoção de Prefixo
 
@@ -12,30 +19,18 @@ Este é o **padrão oficial**:
 - Gateway expõe: `/api/{dominio}/...`
 - Microsserviço recebe a rota **sem** o prefixo `/api/{dominio}`.
 
-**Exemplos:**
-- `GET /api/produtos/health` -> `produtos-service` recebe `GET /health`
-- `GET /api/demandas/health` -> `demanda-service` recebe `GET /health`
+**Exemplos de Roteamento:**
+- `GET http://IP_DA_VM/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
+- `GET http://IP_DA_VM/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
 
-## Cenários de Comunicação (host.docker.internal vs IPs Privados)
+## Observações Futuras (Dockerização/VPNs)
 
-### Cenário A: Infraestrutura e Microsserviços na Mesma Máquina/VM
-O arquivo `nginx.conf` padrão utiliza `host.docker.internal`. Isso significa que o Nginx tentará encontrar o serviço na **máquina hospedeira** onde o Docker está rodando. Se o colega subir a infraestrutura localmente e o seu microsserviço também localmente, as rotas funcionarão imediatamente.
-
-### Cenário B: Infra na VM Central e Microsserviços nas Máquinas dos Colegas (Tailscale/ZeroTier)
-Quando a infraestrutura roda de forma centralizada e cada equipe roda seu próprio código no seu computador via uma rede privada (VPN como Tailscale ou ZeroTier), o `host.docker.internal` **não vai encontrar** o microsserviço (porque ele não está na VM central, está no PC do colega).
-
-Nesse caso, o responsável pela infraestrutura precisará editar o `nginx/nginx.conf` substituindo `host.docker.internal` pelo IP privado do desenvolvedor responsável. 
-
-Exemplo de adaptação no `nginx.conf`:
+**Containers no mesmo Docker Compose:**
+Se futuramente os microsserviços forem containerizados dentro do mesmo Docker Compose (e não mais rodando via processo na VM), o `nginx.conf` poderá ser alterado para usar o nome dos containers na rede Docker, substituindo `host.docker.internal` por:
 ```nginx
-location /api/produtos/ {
-    # Apontando para o IP da máquina do colega de Produtos na VPN
-    proxy_pass http://100.100.10.2:5002/;
-}
-
-location /api/demandas/ {
-    # Apontando para o IP da máquina do colega de Demandas na VPN
-    proxy_pass http://100.100.20.5:5004/;
-}
+proxy_pass http://produtos-service:5002/;
 ```
-Após as edições, basta recarregar as configurações: `docker compose restart nginx-gateway`.
+Mas nesta etapa atual, manteremos `host.docker.internal` porque os serviços podem rodar diretamente no host da VM.
+
+**VPN (Tailscale/ZeroTier):**
+A arquitetura anterior considerava cada desenvolvedor rodando seu microsserviço em sua própria máquina, conectados à VM através de VPN (Tailscale/ZeroTier). Esse modelo não é mais o padrão, mas se necessário academicamente, o `nginx.conf` precisaria ser alterado para apontar para o IP privado da VPN do desenvolvedor ao invés de `host.docker.internal`.

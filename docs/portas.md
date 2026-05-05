@@ -1,12 +1,15 @@
 # Portas do Sistema
 
 ## Infraestrutura
+
+- **API Gateway:** `80`
 - **PostgreSQL:** `5432`
-- **Redpanda (Kafka):** `9092`
 - **PgAdmin:** `5050`
+- **Kafka/Redpanda:** `9092`
 - **Kafka UI:** `8080`
 
 ## Microsserviços
+
 - **usuarios-service:** `5001`
 - **produtos-service:** `5002`
 - **fornecimentos-service:** `5003`
@@ -17,10 +20,9 @@
 - **logistica-service:** `5008`
 - **transportadoras-service:** `5009`
 
-## Acesso Público e Segurança
-Somente o **API Gateway (Porta 80)** deve ser exposto publicamente para acesso aos serviços. 
+## Segurança
 
-**ATENÇÃO À SEGURANÇA EM VM CENTRAL:**
-- Em ambiente local, as portas podem ficar abertas no `localhost`.
-- Em uma VM pública, **NÃO EXPONHA** as portas de banco de dados, Kafka e interfaces visuais (5432, 9092, 5050, 8080) diretamente para a internet.
-- Use Firewall, Security Groups ou uma rede VPN privada como **Tailscale** ou **ZeroTier** para garantir que apenas os colegas autorizados tenham acesso a essas ferramentas da infraestrutura.
+- Em ambiente de desenvolvimento acadêmico, as portas podem ficar disponíveis na VM para teste e facilitação do aprendizado.
+- Idealmente, em produção, somente o **API Gateway (Porta 80)** deveria ficar exposto publicamente para acesso aos serviços.
+- PostgreSQL, Kafka, PgAdmin e Kafka UI devem ser protegidos por firewall, VPN ou regra de acesso da VM (Security Groups), garantindo que apenas membros da equipe acessem.
+- **Atenção:** Não usar as credenciais de `admin` ou do `db_portal_b2b` nos microsserviços. Os microsserviços devem usar apenas `svc_portal_b2b`.
