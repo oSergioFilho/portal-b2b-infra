@@ -19,7 +19,7 @@ A divisão de responsabilidades é muito clara:
 
 ## 2. Visão geral da arquitetura
 
-A arquitetura do Portal B2B exige que **todos os serviços e ferramentas rodem na mesma VM central**.
+A arquitetura do Portal B2B exige que **todos os serviços e ferramentas rodem na mesma VM central. A infraestrutura roda via Docker Compose, e cada microsserviço deve rodar como container próprio conectado à rede externa portal-b2b-network.**
 
 O fluxo de dados funciona assim:
 
@@ -44,6 +44,7 @@ Outros microsserviços consumidores
 Absolutamente tudo roda na VM central:
 
 **Infraestrutura:**
+- roda no docker-compose.yml deste repositório.
 - PostgreSQL
 - PgAdmin
 - Redpanda/Kafka
@@ -51,6 +52,10 @@ Absolutamente tudo roda na VM central:
 - Nginx API Gateway
 
 **Microsserviços das equipes:**
+- rodam como containers próprios.
+- cada equipe mantém o próprio Dockerfile e docker-compose.yml.
+- cada container publica sua porta oficial no host.
+- cada container entra na rede portal-b2b-network.
 - usuarios-service
 - produtos-service
 - fornecimentos-service
@@ -139,6 +144,8 @@ DB_SCHEMA=portal_b2b
 
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
+
+Esses nomes, postgres e redpanda, só funcionam porque o container do microsserviço está conectado à rede externa portal-b2b-network. Se a equipe esquecer essa rede no docker-compose.yml, a conexão com banco e Kafka vai falhar.
 
 ### Alternativa emergencial: rodar direto no host da VM (sem Docker)
 
@@ -261,6 +268,14 @@ docker compose up -d --build
 docker ps
 docker logs -f nome-service
 ```
+
+O responsável pela infraestrutura só deve validar a integração depois que a equipe conseguir executar:
+
+```bash
+docker compose up -d --build
+```
+
+dentro da pasta do próprio microsserviço.
 
 **Exemplo completo para produtos-service:**
 ```bash

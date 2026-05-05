@@ -20,12 +20,34 @@ Cada equipe é responsável por um serviço que escuta em uma porta específica 
 
 ## Conexão padrão em container (obrigatório)
 
-O padrão oficial de execução é via Docker (container). O microsserviço roda dentro da rede `portal-b2b-network` e acessa banco e mensageria pelos nomes dos serviços Docker:
+O padrão oficial de execução é via Docker (container). Esse é o padrão oficial. Não use localhost dentro do container para banco ou Kafka. O microsserviço roda dentro da rede `portal-b2b-network` e acessa banco e mensageria pelos nomes dos serviços Docker:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+```
+
+localhost dentro de um container aponta para o próprio container. Por isso, para acessar serviços da infraestrutura na rede Docker, devem ser usados os nomes dos containers/serviços: postgres e redpanda.
+
+Exemplo mínimo de docker-compose.yml para microsserviço:
+
+```yaml
+services:
+  produtos-service:
+    build: .
+    container_name: produtos-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5002:5002"
+    networks:
+      - portal-b2b-network
+
+networks:
+  portal-b2b-network:
+    external: true
 ```
 
 **Importante:** Dentro de um container, `localhost` aponta para o próprio container, não para o host ou para outros serviços. Por isso, o host do banco é `postgres` e o host do Kafka é `redpanda`.

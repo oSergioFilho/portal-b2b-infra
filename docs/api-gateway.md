@@ -26,6 +26,17 @@ Container produtos-service — porta 5002
 
 **Exemplo:** `GET /api/produtos/health` → Gateway encaminha para `host.docker.internal:5002` → chega no container `produtos-service` como `GET /health`.
 
+Para o Gateway conseguir acessar o container do microsserviço, o docker-compose.yml do microsserviço precisa publicar a porta oficial no host da VM.
+
+Exemplo:
+
+```yaml
+ports:
+  - "5002:5002"
+```
+
+Sem esse mapeamento, o Gateway não conseguirá acessar host.docker.internal:5002.
+
 ### Por que `host.docker.internal`?
 
 O Nginx do Gateway roda em seu próprio container. Como cada microsserviço publica sua porta no host da VM, o Gateway utiliza `host.docker.internal` para alcançar essas portas publicadas.

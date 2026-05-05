@@ -16,3 +16,11 @@ Para garantir a integração suave com a infraestrutura centralizada do Portal B
 - [ ] Swagger funciona e expõe os endpoints.
 - [ ] Eventos Kafka seguem o envelope padrão.
 - [ ] Aplicação não tenta criar tabelas automaticamente (DDL automático desativado).
+- [ ] O container_name no docker-compose.yml está igual ao nome oficial do serviço.
+- [ ] O serviço publica a porta oficial no host da VM usando o formato "PORTA:PORTA".
+- [ ] O serviço não usa localhost para acessar PostgreSQL quando roda em container.
+- [ ] O serviço não usa localhost para acessar Kafka quando roda em container.
+- [ ] O serviço usa postgres:5432 para acessar PostgreSQL em container.
+- [ ] O serviço usa redpanda:9092 para acessar Kafka em container.
+- [ ] O comando docker compose up -d --build funciona sem intervenção manual.
+- [ ] O comando docker logs -f nome-do-container mostra os logs do serviço.

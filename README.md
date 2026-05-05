@@ -43,7 +43,14 @@ A infraestrutura fornece:
 
 **Equipes de Microsserviços:**
 - Implementar as APIs, regras de negócio e conectar ao banco de dados com o usuário `svc_portal_b2b`.
-- Rodar seu respectivo microsserviço na porta oficial designada na VM central.
+- Rodar seu respectivo microsserviço como container Docker, publicando a porta oficial na VM central e conectando o container à rede externa portal-b2b-network.
+- Entregar Dockerfile.
+- Entregar docker-compose.yml.
+- Entregar .env.example.
+- Garantir que o container use a rede portal-b2b-network.
+- Garantir que o serviço publique a porta oficial no host.
+- Usar postgres:5432 para PostgreSQL quando rodar em container.
+- Usar redpanda:9092 para Kafka quando rodar em container.
 - Publicar e consumir eventos Kafka.
 - Fornecer endpoint `/health`.
 
