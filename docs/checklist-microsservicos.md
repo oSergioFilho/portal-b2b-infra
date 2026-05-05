@@ -24,3 +24,9 @@ Para garantir a integração suave com a infraestrutura centralizada do Portal B
 - [ ] O serviço usa redpanda:9092 para acessar Kafka em container.
 - [ ] O comando docker compose up -d --build funciona sem intervenção manual.
 - [ ] O comando docker logs -f nome-do-container mostra os logs do serviço.
+- [ ] O endpoint GET /health retorna HTTP 200.
+- [ ] O endpoint GET /health retorna JSON com status igual a "ok".
+- [ ] O endpoint GET /health retorna o campo service com o nome oficial do serviço.
+- [ ] O serviço foi testado diretamente na porta oficial.
+- [ ] O serviço foi testado pelo API Gateway.
+- [ ] O serviço passou no script scripts/check-services.sh, quando aplicável.

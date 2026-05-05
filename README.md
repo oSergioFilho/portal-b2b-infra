@@ -130,3 +130,45 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 - A infraestrutura **não** instalará dependências manualmente.
 
 Veja os arquivos na pasta `docs/` para mais detalhes de portas e integrações.
+
+## Testando os microsserviços pelo Gateway
+
+Depois que as equipes subirem seus containers, o responsável pela infraestrutura pode testar todos os endpoints `/health` com:
+
+```bash
+bash scripts/check-services.sh
+```
+
+Esse script testa:
+- usuarios-service
+- produtos-service
+- fornecimentos-service
+- demanda-service
+- mercado-service
+- negociacao-service
+- pedidos-service
+- logistica-service
+- transportadoras-service
+
+## Estrutura recomendada da VM
+
+```text
+/opt/portal-b2b/
+├── infra/
+│   └── portal-b2b-infra/
+└── services/
+    ├── usuarios-service/
+    ├── produtos-service/
+    ├── fornecimentos-service/
+    ├── demanda-service/
+    ├── mercado-service/
+    ├── negociacao-service/
+    ├── pedidos-service/
+    ├── logistica-service/
+    └── transportadoras-service/
+```
+
+Explicar:
+- `portal-b2b-infra` guarda a infraestrutura.
+- `services` guarda os repositórios dos microsserviços das equipes.
+- cada equipe deve subir seu container dentro da própria pasta de serviço.

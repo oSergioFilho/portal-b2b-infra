@@ -15,3 +15,7 @@ echo "PostgreSQL: localhost:5432"
 echo "Kafka/Redpanda: localhost:9092"
 echo "========================================"
 echo "Observação: Na VM, troque 'localhost' pelo IP_DA_VM."
+
+echo ""
+echo "Para testar os microsserviços depois de iniciados, execute:"
+echo "bash scripts/check-services.sh"

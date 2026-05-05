@@ -618,3 +618,82 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 - Porta `5009`
 - Gateway `/api/transportadoras/`
 - Evento `cotacao_frete_enviada`
+
+---
+
+## 24. Contrato obrigatório do endpoint /health
+
+Todo microsserviço precisa expor:
+
+`GET /health`
+
+**Resposta esperada:**
+```json
+{
+  "status": "ok",
+  "service": "produtos-service"
+}
+```
+
+**Regras:**
+- status deve ser "ok".
+- service deve ser o nome oficial do serviço.
+- o endpoint deve retornar HTTP 200.
+- o endpoint deve funcionar direto na porta do serviço e também pelo Gateway.
+
+**Exemplo:**
+Direto na VM:
+```bash
+curl http://localhost:5002/health
+```
+Pelo Gateway:
+```bash
+curl http://localhost/api/produtos/health
+```
+
+---
+
+## 25. Estrutura recomendada da VM
+
+```text
+/opt/portal-b2b/
+├── infra/
+│   └── portal-b2b-infra/
+└── services/
+    ├── usuarios-service/
+    ├── produtos-service/
+    ├── fornecimentos-service/
+    ├── demanda-service/
+    ├── mercado-service/
+    ├── negociacao-service/
+    ├── pedidos-service/
+    ├── logistica-service/
+    └── transportadoras-service/
+```
+
+Cada equipe deve clonar o próprio repositório dentro de `/opt/portal-b2b/services`.
+
+---
+
+## 26. Como o responsável pela infraestrutura valida os serviços
+
+- A equipe sobe o próprio container.
+- A equipe confirma que `docker compose up -d --build` funcionou.
+- A equipe confirma que `docker logs -f nome-do-container` não mostra erro.
+- O responsável pela infraestrutura testa diretamente:
+
+```bash
+curl http://localhost:PORTA/health
+```
+
+- Depois testa pelo Gateway:
+
+```bash
+curl http://localhost/api/DOMINIO/health
+```
+
+- Por fim, pode rodar:
+
+```bash
+bash scripts/check-services.sh
+```

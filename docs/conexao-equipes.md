@@ -1,5 +1,10 @@
 # Como as equipes se conectam
 
+Antes de criar ou ajustar o microsserviço, consulte:
+`docs/template-microsservico.md`
+
+Todas as equipes devem usar o template como base mínima para Dockerfile, docker-compose.yml, .env.example e endpoint /health.
+
 Na arquitetura atual, todos os microsserviços devem rodar como **containers Docker** na **VM Central** do projeto, compartilhando os mesmos recursos de banco de dados e mensageria através da rede `portal-b2b-network`.
 
 ## Tabela de Conexões e Responsabilidades
