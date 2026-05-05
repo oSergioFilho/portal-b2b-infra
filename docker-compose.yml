@@ -112,6 +112,7 @@ services:
 
 networks:
   portal-b2b-network:
+    name: portal-b2b-network
     driver: bridge
 
 volumes:

@@ -3,6 +3,22 @@
 ## Objetivo da infraestrutura
 Montar a infraestrutura acadêmica centralizada do Portal B2B Distribuído, fornecendo os componentes compartilhados para que as diferentes equipes consigam desenvolver seus microsserviços. Este repositório NÃO implementa regras de negócio ou microsserviços, servindo apenas como fundação de infraestrutura.
 
+## Guia principal para as equipes
+
+Antes de integrar qualquer microsserviço, leia:
+
+[GUIA_DE_INTEGRACAO.md](./GUIA_DE_INTEGRACAO.md)
+
+## Padrão de entrega dos microsserviços
+
+Cada equipe deve entregar seu serviço dockerizado contendo:
+- `Dockerfile`
+- `docker-compose.yml`
+- `.env.example`
+- Endpoint `/health`
+
+A infraestrutura **não** instalará dependências (npm, pip, maven) manualmente para nenhuma equipe. O deploy e execução do microsserviço devem ocorrer exclusivamente via Docker utilizando a rede da infraestrutura.
+
 ## Arquitetura e Componentes Centrais
 A arquitetura final define que **todos os microsserviços e a infraestrutura rodam na mesma VM central**.
 

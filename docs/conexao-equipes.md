@@ -18,28 +18,21 @@ Cada equipe é responsável por um serviço que escuta em uma porta específica 
 | Logística | logistica-service | 5008 | `/api/logistica/` | `solicitacao_frete_criada`, `frete_selecionado` |
 | Transportadoras | transportadoras-service | 5009 | `/api/transportadoras/` | `cotacao_frete_enviada` |
 
-## Padrão `.env` dos Microsserviços
+## Conexão quando o microsserviço roda em container (Recomendado)
 
-Para rodar diretamente na VM, todos os microsserviços seguirão este padrão básico de `.env`:
+A partir de agora, o padrão é entregar o microsserviço dockerizado. Quando rodando dentro de container na mesma rede da infraestrutura, utilize:
 
 ```env
-# Banco de Dados Central
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-
-# Mensageria Kafka
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-
-# Identificação do Serviço
-SERVICE_NAME=nome-do-servico
-PORT=porta-do-servico
+KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-**Exemplo para o `produtos-service`:**
+## Conexão quando o microsserviço roda direto na VM
+
+Caso ainda precise rodar seu microsserviço via terminal, escutando direto na VM:
 
 ```env
-SERVICE_NAME=produtos-service
-PORT=5002
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
