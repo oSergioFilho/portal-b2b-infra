@@ -166,12 +166,20 @@ Em caso de falha da VM principal, a infraestrutura pode ser restaurada na VM sta
 ```bash
 bash scripts/backup-postgres.sh
 ```
+* **Atenção:** Backups gerados em `backups/postgres/` não devem ser commitados no Git.
+* **Recomendação:** Após gerar backup, copie o arquivo para fora da VM principal.
 
 ### Restaurar backup do banco
 
 ```bash
 bash scripts/restore-postgres.sh backups/postgres/NOME_DO_BACKUP.sql
 ```
+* **Recomendação:** A restauração deve ser feita preferencialmente em VM standby ou ambiente limpo.
+* O script possui uma **confirmação interativa** para evitar sobrescrever dados por engano.
+* Para automação, é possível usar `--force` (use apenas quando tiver certeza):
+  ```bash
+  bash scripts/restore-postgres.sh backups/postgres/NOME_DO_BACKUP.sql --force
+  ```
 
 Para o plano completo de redundância e recuperação, consulte:
 

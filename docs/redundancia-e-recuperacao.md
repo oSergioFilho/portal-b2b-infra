@@ -106,6 +106,10 @@ Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **
 
 ## 6. Processo de recuperação em caso de queda da VM principal
 
+> **Atenção:** Antes de restaurar um backup, confirme se o banco atual pode receber a restauração. O script `restore-postgres.sh` executa o SQL do backup sobre o banco `portal_b2b` existente. Em uma VM standby recém-criada isso é esperado. Em uma VM com dados existentes, pode haver conflito com tabelas, constraints ou registros já presentes.
+>
+> **Recomendação:** Para testes de recuperação, prefira restaurar o backup em uma VM limpa ou em um ambiente local descartável.
+
 Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
 
 ### Passo a passo
@@ -124,6 +128,9 @@ Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
    ```
 
 4. **Restaurar o último backup do PostgreSQL:**
+   - Restaurar backup preferencialmente em ambiente limpo.
+   - Se a infraestrutura já foi usada antes na VM standby, avaliar se precisa limpar volumes antes de restaurar (`docker compose down -v`).
+   - Não rodar restore em ambiente de produção acadêmica sem confirmar com a equipe.
    ```bash
    bash scripts/restore-postgres.sh backups/postgres/NOME_DO_ULTIMO_BACKUP.sql
    ```

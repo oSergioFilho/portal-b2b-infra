@@ -706,6 +706,9 @@ A infraestrutura possui mecanismos básicos de resiliência e um plano de recupe
 
 - **Se um container cair**, o Docker tenta reiniciar automaticamente (política `restart: unless-stopped`).
 - **O banco possui backup via script.** O responsável pela infraestrutura pode gerar backups com `bash scripts/backup-postgres.sh` e restaurar com `bash scripts/restore-postgres.sh`.
+  - **Aviso:** Os backups do banco são responsabilidade operacional da infraestrutura.
+  - As equipes de microsserviços não devem executar restore do banco.
+  - Restore deve ser feito apenas pela equipe de infraestrutura, preferencialmente na VM standby ou ambiente limpo.
 - **Existe um plano de VM standby** para recuperação em caso de queda completa da VM principal. A VM standby pode ser ativada com a infraestrutura clonada e o último backup do banco.
 - **Isso não substitui alta disponibilidade real**, mas atende ao plano acadêmico de recuperação com procedimentos documentados e testáveis.
 
