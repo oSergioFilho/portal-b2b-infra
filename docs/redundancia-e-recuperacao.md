@@ -1,4 +1,4 @@
-# Redundância e Recuperação da Infraestrutura
+   # Redundância e Recuperação da Infraestrutura
 
 ## 1. Objetivo
 
@@ -78,8 +78,6 @@ Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **
 - Roda os microsserviços das equipes.
 - Recebe as chamadas do grupo.
 - É o ambiente de produção acadêmica.
-
-> **Aviso:** A VM principal atual está no Google Cloud Platform e usa o IP público: `34.29.84.207`. Em caso de troca para VM standby, o IP/DNS informado às equipes deverá ser atualizado.
 
 ### VM Standby
 
@@ -177,7 +175,7 @@ Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
 
 ✅ Reinício automático de container — política `unless-stopped`.
 
-✅ Perda parcial da infraestrutura — health checks detectam e Docker reinicia.
+✅ Perda parcial da infraestrutura — health checks ajudam a detectar falhas, e containers que encerram são reiniciados pela política restart.
 
 ✅ Recuperação manual em outra VM — procedimento documentado com VM standby.
 

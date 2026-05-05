@@ -88,7 +88,9 @@ bash scripts/check-infra.sh
 
 ## Ambiente atual de integração
 
-A infraestrutura está atualmente disponível na VM do Google Cloud Platform com o seguinte IP público:
+A infraestrutura está atualmente disponível em uma VM no Google Cloud Platform.
+
+IP público atual:
 
 ```text
 34.29.84.207

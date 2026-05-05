@@ -1,45 +1,38 @@
-# Como as equipes se conectam
+# Conexão das Equipes
 
-Antes de criar ou ajustar o microsserviço, consulte:
-`docs/template-microsservico.md`
+## Ambiente atual
 
-Todas as equipes devem usar o template como base mínima para Dockerfile, docker-compose.yml, .env.example e endpoint /health.
+IP atual da VM de integração: **34.29.84.207**
 
-Na arquitetura atual, todos os microsserviços devem rodar como **containers Docker** na **VM Central** do projeto, compartilhando os mesmos recursos de banco de dados e mensageria através da rede `portal-b2b-network`.
+| Recurso | URL |
+|---|---|
+| API Gateway | http://34.29.84.207 |
+| Health do Gateway | http://34.29.84.207/health |
+| PgAdmin | http://34.29.84.207:5050 |
+| Kafka UI | http://34.29.84.207:8080 |
 
-## IP atual da VM de integração
+---
 
-- IP atual: 34.29.84.207
-- API Gateway: http://34.29.84.207
-- PgAdmin: http://34.29.84.207:5050
-- Kafka UI: http://34.29.84.207:8080
+## Banco de dados
 
-> **Aviso:** Para microsserviços rodando em container, manter:
-> ```env
-> DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
-> KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
-> ```
-> Não trocar `postgres` ou `redpanda` pelo IP público dentro do container.
+- **Banco:** `portal_b2b`
+- **Schema:** `portal_b2b`
 
-## Tabela de Conexões e Responsabilidades
+**Usuário da equipe de banco (DDL):**
+```
+db_portal_b2b
+```
 
-Cada equipe é responsável por um serviço que escuta em uma porta específica e responde atrás do API Gateway:
+**Usuário dos microsserviços (DML):**
+```
+svc_portal_b2b
+```
 
-| Equipe | Serviço | Porta | Endpoint Gateway | Eventos publicados |
-|---|---|---|---|---|
-| Usuários | usuarios-service | 5001 | `/api/usuarios/` | `empresa_cadastrada` |
-| Produtos | produtos-service | 5002 | `/api/produtos/` | `produto_cadastrado` |
-| Fornecimentos | fornecimentos-service | 5003 | `/api/fornecimentos/` | `fornecimento_criado`, `estoque_atualizado` |
-| Demanda | demanda-service | 5004 | `/api/demandas/` | `demanda_criada`, `demanda_recorrente_gerada` |
-| Mercado | mercado-service | 5005 | `/api/mercado/` | `modo_negociacao_definido`, `leilao_iniciado` |
-| Negociação | negociacao-service | 5006 | `/api/negociacoes/` | `lance_realizado`, `negociacao_fechada` |
-| Pedidos | pedidos-service | 5007 | `/api/pedidos/` | `pedido_criado`, `pedido_atualizado` |
-| Logística | logistica-service | 5008 | `/api/logistica/` | `solicitacao_frete_criada`, `frete_selecionado` |
-| Transportadoras | transportadoras-service | 5009 | `/api/transportadoras/` | `cotacao_frete_enviada` |
+---
 
-## Conexão padrão em container (obrigatório)
+## Conexão padrão dos microsserviços em container
 
-O padrão oficial de execução é via Docker (container). Esse é o padrão oficial. Não use localhost dentro do container para banco ou Kafka. O microsserviço roda dentro da rede `portal-b2b-network` e acessa banco e mensageria pelos nomes dos serviços Docker:
+Todo microsserviço deve rodar em container na rede `portal-b2b-network`. As variáveis de ambiente obrigatórias são:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
@@ -47,9 +40,50 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-localhost dentro de um container aponta para o próprio container. Por isso, para acessar serviços da infraestrutura na rede Docker, devem ser usados os nomes dos containers/serviços: postgres e redpanda.
+**Regras importantes:**
+- Dentro do container, **não usar `localhost`** para PostgreSQL. O host correto é `postgres`.
+- Dentro do container, **não usar `localhost`** para Kafka. O host correto é `redpanda`.
+- O `localhost` dentro de um container aponta para o próprio container, não para os outros serviços.
+- O container do microsserviço **precisa estar na rede `portal-b2b-network`** para que os nomes `postgres` e `redpanda` funcionem.
 
-Exemplo mínimo de docker-compose.yml para microsserviço:
+---
+
+## Conexão externa para ferramentas
+
+**PgAdmin (interface web):**
+- URL: http://34.29.84.207:5050
+- Login: `admin@portalb2b.com`
+- Senha: `admin`
+- Host do banco dentro do PgAdmin: `postgres` (não usar o IP externo dentro do PgAdmin)
+
+**Kafka UI:**
+- URL: http://34.29.84.207:8080
+
+**DBeaver / DataGrip / psql (ferramenta externa no seu PC):**
+- Host: `34.29.84.207`
+- Porta: `5432`
+- Banco: `portal_b2b`
+- Usuário: `db_portal_b2b` (equipe de banco) ou `svc_portal_b2b` (microsserviços)
+
+---
+
+## Portas dos microsserviços
+
+| Serviço | Porta | Gateway |
+|---|---:|---|
+| usuarios-service | 5001 | /api/usuarios/ |
+| produtos-service | 5002 | /api/produtos/ |
+| fornecimentos-service | 5003 | /api/fornecimentos/ |
+| demanda-service | 5004 | /api/demandas/ |
+| mercado-service | 5005 | /api/mercado/ |
+| negociacao-service | 5006 | /api/negociacoes/ |
+| pedidos-service | 5007 | /api/pedidos/ |
+| logistica-service | 5008 | /api/logistica/ |
+| transportadoras-service | 5009 | /api/transportadoras/ |
+
+---
+
+## Exemplo de docker-compose.yml do microsserviço
 
 ```yaml
 services:
@@ -69,30 +103,4 @@ networks:
     external: true
 ```
 
-**Importante:** Dentro de um container, `localhost` aponta para o próprio container, não para o host ou para outros serviços. Por isso, o host do banco é `postgres` e o host do Kafka é `redpanda`.
-
-## Alternativa emergencial: rodar direto no host da VM (sem Docker)
-
-Apenas em situações emergenciais justificadas, caso o microsserviço precise rodar diretamente no host da VM sem container:
-
-```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
-DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=localhost:9092
-```
-
-**Este não é o padrão oficial.** A entrega final deve ser dockerizada.
-
-## Requisitos de Implementação
-
-- **Rodar escutando em todos os IPs (0.0.0.0):** Para que o API Gateway consiga alcançar o seu microsserviço na VM, você DEVE subir o servidor web escutando em `0.0.0.0` (todos os endereços), e não apenas em `127.0.0.1` ou `localhost`.
-  Exemplo (FastAPI/Uvicorn):
-  ```bash
-  uvicorn main:app --host 0.0.0.0 --port 5002
-  ```
-- **Endpoint de Health:** Todos os serviços **precisam** ter um endpoint `GET /health` operante.
-  O Gateway Nginx deve conseguir acessar:
-  - `GET http://IP_DA_VM/api/produtos/health`
-  - `GET http://IP_DA_VM/api/demandas/health`
-  - `GET http://IP_DA_VM/api/pedidos/health`
-  - *(e assim por diante)*
+> Substitua `produtos-service` e `5002` pelo nome e porta oficial do seu microsserviço.
