@@ -31,7 +31,7 @@ Além disso, os serviços críticos possuem **health checks** configurados:
 - **PostgreSQL:** verifica se o banco está aceitando conexões via `pg_isready`.
 - **Redpanda:** verifica se o broker Kafka está respondendo via endpoint de saúde.
 
-Esses health checks permitem que o Docker identifique quando um serviço está em estado degradado e tome ações de recuperação.
+Esses health checks permitem identificar quando um serviço está em estado degradado. A política de restart automático cobre falhas em que o processo do container encerra. Em caso de container unhealthy sem encerramento do processo, a equipe de infraestrutura deve investigar usando docker compose ps e docker logs.
 
 ---
 
