@@ -1,125 +1,517 @@
-# Guia de Integração para as Equipes
+# Guia Oficial de Integração
 
-Bem-vindos! Este documento foi feito para você, desenvolvedor(a) de um dos microsserviços do **Portal B2B Distribuído**.
+## 1. Objetivo do guia
 
-A infraestrutura (banco de dados central, mensageria Kafka e o API Gateway) já está pronta. O seu trabalho não é mexer na infraestrutura, mas sim **conectar o seu microsserviço a ela**.
+Este documento é o **guia oficial** para as equipes conectarem seus microsserviços à infraestrutura central do Portal B2B. Ele foi projetado para que você consiga conectar, rodar e testar seu serviço sem precisar perguntar ao responsável pela infraestrutura.
 
-Siga este passo a passo para integrar a sua parte do projeto sem dores de cabeça.
-
----
-
-## 1. Onde está rodando a Infraestrutura?
-
-O ambiente oficial do projeto funciona com **todos os serviços e a infraestrutura rodando na mesma VM da Turma**.
-Você conectará usando o IP dessa máquina (ex: `IP_DA_VM`) quando estiver desenvolvendo na sua máquina, ou usará `localhost`/`0.0.0.0` quando for subir o seu serviço definitivamente na VM.
-
-> **Atenção:** Em todas as variáveis de ambiente abaixo, substitua `IP_DA_VM` pelo IP real onde a infraestrutura está hospedada.
+A divisão de responsabilidades é muito clara:
+- A **equipe de infraestrutura** entrega a VM central, Banco de Dados, Kafka, Gateway, PgAdmin e Kafka UI já configurados e rodando.
+- A **equipe de banco de dados** cria as tabelas e o modelo relacional centralizado.
+- As **equipes de microsserviços** (você) implementam as APIs, as regras de negócio e a publicação/consumo de eventos.
 
 ---
 
-## 2. Configurando o seu Banco de Dados
+## 2. Visão geral da arquitetura
 
-O projeto usa um **Banco de Dados Centralizado**. Todas as equipes compartilham o banco `portal_b2b` e o schema `portal_b2b`.
+A arquitetura do Portal B2B exige que **todos os serviços e ferramentas rodem na mesma VM central**.
 
-A equipe de banco de dados é responsável pela estruturação. O seu papel como desenvolvedor de microsserviço é conectar-se ao banco com o usuário da aplicação e consumir ou gravar dados, respeitando o isolamento lógico das tabelas do seu domínio.
+O fluxo de dados funciona assim:
 
-**Usuário da Aplicação (Comum a todos os microsserviços):**
-- **Usuário DB:** `svc_portal_b2b`
-- **Senha DB:** `senha_portal_b2b`
-
-### Exemplo de `.env` que você deve usar na sua aplicação:
-
-```env
-# Porta em que o SEU microsserviço vai rodar
-PORT=5002
-
-# Nome do seu serviço
-SERVICE_NAME=produtos-service
-
-# Banco de dados
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@IP_DA_VM:5432/portal_b2b
-DB_SCHEMA=portal_b2b
-
-# Kafka
-KAFKA_BOOTSTRAP_SERVERS=IP_DA_VM:9092
+```text
+Usuário/Frontend
+    ↓
+API Gateway - Porta 80
+    ↓
+Microsserviço na VM - Porta 5001 a 5009
+    ↓
+PostgreSQL central - Porta 5432
+    ↓
+Kafka/Redpanda - Porta 9092
+    ↓
+Outros microsserviços consumidores
 ```
 
 ---
 
-## 3. Mensageria (Kafka / Redpanda)
+## 3. O que roda na VM central
 
-Toda a comunicação *assíncrona* entre os grupos deve ser feita pelo Kafka.
-Você pode monitorar as mensagens que chegam acessando o **Kafka UI** pelo navegador em: `http://IP_DA_VM:8080`.
+Absolutamente tudo roda na VM central:
 
-**Regras para o Kafka:**
-1. O tópico do Kafka tem o **mesmo nome** do evento (ex: `produto_cadastrado`).
-2. O corpo do evento (JSON) precisa seguir exatamente o nosso contrato padrão.
+**Infraestrutura:**
+- PostgreSQL
+- PgAdmin
+- Redpanda/Kafka
+- Kafka UI
+- Nginx API Gateway
 
-### Contrato Padrão do JSON
-Todos os eventos publicados por vocês devem respeitar esse envelope:
+**Microsserviços das equipes:**
+- usuarios-service
+- produtos-service
+- fornecimentos-service
+- demanda-service
+- mercado-service
+- negociacao-service
+- pedidos-service
+- logistica-service
+- transportadoras-service
+
+---
+
+## 4. Endereços principais da infraestrutura
+
+| Recurso | URL/Host | Porta | Uso |
+|---|---|---|---|
+| API Gateway | `http://IP_DA_VM` | 80 | Entrada para APIs REST |
+| PostgreSQL | `IP_DA_VM` (ou `localhost` na VM) | 5432 | Banco central |
+| PgAdmin | `http://IP_DA_VM:5050` | 5050 | Administração visual do banco |
+| Kafka/Redpanda | `IP_DA_VM` (ou `localhost` na VM) | 9092 | Broker de eventos |
+| Kafka UI | `http://IP_DA_VM:8080` | 8080 | Visualizar tópicos e mensagens |
+
+**Atenção:** 
+- Se você está rodando seu código **dentro** da VM, aponte as credenciais do `.env` para `localhost`. 
+- Se estiver rodando o código ou acessando visualmente **de fora** da VM, use o `IP_DA_VM`.
+
+---
+
+## 5. Tabela oficial de portas
+
+**Infraestrutura:**
+- API Gateway: `80`
+- PostgreSQL: `5432`
+- PgAdmin: `5050`
+- Kafka/Redpanda: `9092`
+- Kafka UI: `8080`
+
+**Microsserviços:**
+- usuarios-service: `5001`
+- produtos-service: `5002`
+- fornecimentos-service: `5003`
+- demanda-service: `5004`
+- mercado-service: `5005`
+- negociacao-service: `5006`
+- pedidos-service: `5007`
+- logistica-service: `5008`
+- transportadoras-service: `5009`
+
+**Regra inegociável:** Nenhuma equipe pode trocar a porta do serviço sem avisar a equipe de infraestrutura.
+
+---
+
+## 6. Tabela oficial dos microsserviços
+
+| Equipe | Serviço | Porta | Gateway | Evento(s) que publica |
+|---|---|---|---|---|
+| Usuários | usuarios-service | 5001 | `/api/usuarios/` | `empresa_cadastrada` |
+| Produtos | produtos-service | 5002 | `/api/produtos/` | `produto_cadastrado` |
+| Fornecimentos | fornecimentos-service | 5003 | `/api/fornecimentos/` | `fornecimento_criado`, `estoque_atualizado` |
+| Demanda | demanda-service | 5004 | `/api/demandas/` | `demanda_criada`, `demanda_recorrente_gerada` |
+| Mercado | mercado-service | 5005 | `/api/mercado/` | `modo_negociacao_definido`, `leilao_iniciado` |
+| Negociação | negociacao-service | 5006 | `/api/negociacoes/` | `lance_realizado`, `negociacao_fechada` |
+| Pedidos | pedidos-service | 5007 | `/api/pedidos/` | `pedido_criado`, `pedido_atualizado` |
+| Logística | logistica-service | 5008 | `/api/logistica/` | `solicitacao_frete_criada`, `frete_selecionado` |
+| Transportadoras | transportadoras-service | 5009 | `/api/transportadoras/` | `cotacao_frete_enviada` |
+
+---
+
+## 7. Como cada equipe deve configurar o .env
+
+Todo microsserviço deve conter um arquivo `.env` para carregar as configurações dinamicamente. O esquema de banco é o mesmo para todos: `portal_b2b`.
+
+**Padrão para rodar o serviço DENTRO da VM:**
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+SERVICE_NAME=nome-do-servico
+PORT=porta-do-servico
+```
+
+**Padrão para testar o serviço DE FORA da VM (no seu PC):**
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@IP_DA_VM:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=IP_DA_VM:9092
+SERVICE_NAME=nome-do-servico
+PORT=porta-do-servico
+```
+
+### Exemplos completos
+
+**usuarios-service:**
+```env
+SERVICE_NAME=usuarios-service
+PORT=5001
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+**produtos-service:**
+```env
+SERVICE_NAME=produtos-service
+PORT=5002
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+**demanda-service:**
+```env
+SERVICE_NAME=demanda-service
+PORT=5004
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+**pedidos-service:**
+```env
+SERVICE_NAME=pedidos-service
+PORT=5007
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+---
+
+## 8. Como rodar o microsserviço na VM
+
+Cada equipe é responsável por subir e deixar o seu serviço rodando na VM.
+O seu serviço **precisa escutar obrigatoriamente em `0.0.0.0`** (todos os IPs). Não pode escutar apenas em `127.0.0.1`, caso contrário o Gateway não o encontrará.
+
+**Exemplo FastAPI / Python:**
+```bash
+uvicorn main:app --host 0.0.0.0 --port 5002
+```
+
+**Exemplo Node.js / Express:**
+```javascript
+app.listen(process.env.PORT || 5002, "0.0.0.0")
+```
+
+**Exemplo Spring Boot:**
+```properties
+server.address=0.0.0.0
+server.port=5002
+```
+
+---
+
+## 9. Como o API Gateway encaminha as chamadas
+
+A comunicação com as suas rotas externas passará pelo Nginx Gateway.
+
+Se o Frontend fizer uma requisição para:
+`GET /api/produtos/health`
+
+O Nginx **remove o prefixo** `/api/produtos/` e encaminha apenas `/health` para o `produtos-service` na porta 5002.
+
+### Tabela de Exemplos de Roteamento
+
+| Chamada pelo Gateway | Chega no serviço |
+|---|---|
+| `/api/usuarios/health` | `/health` na porta 5001 |
+| `/api/produtos/health` | `/health` na porta 5002 |
+| `/api/fornecimentos/health`| `/health` na porta 5003 |
+| `/api/demandas/health` | `/health` na porta 5004 |
+| `/api/mercado/health` | `/health` na porta 5005 |
+| `/api/negociacoes/health`| `/health` na porta 5006 |
+| `/api/pedidos/health` | `/health` na porta 5007 |
+| `/api/logistica/health` | `/health` na porta 5008 |
+| `/api/transportadoras/health`| `/health` na porta 5009 |
+
+**Aviso:**
+O seu microsserviço **NÃO DEVE** criar rotas internas começando com `/api/produtos` ou `/api/pedidos`. A rota no seu código deve ser apenas `/health`, `/listar`, `/cadastrar`. O prefixo `/api/...` é responsabilidade exclusiva do Gateway.
+
+---
+
+## 10. Como testar o /health pelo Gateway
+
+Uma vez que seu serviço está rodando, teste se o Gateway o reconhece.
+
+Se você está na VM, rode no terminal:
+```bash
+curl http://localhost/api/produtos/health
+curl http://localhost/api/demandas/health
+curl http://localhost/api/pedidos/health
+```
+
+Se estiver testando de fora da VM (no seu computador local):
+```bash
+curl http://IP_DA_VM/api/produtos/health
+```
+
+O retorno esperado deve ser um JSON padrão de saúde. Exemplo:
 ```json
 {
-  "eventId": "gerar-um-uuid-unico-aqui",
-  "eventType": "produto_cadastrado",
-  "eventVersion": "1.0",
-  "timestamp": "2026-05-03T10:00:00Z",
-  "source": "produtos-service",
-  "correlationId": "uuid-da-jornada-do-usuario",
-  "payload": {
-    // AQUI DENTRO VAI O SEU DADO ESPECÍFICO (Regra de negócio)
-    "idProduto": 1,
-    "nome": "Arroz 5kg"
-  }
+  "status": "ok",
+  "service": "produtos-service"
 }
 ```
 
-> **Consulte a documentação completa dos eventos e quem consome o quê no arquivo:** [`docs/eventos-kafka.md`](docs/eventos-kafka.md).
+---
+
+## 11. Como conectar ao PostgreSQL
+
+O banco de dados do projeto é completamente centralizado.
+
+- **Banco:** `portal_b2b`
+- **Schema:** `portal_b2b`
+- **Porta:** `5432`
+
+Existem credenciais separadas por responsabilidade.
+
+**Usuário dos microsserviços (Aplicação):**
+- Usuário: `svc_portal_b2b`
+- Senha: `senha_portal_b2b`
+
+**Usuário da equipe de banco (DDL):**
+- Usuário: `db_portal_b2b`
+- Senha: `senha_db_portal_b2b`
+
+Ninguém, sob nenhuma hipótese, deve usar o usuário `postgres` na aplicação.
 
 ---
 
-## 4. API Gateway e Comunicação Síncrona
+## 12. Diferença entre usuário de banco e usuário de aplicação
 
-Se o Frontend for chamar o seu serviço, ou se outro grupo precisar de um dado de forma imediata (síncrona), eles não baterão direto na sua porta 5002 ou 5004. Eles baterão no **API Gateway**.
+| Usuário | Quem usa | Para quê |
+|---|---|---|
+| `postgres` | Infraestrutura | Administração geral do banco. |
+| `db_portal_b2b` | Equipe de banco | Criar e alterar tabelas, views, constraints e estrutura do banco (DDL). |
+| `svc_portal_b2b`| Microsserviços | Ler (SELECT), inserir (INSERT), atualizar (UPDATE) e excluir (DELETE) dados da aplicação (DML). |
 
-O Gateway roda na **Porta 80**. O mapeamento já foi feito e roteará para a porta oficial de cada serviço na VM.
-
-**Atenção ao Mapeamento (Remoção do Prefixo):**
-O Nginx está configurado para **remover o prefixo** `/api/{dominio}/` quando envia a requisição para você.
-
-**Este é o padrão oficial:**
-- Cliente chama o Gateway: `GET /api/produtos/health`
-- O `produtos-service` recebe: `GET /health`
-
-Portanto, o seu microsserviço **não deve** incluir `/api/...` nas rotas internas dele. Ele deve expor apenas as rotas diretas (ex: `/health`, `/listar`, `/criar`), e o Nginx fará a tradução.
-
-**IMPORTANTE:** Para que o Gateway consiga alcançar o seu microsserviço na VM, você deve executá-lo escutando em todos os IPs (ex: `0.0.0.0`).
+**Aviso muito importante para Microsserviços:**
+Os microsserviços **não devem fazer DDL**. Você deve **desativar** qualquer flag de `auto-migrate`, `sync` ou geração automática de esquema do seu ORM (ex: Sequelize, TypeORM, Hibernate) se ele tentar criar tabelas na inicialização. A criação de tabelas é responsabilidade exclusiva da equipe de banco.
 
 ---
 
-## 5. Visualizando seus Dados (PgAdmin e Clientes Externos)
+## 13. Como acessar pelo PgAdmin
 
-Você pode acessar o banco de dados visualmente para debugar sua aplicação pelo **PgAdmin** que já vem junto com a infra:
-- **Acesso:** `http://IP_DA_VM:5050`
+O PgAdmin é a interface web de banco providenciada pela infraestrutura.
+
+- **URL:** `http://IP_DA_VM:5050`
 - **Login:** `admin@portalb2b.com`
 - **Senha:** `admin`
 
-Para adicionar o banco de dados **dentro da interface web do PgAdmin**:
-- **Host:** `postgres` *(Atenção: como o PgAdmin roda dentro do Docker, ele enxerga o banco pelo nome interno do container)*
+Para cadastrar a conexão com o banco de dados **dentro do PgAdmin**:
+- **Host:** `postgres` *(Usa-se "postgres" porque o PgAdmin roda no Docker na mesma rede)*
 - **Port:** `5432`
-- **User / Password:** `db_portal_b2b` e `senha_db_portal_b2b` (ou `svc_portal_b2b` se quiser ver com a visão da aplicação).
 - **Database:** `portal_b2b`
-
-**Se for usar o DBeaver, DataGrip ou `psql` direto no seu computador:**
-Neste caso, a sua ferramenta está fora do Docker, então o host será o IP da máquina central:
-- **Host:** `IP_DA_VM`
-- **Port:** `5432`
-- **User / Password:** `db_portal_b2b` ou `svc_portal_b2b`
-- **Database:** `portal_b2b`
+- **User:** `db_portal_b2b` (Se for equipe de banco)
+- **Password:** `senha_db_portal_b2b`
 
 ---
 
-## Dúvidas?
-Se algo na conexão do banco ou do Kafka não funcionar:
-1. Revise se você preencheu o `IP_DA_VM` e as credenciais (`svc_portal_b2b`) corretamente no seu `.env`.
-2. Você só tem permissão de DML (Manipulação de Dados). Se a sua aplicação (ORM) tentar criar ou alterar tabelas (ex: `sync()`, `auto_migrate`), dará erro de permissão negada. A estruturação do banco é dever da equipe de Banco de Dados.
-3. Caso a infra caia, acione o responsável pela VM central.
+## 14. Como acessar pelo DBeaver/DataGrip/psql
+
+Se preferir usar sua ferramenta favorita instalada no seu PC:
+
+- **Host:** `IP_DA_VM`
+- **Port:** `5432`
+- **Database:** `portal_b2b`
+- **User:** `db_portal_b2b` ou `svc_portal_b2b`
+- **Password:** A senha correspondente ao usuário.
+
+Exemplo de string de conexão para `psql`:
+```bash
+psql "postgresql://svc_portal_b2b:senha_portal_b2b@IP_DA_VM:5432/portal_b2b"
+```
+
+---
+
+## 15. Como conectar ao Kafka/Redpanda
+
+A mensageria utiliza Redpanda (100% compatível com a API do Apache Kafka).
+
+**Para aplicações rodando na VM:**
+`KAFKA_BOOTSTRAP_SERVERS=localhost:9092`
+
+**Para aplicações rodando de fora da VM:**
+`KAFKA_BOOTSTRAP_SERVERS=IP_DA_VM:9092`
+
+Para monitorar tópicos e mensagens em tempo real, utilize a interface do **Kafka UI**:
+- URL: `http://IP_DA_VM:8080`
+
+---
+
+## 16. Lista de tópicos Kafka disponíveis
+
+Abaixo estão os tópicos oficiais do barramento:
+
+- `empresa_cadastrada`
+- `produto_cadastrado`
+- `fornecimento_criado`
+- `estoque_atualizado`
+- `demanda_criada`
+- `demanda_recorrente_gerada`
+- `modo_negociacao_definido`
+- `leilao_iniciado`
+- `lance_realizado`
+- `negociacao_fechada`
+- `pedido_criado`
+- `pedido_atualizado`
+- `solicitacao_frete_criada`
+- `cotacao_frete_enviada`
+- `frete_selecionado`
+
+---
+
+## 17. Padrão obrigatório dos eventos Kafka
+
+Todo evento postado no barramento **deve obrigatoriamente** ser envelopado neste padrão JSON exato:
+
+```json
+{
+  "eventId": "uuid",
+  "eventType": "nome_do_evento",
+  "eventVersion": "1.0",
+  "timestamp": "ISO8601",
+  "source": "nome-do-servico",
+  "correlationId": "uuid",
+  "payload": {}
+}
+```
+
+**Regras:**
+- **Nome do tópico:** Deve ser **exatamente igual** ao valor do campo `eventType`.
+- **eventId:** Deve ser um UUID único gerado para este disparo específico.
+- **timestamp:** Data/hora no formato ISO8601.
+- **source:** O nome do seu microsserviço (ex: `produtos-service`).
+- **correlationId:** UUID compartilhado para rastrear um fluxo entre vários serviços.
+- **payload:** Um objeto JSON contendo os dados de negócio do seu domínio. Não há padrão estrito para dentro do payload.
+- **Não publique eventos fora desse padrão de envelope.**
+
+---
+
+## 18. O que cada equipe deve publicar
+
+| Serviço | Publica |
+|---|---|
+| `usuarios-service` | `empresa_cadastrada` |
+| `produtos-service` | `produto_cadastrado` |
+| `fornecimentos-service` | `fornecimento_criado`, `estoque_atualizado` |
+| `demanda-service` | `demanda_criada`, `demanda_recorrente_gerada` |
+| `mercado-service` | `modo_negociacao_definido`, `leilao_iniciado` |
+| `negociacao-service` | `lance_realizado`, `negociacao_fechada` |
+| `pedidos-service` | `pedido_criado`, `pedido_atualizado` |
+| `logistica-service` | `solicitacao_frete_criada`, `frete_selecionado` |
+| `transportadoras-service`| `cotacao_frete_enviada` |
+
+---
+
+## 19. O que cada equipe deve consumir
+
+Sugestão de fluxo inicial de mensageria assíncrona (A confirmar com alinhamentos de negócio):
+
+- `fornecimentos-service` pode consumir `produto_cadastrado` e `empresa_cadastrada`.
+- `demanda-service` pode consumir `produto_cadastrado` e `empresa_cadastrada`.
+- `mercado-service` consome `fornecimento_criado`, `estoque_atualizado` e `demanda_criada`.
+- `negociacao-service` consome `modo_negociacao_definido` e `leilao_iniciado`.
+- `pedidos-service` consome `negociacao_fechada`.
+- `logistica-service` consome `pedido_criado`.
+- `transportadoras-service` consome `solicitacao_frete_criada`.
+
+**Aviso:**
+Os eventos consumidos devem ser confirmados entre as equipes de acordo com o mapeamento e a regra de negócio estabelecida.
+
+---
+
+## 20. O que cada equipe precisa entregar para integração
+
+Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou esta **lista obrigatória**:
+
+- [ ] repositório do microsserviço;
+- [ ] comando de instalação (ex: `npm install`);
+- [ ] comando para rodar (ex: `npm start`);
+- [ ] porta oficial configurada para rodar e escutar em `0.0.0.0`;
+- [ ] arquivo `.env.example`;
+- [ ] endpoint `GET /health`;
+- [ ] Swagger/OpenAPI funcionando (ex: `/docs` ou `/api-docs`);
+- [ ] lista de endpoints REST mapeados;
+- [ ] eventos Kafka que publica programados;
+- [ ] eventos Kafka que consome programados;
+- [ ] tabelas que usa acordadas com equipe de DB;
+- [ ] Dockerfile se tiver (opcional, mas recomendado).
+
+---
+
+## 21. Erros comuns e como resolver
+
+| Erro | Causa provável | Como resolver |
+|---|---|---|
+| `Connection refused` no banco | PostgreSQL não está acessível ou host errado. | Verificar se usou `IP_DA_VM`, porta `5432` e se a infra está de pé. |
+| `permission denied for schema` | Usando usuário errado ou tentando criar tabela com `svc_portal_b2b`. | Usar `db_portal_b2b` para DDL ou pedir à equipe de banco. |
+| Gateway retorna `502` | Microsserviço não está rodando ou está na porta errada. | Subir serviço na porta oficial com `0.0.0.0`. |
+| Kafka não conecta | Bootstrap server errado. | Usar `localhost:9092` na VM ou `IP_DA_VM:9092` fora da VM. |
+| Swagger não abre pelo Gateway | Rota interna incompatível. | Lembrar que o Gateway remove `/api/{dominio}/` da rota. |
+| Serviço funciona local, mas Gateway não vê | O serviço está escutando em `127.0.0.1`. | Rodar o servidor web com binding para `0.0.0.0`. |
+| ORM tentou criar tabela na inicialização | `auto-migrate`/`sync` ativado no código. | Desativar DDL automático na aplicação; isso é dever do DB Admin. |
+| Porta já em uso ao iniciar | Outro serviço travou segurando a porta. | Verificar com `lsof -i :PORT` (Linux) ou `docker ps` e matar o processo. |
+
+---
+
+## 22. Checklist final antes de chamar o responsável pela infra
+
+- [ ] Meu serviço roda na porta oficial.
+- [ ] Meu serviço escuta em `0.0.0.0`.
+- [ ] Meu `.env` usa `DATABASE_URL` correta (`svc_portal_b2b` e `portal_b2b`).
+- [ ] Meu `.env` usa `KAFKA_BOOTSTRAP_SERVERS` correto.
+- [ ] `GET /health` funciona localmente.
+- [ ] `GET /api/meu-dominio/health` funciona pelo Gateway.
+- [ ] Swagger está acessível.
+- [ ] Não estou usando o usuário `postgres`.
+- [ ] Não estou tentando criar tabela pela aplicação.
+- [ ] Sei quais eventos publico.
+- [ ] Sei quais eventos consumo.
+- [ ] As tabelas que uso foram alinhadas com a equipe de banco.
+
+---
+
+## 23. Resumo rápido por equipe
+
+### Usuários
+- Porta `5001`
+- Gateway `/api/usuarios/`
+- Evento `empresa_cadastrada`
+
+### Produtos
+- Porta `5002`
+- Gateway `/api/produtos/`
+- Evento `produto_cadastrado`
+
+### Fornecimentos
+- Porta `5003`
+- Gateway `/api/fornecimentos/`
+- Eventos `fornecimento_criado`, `estoque_atualizado`
+
+### Demanda
+- Porta `5004`
+- Gateway `/api/demandas/`
+- Eventos `demanda_criada`, `demanda_recorrente_gerada`
+
+### Mercado
+- Porta `5005`
+- Gateway `/api/mercado/`
+- Eventos `modo_negociacao_definido`, `leilao_iniciado`
+
+### Negociação
+- Porta `5006`
+- Gateway `/api/negociacoes/`
+- Eventos `lance_realizado`, `negociacao_fechada`
+
+### Pedidos
+- Porta `5007`
+- Gateway `/api/pedidos/`
+- Eventos `pedido_criado`, `pedido_atualizado`
+
+### Logística
+- Porta `5008`
+- Gateway `/api/logistica/`
+- Eventos `solicitacao_frete_criada`, `frete_selecionado`
+
+### Transportadoras
+- Porta `5009`
+- Gateway `/api/transportadoras/`
+- Evento `cotacao_frete_enviada`
