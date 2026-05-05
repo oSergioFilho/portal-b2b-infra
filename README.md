@@ -152,6 +152,24 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 
 Veja os arquivos na pasta `docs/` para mais detalhes de portas e integrações.
 
+## Deploy controlado dos microsserviços
+
+Neste primeiro momento, o deploy dos microsserviços será feito de forma controlada pela infraestrutura. Cada equipe deve enviar o link do repositório do seu microsserviço. O responsável pela infraestrutura irá clonar o repositório na pasta correta da VM e subir o container com:
+
+```bash
+bash scripts/deploy-service.sh nome-service URL_DO_REPOSITORIO
+```
+
+Exemplo:
+
+```bash
+bash scripts/deploy-service.sh produtos-service https://github.com/EXEMPLO/produtos-service.git
+```
+
+Esse processo não substitui a responsabilidade da equipe de entregar `Dockerfile`, `docker-compose.yml`, `.env.example` e `GET /health` funcionando.
+
+Para o passo a passo completo, consulte: [docs/deploy-microsservicos-na-vm.md](./docs/deploy-microsservicos-na-vm.md)
+
 ## Testando os microsserviços pelo Gateway
 
 Depois que as equipes subirem seus containers, o responsável pela infraestrutura pode testar todos os endpoints `/health` com:
@@ -227,3 +245,9 @@ Para o plano completo de redundância e recuperação, consulte:
 - `portal-b2b-infra` guarda a infraestrutura.
 - `services` guarda os repositórios dos microsserviços das equipes.
 - Cada equipe deve subir seu container dentro da própria pasta de serviço.
+
+As pastas oficiais dos microsserviços podem ser criadas com:
+
+```bash
+bash scripts/setup-service-folders.sh
+```

@@ -30,3 +30,13 @@ Para garantir a integração suave com a infraestrutura centralizada do Portal B
 - [ ] O serviço foi testado diretamente na porta oficial.
 - [ ] O serviço foi testado pelo API Gateway.
 - [ ] O serviço passou no script scripts/check-services.sh, quando aplicável.
+
+## Checklist de entrega para deploy
+
+- [ ] Enviei o link do repositório para a equipe de infraestrutura.
+- [ ] O repositório pode ser clonado sem configuração manual extra.
+- [ ] O comando `docker compose up -d --build` funciona na raiz do repositório.
+- [ ] O `container_name` no `docker-compose.yml` é exatamente igual ao nome oficial do serviço.
+- [ ] O serviço usa a porta oficial.
+- [ ] O serviço entra na rede `portal-b2b-network`.
+

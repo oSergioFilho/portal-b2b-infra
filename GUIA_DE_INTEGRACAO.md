@@ -310,6 +310,32 @@ docker logs -f produtos-service
 
 ---
 
+### Deploy controlado pela infraestrutura
+
+Nesta primeira etapa, para evitar alterações indevidas na VM, o deploy dos microsserviços será feito de forma controlada pelo responsável da infraestrutura.
+
+Cada equipe deverá enviar:
+
+- Nome do serviço (ex: `produtos-service`).
+- Link do repositório GitHub.
+- Porta oficial.
+- Confirmação de `Dockerfile`.
+- Confirmação de `docker-compose.yml`.
+- Confirmação de `.env.example`.
+- Confirmação de `GET /health`.
+
+A infraestrutura irá usar:
+
+```bash
+bash scripts/deploy-service.sh nome-service URL_DO_REPOSITORIO
+```
+
+Para o passo a passo completo, consulte:
+
+[docs/deploy-microsservicos-na-vm.md](./docs/deploy-microsservicos-na-vm.md)
+
+---
+
 ## 9. Como o API Gateway encaminha as chamadas
 
 A comunicação com as suas rotas externas passará pelo Nginx Gateway.
