@@ -9,6 +9,8 @@ Antes de integrar qualquer microsserviço, leia:
 
 [GUIA_DE_INTEGRACAO.md](./GUIA_DE_INTEGRACAO.md)
 
+[Deploy de Front-ends na VM](./docs/deploy-frontends-na-vm.md)
+
 ## Padrão de entrega dos microsserviços
 
 Cada equipe deve entregar seu serviço dockerizado contendo:

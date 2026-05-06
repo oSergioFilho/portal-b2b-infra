@@ -760,3 +760,11 @@ A infraestrutura possui mecanismos básicos de resiliência e um plano de recupe
 - **Isso não substitui alta disponibilidade real**, mas atende ao plano acadêmico de recuperação com procedimentos documentados e testáveis.
 
 Para o plano completo, consulte: [docs/redundancia-e-recuperacao.md](./docs/redundancia-e-recuperacao.md)
+
+---
+
+## 28. Front-ends dos microsserviços
+
+Se o repositório da equipe tiver front-end, ele também deve ser dockerizado. A infraestrutura **não executará** `npm install` ou `npm run dev` manualmente como solução final. Para o padrão recomendado, consulte:
+
+[docs/deploy-frontends-na-vm.md](./docs/deploy-frontends-na-vm.md)
