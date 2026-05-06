@@ -107,7 +107,7 @@ Acessos principais:
 | PgAdmin | http://34.29.84.207:5050 |
 | Kafka UI | http://34.29.84.207:8080 |
 
-> **Observação:** Este é o IP atual da VM de integração. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada. Nos demais exemplos da documentação, `34.29.84.207` continua sendo usado como placeholder genérico.
+> **Observação:** Este é o IP atual da VM de integração. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada. Nos demais exemplos da documentação, `IP_DA_VM` pode ser usado como placeholder genérico. Neste ambiente atual, substitua por `34.29.84.207`.
 
 ## Acessos e Validação
 
