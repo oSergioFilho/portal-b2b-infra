@@ -35,7 +35,7 @@ svc_portal_b2b
 Todo microsserviço deve rodar em container na rede `portal-b2b-network`. As variáveis de ambiente obrigatórias são:
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
@@ -53,7 +53,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 **PgAdmin (interface web):**
 - URL: http://34.29.84.207:5050
 - Login: `admin@portalb2b.com`
-- Senha: `admin`
+- Senha: `***`
 - Host do banco dentro do PgAdmin: `postgres` (não usar o IP externo dentro do PgAdmin)
 
 **Kafka UI:**

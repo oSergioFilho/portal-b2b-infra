@@ -5,11 +5,11 @@ CREATE SCHEMA IF NOT EXISTS portal_b2b;
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'db_portal_b2b') THEN
-        CREATE ROLE db_portal_b2b WITH LOGIN PASSWORD 'senha_db_portal_b2b';
+        CREATE ROLE db_portal_b2b WITH LOGIN PASSWORD '***'; -- substitua pela senha real antes de executar
     END IF;
 
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'svc_portal_b2b') THEN
-        CREATE ROLE svc_portal_b2b WITH LOGIN PASSWORD 'senha_portal_b2b';
+        CREATE ROLE svc_portal_b2b WITH LOGIN PASSWORD '***'; -- substitua pela senha real antes de executar
     END IF;
 END $$;
 

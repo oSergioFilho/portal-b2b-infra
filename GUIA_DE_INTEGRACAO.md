@@ -160,7 +160,7 @@ Regras importantes:
 SERVICE_NAME=produtos-service
 PORT=5002
 
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
@@ -173,7 +173,7 @@ Esses nomes, postgres e redpanda, só funcionam porque o container do microsserv
 Se por algum motivo emergencial o serviço precisar rodar diretamente no host da VM, sem Docker, as conexões mudam para `localhost` porque nesse caso o processo está no mesmo host que o PostgreSQL e o Redpanda:
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@localhost:5432/portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ```
 
@@ -405,11 +405,11 @@ Existem credenciais separadas por responsabilidade.
 
 **Usuário dos microsserviços (Aplicação):**
 - Usuário: `svc_portal_b2b`
-- Senha: `senha_portal_b2b`
+- Senha: `***` *(fornecida pela equipe de infraestrutura)*
 
 **Usuário da equipe de banco (DDL):**
 - Usuário: `db_portal_b2b`
-- Senha: `senha_db_portal_b2b`
+- Senha: `***` *(fornecida pela equipe de infraestrutura)*
 
 Ninguém, sob nenhuma hipótese, deve usar o usuário `postgres` na aplicação.
 
@@ -434,14 +434,14 @@ O PgAdmin é a interface web de banco providenciada pela infraestrutura.
 
 - **URL:** `http://34.29.84.207:5050`
 - **Login:** `admin@portalb2b.com`
-- **Senha:** `admin`
+- **Senha:** `***`
 
 Para cadastrar a conexão com o banco de dados **dentro do PgAdmin**:
 - **Host:** `postgres` *(Usa-se "postgres" porque o PgAdmin roda no Docker na mesma rede)*
 - **Port:** `5432`
 - **Database:** `portal_b2b`
 - **User:** `db_portal_b2b` (Se for equipe de banco)
-- **Password:** `senha_db_portal_b2b`
+- **Password:** `***` *(fornecida pela equipe de infraestrutura)*
 
 ---
 
@@ -457,7 +457,7 @@ Se preferir usar sua ferramenta favorita instalada no seu PC:
 
 Exemplo de string de conexão para `psql`:
 ```bash
-psql "postgresql://svc_portal_b2b:senha_portal_b2b@34.29.84.207:5432/portal_b2b"
+psql "postgresql://svc_portal_b2b:***@34.29.84.207:5432/portal_b2b"
 ```
 
 ---

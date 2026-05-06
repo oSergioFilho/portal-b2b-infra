@@ -114,7 +114,7 @@ Acessos principais:
 | Componente | URL / Conexão | Credenciais / Notas |
 |------------|---------------|---------------------|
 | API Gateway | http://34.29.84.207 | Retorna `API Gateway do Portal B2B ativo` em `/health` |
-| PgAdmin | http://34.29.84.207:5050 | `admin@portalb2b.com` / `admin`. Permite visualizar as tabelas do PostgreSQL. |
+| PgAdmin | http://34.29.84.207:5050 | `admin@portalb2b.com` / `***`. Permite visualizar as tabelas do PostgreSQL. |
 | Kafka UI | http://34.29.84.207:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
 | PostgreSQL | `34.29.84.207:5432` | `postgres` (Admin), `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação) |
 | Redpanda/Kafka| `34.29.84.207:9092` | Broker Kafka principal |
@@ -126,20 +126,20 @@ Se usar o **PgAdmin web (já incluso na infra)**:
 - Port: `5432`
 - Database: `portal_b2b`
 - User: `db_portal_b2b`
-- Password: `senha_db_portal_b2b`
+- Password: `***` *(senha fornecida diretamente pela equipe de infraestrutura)*
 
 Se usar **Ferramenta Externa (DBeaver, DataGrip, psql no seu PC)**:
 - Host: `34.29.84.207` (Ou `localhost` se estiver rodando a infra na sua própria máquina).
 - Port: `5432`
 - Database: `portal_b2b`
 - User: `db_portal_b2b`
-- Password: `senha_db_portal_b2b`
+- Password: `***` *(senha fornecida diretamente pela equipe de infraestrutura)*
 
 **Acesso das Equipes de Microsserviços (.env):**
 
 **Padrão em container (Obrigatório):**
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```

@@ -110,7 +110,7 @@ docker logs -f produtos-service
 SERVICE_NAME=produtos-service
 PORT=5002
 
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092

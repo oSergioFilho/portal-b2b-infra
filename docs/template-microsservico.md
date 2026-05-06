@@ -17,7 +17,7 @@ nome-service/
 SERVICE_NAME=nome-service
 PORT=5000
 
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092

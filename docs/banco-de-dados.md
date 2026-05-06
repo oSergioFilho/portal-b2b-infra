@@ -37,7 +37,7 @@ A equipe de banco utiliza o usuário administrador do schema para gerenciar a es
 - **Banco:** `portal_b2b`
 - **Schema:** `portal_b2b`
 - **Usuário:** `db_portal_b2b`
-- **Senha:** `senha_db_portal_b2b`
+- **Senha:** `***` *(fornecida pela equipe de infraestrutura)*
 
 *A equipe pode usar o PgAdmin disponibilizado pela infraestrutura ou uma ferramenta local conectando no IP da VM.*
 
@@ -46,7 +46,7 @@ A equipe de banco utiliza o usuário administrador do schema para gerenciar a es
 As equipes de desenvolvimento dos microsserviços configuram suas aplicações para conectar usando o usuário de aplicação:
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@localhost:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@localhost:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 ```
 *(Nota: Substitua `localhost` pelo IP da VM caso esteja rodando o microsserviço fora da VM).*
