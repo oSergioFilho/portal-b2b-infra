@@ -67,7 +67,7 @@ Portanto, se a raiz retornar `404`, isso **não significa que a infraestrutura e
 Se a equipe de produtos tiver front-end, o compose do repositório pode subir dois serviços:
 
 - `produtos-service`: backend na porta 5002;
-- `produtos-front`: front-end na porta 8082.
+- `produtos-front`: front-end na porta 8081.
 
 Exemplo:
 
@@ -93,7 +93,7 @@ services:
     container_name: produtos-front
     restart: unless-stopped
     ports:
-      - "8082:80"
+      - "8081:80"
     depends_on:
       - produtos-service
     networks:
@@ -167,7 +167,7 @@ server {
 Depois do deploy, o front-end de produtos ficaria acessível em:
 
 ```
-http://34.29.84.207:8082
+http://34.29.84.207:8081
 ```
 
 ---
@@ -176,8 +176,8 @@ http://34.29.84.207:8082
 
 | Equipe | Backend | Front-end sugerido |
 |---|---:|---:|
-| Usuários | 5001 | 8081 |
-| Produtos | 5002 | 8082 |
+| Produtos | 5002 | 8081 |
+| Usuários | 5001 | 8082 |
 | Fornecimentos | 5003 | 8083 |
 | Demanda | 5004 | 8084 |
 | Mercado | 5005 | 8085 |
@@ -208,7 +208,7 @@ http://34.29.84.207:PORTA_DO_FRONT
 Para produtos, exemplo:
 
 ```
-http://34.29.84.207:8082
+http://34.29.84.207:8081
 ```
 
 ---
