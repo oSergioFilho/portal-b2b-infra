@@ -23,7 +23,9 @@ Acessos:
 - PgAdmin: http://34.29.84.207:5050
 - Kafka UI: http://34.29.84.207:8080
 
-> **Observação:** Esse IP deve ser usado pelas equipes para acessar o Gateway, PgAdmin e Kafka UI durante a integração. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. Dentro dos containers, o Kafka continua sendo acessado por `redpanda:9092`.
+> **Atenção:** O acesso oficial das APIs é pelo Load Balancer: `http://34.8.17.245/api/{dominio}`. O IP da VM principal (`34.29.84.207`) e da VM standby (`104.197.23.241`) devem ser usados apenas para diagnóstico direto. As equipes de microsserviços e front-end não devem usar o IP da VM principal como endpoint oficial. Front-ends devem chamar APIs usando o Load Balancer ou rotas relativas (ex: `/api/produtos`).
+>
+> Esse IP da VM principal pode ser usado pelas equipes para acessar o PgAdmin e Kafka UI durante a integração ou para testes diretos de diagnóstico. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. Dentro dos containers, o Kafka continua sendo acessado por `redpanda:9092`.
 
 ---
 
@@ -389,7 +391,12 @@ curl http://localhost:5002/health
 curl http://localhost/api/produtos/health
 ```
 
-**Teste externo:**
+**Teste oficial pelo Load Balancer:**
+```bash
+curl http://34.8.17.245/api/produtos/health
+```
+
+**Teste direto na VM (apenas diagnóstico):**
 ```bash
 curl http://34.29.84.207/api/produtos/health
 ```

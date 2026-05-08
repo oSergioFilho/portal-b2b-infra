@@ -335,10 +335,23 @@ Microsserviços dockerizados
 Cloud SQL PostgreSQL - 136.114.235.212
 ```
 
-Acesso principal da aplicação:
+Acesso oficial das APIs:
 
 ```text
-http://34.8.17.245
+http://34.8.17.245/api/{dominio}
+```
+
+Acesso oficial do front de produtos, se publicado no Gateway:
+
+```text
+http://34.8.17.245/produtos/
+```
+
+Acessos diretos às VMs são apenas para diagnóstico:
+
+```text
+http://34.29.84.207
+http://104.197.23.241
 ```
 
 Health do Gateway:

@@ -162,13 +162,38 @@ server {
 
 ---
 
-## Acesso ao front-end
+## Modelos de Acesso ao Front-end
 
-Depois do deploy, o front-end de produtos ficaria acessível em:
+Existem dois modelos de publicação de front-end:
 
+**1. Modelo atual por porta direta (Apenas para diagnóstico):**
+
+produtos-front:
+- http://34.29.84.207:8081 (VM principal)
+- http://104.197.23.241:8081 (VM standby)
+
+Esse modelo funciona, mas não é o acesso oficial redundante. Se a VM principal cair, o acesso direto a `http://34.29.84.207:8081` cai.
+
+**2. Modelo recomendado (Acesso oficial):**
+
+Publicar o front pelo Nginx Gateway e Load Balancer:
+
+```text
+http://34.8.17.245/produtos/
 ```
-http://34.29.84.207:8081
+
+**Fluxo:**
+
+```text
+Load Balancer
+        ↓
+Nginx Gateway da VM saudável
+        ↓
+produtos-front:8081
 ```
+
+**Explicação:**
+Se a VM principal cair, o acesso direto cai. Porém, se o front estiver publicado pelo Gateway em `http://34.8.17.245/produtos/`, o Load Balancer redireciona para a VM standby automaticamente. O Nginx Gateway da infraestrutura deve ser configurado com uma rota `/produtos/` que aponta para a porta `8081` do container `produtos-front`.
 
 ---
 

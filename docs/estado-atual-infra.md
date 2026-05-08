@@ -92,9 +92,12 @@ O acesso principal ao sistema é pelo Load Balancer:
 ```text
 http://34.8.17.245/health
 http://34.8.17.245/api/produtos/health
+http://34.8.17.245/produtos/
 ```
 
 O Load Balancer distribui requisições entre a VM principal e a VM standby com base no health check (`GET /health`).
+
+> **Observação:** O acesso oficial do sistema (APIs e Front-end) é feito pelo Load Balancer. Os IPs diretos da VM principal (`34.29.84.207`) e da VM standby (`104.197.23.241`) devem ser usados apenas para diagnóstico.
 
 ---
 

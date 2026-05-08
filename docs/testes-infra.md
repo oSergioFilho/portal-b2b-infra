@@ -193,7 +193,30 @@ Resposta esperada:
 
 ---
 
-## 13. Testar backends do Load Balancer
+## 13. Testar Front-end pelo Load Balancer
+
+**Teste oficial do front produtos pelo Load Balancer:**
+```bash
+curl -I http://34.8.17.245/produtos/
+```
+
+**Teste direto na VM principal, somente diagnóstico:**
+```bash
+curl -I http://34.29.84.207:8081
+```
+
+**Teste direto na VM standby, somente diagnóstico:**
+```bash
+curl -I http://104.197.23.241:8081
+```
+
+**Resultado esperado:**
+- Pelo Load Balancer, o front deve responder.
+- Se a VM principal cair, o acesso direto a `34.29.84.207:8081` falha, mas o acesso pelo Load Balancer deve continuar funcionando se a standby estiver saudável.
+
+---
+
+## 14. Testar backends do Load Balancer
 
 No Cloud Shell do GCP:
 
@@ -210,7 +233,7 @@ portal-b2b-vm-standby HEALTHY
 
 ---
 
-## 14. Testar VM standby diretamente
+## 15. Testar VM standby diretamente
 
 ```bash
 curl http://104.197.23.241/health
@@ -221,7 +244,7 @@ Resultado esperado: mesmas respostas que a VM principal.
 
 ---
 
-## 15. Testes legados do PostgreSQL local
+## 16. Testes legados do PostgreSQL local
 
 Esses testes só são necessários se a equipe quiser validar o PostgreSQL local/fallback.
 
@@ -237,7 +260,7 @@ docker compose exec -T postgres psql -U postgres -d portal_b2b -c "SELECT * FROM
 
 ---
 
-## 16. Resultado esperado geral
+## 17. Resultado esperado geral
 
 A infraestrutura atual está validada quando:
 
@@ -256,7 +279,7 @@ A infraestrutura atual está validada quando:
 
 ---
 
-## 17. Testar sincronização redundante
+## 18. Testar sincronização redundante
 
 Na VM principal:
 
@@ -274,7 +297,7 @@ Resultado esperado:
 
 ---
 
-## 18. Testar Load Balancer após sincronização
+## 19. Testar Load Balancer após sincronização
 
 ```bash
 curl http://34.8.17.245/health
