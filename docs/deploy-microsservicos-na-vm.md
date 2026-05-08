@@ -167,10 +167,17 @@ curl http://localhost:5002/health
 curl http://localhost/api/produtos/health
 ```
 
-**Teste externo:**
+**Teste externo (oficial pelo Load Balancer):**
+```bash
+curl http://34.8.17.245/api/produtos/health
+```
+
+**Teste direto na VM (diagnóstico):**
 ```bash
 curl http://34.29.84.207/api/produtos/health
 ```
+
+> **Observação:** A partir da arquitetura redundante, o endereço oficial externo é o Load Balancer `34.8.17.245`. Os IPs das VMs (`34.29.84.207` e `104.197.23.241`) devem ser usados apenas para diagnóstico direto.
 
 ---
 
@@ -242,6 +249,9 @@ curl http://localhost:PORTA/health
 # Testar pelo Gateway localmente
 curl http://localhost/api/DOMINIO/health
 
-# Testar pelo Gateway externamente
+# Testar pelo Gateway externamente (Load Balancer - oficial)
+curl http://34.8.17.245/api/DOMINIO/health
+
+# Testar pelo Gateway diretamente na VM (diagnóstico)
 curl http://34.29.84.207/api/DOMINIO/health
 ```
