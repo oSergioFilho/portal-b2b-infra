@@ -8,7 +8,7 @@ Cada equipe é responsável por entregar o próprio microsserviço dockerizado. 
 
 ## Ambiente atual de integração
 
-A VM de integração já está disponível no Google Cloud Platform.
+A infraestrutura de integração está disponível no GCP por meio de um Load Balancer HTTP externo, com duas VMs de aplicação por trás.
 
 Acesso oficial externo:
 http://34.8.17.245

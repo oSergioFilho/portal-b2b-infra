@@ -63,9 +63,8 @@ A infraestrutura fornece:
 - Publicar e consumir eventos Kafka.
 - Fornecer endpoint `/health`.
 
-## O que é a VM Central?
-O ambiente do projeto funcionará em uma **VM Central** (Máquina Virtual em nuvem ou um servidor dedicado).
-- **O que roda na VM central?** A VM central roda os componentes de aplicação e suporte: API Gateway, Redpanda/Kafka, Kafka UI, PgAdmin, microsserviços dockerizados e scripts de deploy. O banco oficial não roda mais dentro da VM; ele está no Cloud SQL PostgreSQL. O PostgreSQL local permanece apenas como legado, fallback ou ambiente de desenvolvimento local. A execução direta no host da VM fica apenas como alternativa emergencial.
+## O que são as VMs de aplicação?
+O ambiente possui duas VMs de aplicação atrás do Load Balancer. Cada VM roda API Gateway, Redpanda/Kafka, Kafka UI, PgAdmin, microsserviços dockerizados e scripts de deploy. O banco oficial é externo, no Cloud SQL PostgreSQL.
 - **Banco oficial:** O banco oficial é o Cloud SQL PostgreSQL, usando o banco `portal_b2b` e o schema `portal_b2b`. O PostgreSQL local do Docker Compose não é mais o banco oficial.
 
 *Observação opcional:* Dependendo das limitações acadêmicas, desenvolvedores podem testar localmente usando Tailscale/ZeroTier antes de implantar na VM Central, mas o foco da arquitetura é rodar na VM.
