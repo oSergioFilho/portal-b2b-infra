@@ -62,15 +62,19 @@ Outros microsserviços consumidores
 
 ## 3. O que roda na VM central
 
-Absolutamente tudo roda na VM central:
+A VM central roda os componentes de aplicação e suporte. O banco oficial é externo (Cloud SQL).
 
-**Infraestrutura:**
-- roda no docker-compose.yml deste repositório.
-- PostgreSQL
-- PgAdmin
+**Infraestrutura (Docker Compose):**
+- Nginx API Gateway
 - Redpanda/Kafka
 - Kafka UI
-- Nginx API Gateway
+- PgAdmin
+- PostgreSQL local (legado/fallback, ainda presente no Docker Compose)
+
+**Banco oficial (externo à VM):**
+- Cloud SQL PostgreSQL em `136.114.235.212`
+
+O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud SQL PostgreSQL em `136.114.235.212`.
 
 **Microsserviços das equipes:**
 - rodam como containers próprios.
@@ -764,11 +768,12 @@ bash scripts/check-services.sh
 A infraestrutura possui mecanismos básicos de resiliência e um plano de recuperação documentado:
 
 - **Se um container cair**, o Docker tenta reiniciar automaticamente (política `restart: unless-stopped`).
-- **O banco possui backup via script.** O responsável pela infraestrutura pode gerar backups com `bash scripts/backup-postgres.sh` e restaurar com `bash scripts/restore-postgres.sh`.
-  - **Aviso:** Os backups do banco são responsabilidade operacional da infraestrutura.
+- **O banco oficial está no Cloud SQL**, que possui backups automáticos e exportações gerenciadas pelo GCP.
+- **Os scripts `backup-postgres.sh` e `restore-postgres.sh` validam backup e restore do PostgreSQL local legado.** O banco oficial atual está no Cloud SQL, e os backups principais devem ser feitos pelas ferramentas do GCP/Cloud SQL.
+  - **Aviso:** Os backups do banco local são responsabilidade operacional da infraestrutura.
   - As equipes de microsserviços não devem executar restore do banco.
   - Restore deve ser feito apenas pela equipe de infraestrutura, preferencialmente na VM standby ou ambiente limpo.
-- **Existe um plano de VM standby** para recuperação em caso de queda completa da VM principal. A VM standby pode ser ativada com a infraestrutura clonada e o último backup do banco.
+- **Existe um plano de VM standby** para recuperação em caso de queda completa da VM principal. A VM standby pode ser ativada com a infraestrutura clonada, apontando para o mesmo Cloud SQL.
 - **Isso não substitui alta disponibilidade real**, mas atende ao plano acadêmico de recuperação com procedimentos documentados e testáveis.
 
 Para o plano completo, consulte: [docs/redundancia-e-recuperacao.md](./docs/redundancia-e-recuperacao.md)

@@ -33,10 +33,12 @@ A infraestrutura fornece:
 ## Divisão de Responsabilidades
 
 **Equipe de Infraestrutura:**
-- Configurar e manter a VM Central e ambiente Docker.
-- Disponibilizar PostgreSQL, PgAdmin, Redpanda/Kafka, Kafka UI e API Gateway.
+- Manter e documentar a VM de aplicação.
+- Manter API Gateway, Redpanda/Kafka, Kafka UI, PgAdmin e scripts de deploy.
+- Manter a configuração de acesso ao Cloud SQL PostgreSQL.
+- Manter o PostgreSQL local apenas como legado/fallback, se necessário.
 - Criar o schema geral `portal_b2b` e usuários base (`db_portal_b2b` e `svc_portal_b2b`).
-- Fornecer documentação de portas e acessos.
+- Fornecer documentação de portas, acessos, Cloud SQL, Kafka e Gateway.
 
 **Equipe de Banco de Dados:**
 - Utilizar o usuário `db_portal_b2b` para se conectar ao banco central (`portal_b2b`).
@@ -58,8 +60,8 @@ A infraestrutura fornece:
 
 ## O que é a VM Central?
 O ambiente do projeto funcionará em uma **VM Central** (Máquina Virtual em nuvem ou um servidor dedicado).
-- **O que roda na VM central?** Tudo. A infraestrutura (via Docker Compose) e todos os microsserviços das equipes devem rodar como containers próprios, usando a rede Docker compartilhada `portal-b2b-network`. A execução direta no host da VM fica apenas como alternativa emergencial.
-- **Banco de Dados Único:** Ao invés de um schema por microsserviço, todos compartilharão o schema `portal_b2b`.
+- **O que roda na VM central?** A VM central roda os componentes de aplicação e suporte: API Gateway, Redpanda/Kafka, Kafka UI, PgAdmin, microsserviços dockerizados e scripts de deploy. O banco oficial não roda mais dentro da VM; ele está no Cloud SQL PostgreSQL. O PostgreSQL local permanece apenas como legado, fallback ou ambiente de desenvolvimento local. A execução direta no host da VM fica apenas como alternativa emergencial.
+- **Banco oficial:** O banco oficial é o Cloud SQL PostgreSQL, usando o banco `portal_b2b` e o schema `portal_b2b`. O PostgreSQL local do Docker Compose não é mais o banco oficial.
 
 *Observação opcional:* Dependendo das limitações acadêmicas, desenvolvedores podem testar localmente usando Tailscale/ZeroTier antes de implantar na VM Central, mas o foco da arquitetura é rodar na VM.
 
@@ -197,16 +199,20 @@ Esse script testa:
 
 ## Redundância e recuperação
 
+O banco oficial atual é o **Cloud SQL PostgreSQL** em `136.114.235.212`.
+
 A infraestrutura possui mecanismos de resiliência e um plano de recuperação para lidar com falhas:
 
 - **Restart automático:** Todos os containers utilizam `restart: unless-stopped`. Se um container cair, o Docker reinicia automaticamente.
 - **Health checks:** PostgreSQL e Redpanda possuem health checks configurados para detectar estados degradados.
-- **Backup do PostgreSQL:** Scripts para gerar e restaurar backups do banco `portal_b2b`.
+- **Cloud SQL:** O banco oficial está no Cloud SQL, que possui backups automáticos e exportações gerenciadas pelo GCP.
 - **VM Standby:** Estratégia acadêmica recomendada de manter uma segunda VM preparada para assumir em caso de falha da VM principal.
 
-Em caso de falha da VM principal, a infraestrutura pode ser restaurada na VM standby seguindo o procedimento documentado.
+Em caso de falha da VM principal, a infraestrutura pode ser restaurada na VM standby seguindo o procedimento documentado. O banco Cloud SQL permanece acessível externamente.
 
-### Gerar backup do banco
+### Backup do PostgreSQL local (legado)
+
+Os scripts `backup-postgres.sh` e `restore-postgres.sh` se referem ao **PostgreSQL local legado** que ainda existe no Docker Compose. Eles **não substituem** os backups oficiais do Cloud SQL. Para o Cloud SQL, a estratégia principal deve usar os backups/exportações do próprio GCP.
 
 ```bash
 bash scripts/backup-postgres.sh
@@ -214,7 +220,7 @@ bash scripts/backup-postgres.sh
 * **Atenção:** Backups gerados em `backups/postgres/` não devem ser commitados no Git.
 * **Recomendação:** Após gerar backup, copie o arquivo para fora da VM principal.
 
-### Restaurar backup do banco
+### Restore do PostgreSQL local (legado)
 
 ```bash
 bash scripts/restore-postgres.sh backups/postgres/NOME_DO_BACKUP.sql
@@ -298,6 +304,12 @@ A evolução para uma arquitetura redundante com duas VMs de aplicação está d
 A migração do PostgreSQL local para Cloud SQL está documentada em:
 
 [docs/migracao-cloud-sql.md](./docs/migracao-cloud-sql.md)
+
+## Testes da infraestrutura
+
+O roteiro atualizado de testes da infraestrutura, incluindo Cloud SQL, Gateway, Kafka e microsserviços, está em:
+
+[docs/testes-infra.md](./docs/testes-infra.md)
 
 ## Estrutura recomendada da VM
 

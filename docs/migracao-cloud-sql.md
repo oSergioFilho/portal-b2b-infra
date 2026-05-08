@@ -141,3 +141,5 @@ A tabela `portal_b2b.health_check` retornou os registros dos serviços.
 O PostgreSQL local continua rodando como legado/fallback. Ele pode ser desativado no futuro após validação completa de todos os microsserviços no Cloud SQL.
 
 O próximo passo é atualizar os `.env` dos microsserviços para apontarem para o Cloud SQL.
+
+Após a migração, os scripts `backup-postgres.sh` e `restore-postgres.sh` continuam úteis apenas para o PostgreSQL local legado. Para o banco oficial em Cloud SQL, deve-se utilizar backups automáticos, exportações ou snapshots gerenciados pelo GCP.

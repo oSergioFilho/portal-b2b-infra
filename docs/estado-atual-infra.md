@@ -92,7 +92,9 @@ O PostgreSQL local permanece no `docker-compose.yml` por compatibilidade e teste
 
 ## 6. Próximas etapas
 
-- [ ] Atualizar `.env` dos microsserviços para Cloud SQL
+- [ ] Atualizar `.env` de cada novo microsserviço para Cloud SQL durante o deploy
+- [ ] Validar cada microsserviço com endpoint real que consulte o Cloud SQL, não apenas `/health`
+- [ ] Definir rotina oficial de backup/exportação do Cloud SQL
 - [ ] Criar VM standby
 - [ ] Autorizar IP da VM standby no Cloud SQL
 - [ ] Replicar deploy dos microsserviços na VM standby
