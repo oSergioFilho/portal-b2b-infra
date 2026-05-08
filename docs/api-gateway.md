@@ -10,7 +10,7 @@ O padrão atual definido para a arquitetura é:
 - Todos os microsserviços também devem rodar em containers próprios na VM central.
 - Cada microsserviço publica sua porta oficial no host da VM (ex: `5002:5002`).
 - O Gateway acessa os microsserviços pela máquina host usando `host.docker.internal:PORTA`.
-- Cada container de microsserviço deve estar na rede `portal-b2b-network` para acessar PostgreSQL (`postgres:5432`) e Kafka (`redpanda:9092`).
+- Cada container de microsserviço deve estar na rede portal-b2b-network para acessar o Kafka/Redpanda pelo host redpanda:9092. O banco oficial não é o PostgreSQL local; os microsserviços devem acessar o Cloud SQL PostgreSQL em 136.114.235.212:5432. O host postgres:5432 existe apenas como legado/fallback local.
 
 ### Caminho da requisição
 

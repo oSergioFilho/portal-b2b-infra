@@ -1,4 +1,4 @@
-# Guia de Configuração da Infraestrutura na VM
+# Guia de Configuração das VMs de Aplicação
 
 Este guia descreve o passo a passo para subir e configurar a infraestrutura central do Portal B2B na Máquina Virtual (VM) principal.
 
@@ -75,10 +75,11 @@ bash scripts/check-infra.sh
 ```
 
 ### 7. Acessar os Serviços Externamente
-Você pode acessar os serviços da infraestrutura usando o IP da VM no navegador:
-- **API Gateway:** `http://34.29.84.207`
-- **PgAdmin:** `http://34.29.84.207:5050`
-- **Kafka UI:** `http://34.29.84.207:8080`
+Você pode acessar os serviços da infraestrutura externamente:
+- API Gateway oficial: http://34.8.17.245
+- API Gateway VM principal, diagnóstico: http://34.29.84.207
+- API Gateway VM standby, diagnóstico: http://104.197.23.241
+- PgAdmin/Kafka UI podem continuar por IP direto das VMs
 
 ### 8. Conferir Logs e Status dos Containers
 Para ver o status atual dos containers:
@@ -112,7 +113,7 @@ Uma vez que o microsserviço está rodando, teste o acesso através do Gateway:
 ```bash
 curl http://localhost/api/produtos/health
 ```
-*(Substitua `localhost` por `34.29.84.207` se estiver testando fora da VM).*
+Para teste externo oficial, use http://34.8.17.245/api/produtos/health. Os IPs 34.29.84.207 e 104.197.23.241 são apenas diagnóstico direto.
 
 ## Checklist Final da VM
 - [ ] PostgreSQL ativo (porta 5432)

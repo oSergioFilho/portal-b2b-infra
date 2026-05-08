@@ -48,20 +48,22 @@ A divisão de responsabilidades é muito clara:
 
 ## 2. Visão geral da arquitetura
 
-A arquitetura atual utiliza uma VM de aplicação no GCP (`34.29.84.207`) com banco de dados oficial em **Cloud SQL PostgreSQL** (`136.114.235.212`). A infraestrutura roda via Docker Compose, e cada microsserviço deve rodar como container próprio conectado à rede externa portal-b2b-network. A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em `docs/arquitetura-redundante-gcp.md`.
+A arquitetura atual utiliza um Load Balancer HTTP externo no GCP (34.8.17.245), duas VMs de aplicação (34.29.84.207 e 104.197.23.241) e banco oficial em Cloud SQL PostgreSQL (136.114.235.212). A infraestrutura roda via Docker Compose, e cada microsserviço deve rodar como container próprio conectado à rede externa portal-b2b-network. A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em `docs/arquitetura-redundante-gcp.md`.
 
 O fluxo de dados funciona assim:
 
 ```text
 Usuário/Frontend
     ↓
-API Gateway - Porta 80
+Load Balancer - 34.8.17.245
     ↓
-Microsserviço na VM - Porta 5001 a 5009
+Nginx Gateway da VM saudável
+    ↓
+Microsserviço dockerizado - portas 5001 a 5009
     ↓
 Cloud SQL PostgreSQL - 136.114.235.212:5432
     ↓
-Kafka/Redpanda - Porta 9092
+Kafka/Redpanda - redpanda:9092
     ↓
 Outros microsserviços consumidores
 ```
