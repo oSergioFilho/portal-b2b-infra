@@ -11,7 +11,9 @@ Load Balancer - 34.8.17.245
         ↓
 VM principal ou VM standby
         ↓
-Microsserviços dockerizados
+API Gateway Nginx
+        ↓
+Microsserviços / Fronts publicados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
 ```
@@ -26,6 +28,9 @@ Cloud SQL PostgreSQL - 136.114.235.212
 | VM principal | `34.29.84.207` | Aplicação principal | ✅ Validada |
 | VM standby | `104.197.23.241` | Aplicação redundante | ✅ Validada |
 | Cloud SQL | `136.114.235.212` | Banco oficial compartilhado | ✅ Validado |
+| Front produtos | `http://34.8.17.245/produtos/` | Front publicado via Gateway/Load Balancer | A validar |
+| Uptime Kuma | `http://104.197.23.241:3001` | Painel de status | ✅ Implementado |
+| Status Page | `http://104.197.23.241:3001/status/portal-b2b-status` | Página pública de status | ✅ Implementado |
 
 ---
 
@@ -149,3 +154,11 @@ O PostgreSQL local permanece no `docker-compose.yml` por compatibilidade e teste
 - [ ] Definir rotina oficial de backup/exportação do Cloud SQL
 - [ ] Avaliar cluster Redpanda/Kafka futuramente
 - [ ] Avaliar HTTPS/domínio futuramente
+
+---
+
+## 11. Observabilidade
+
+O painel visual de status da infraestrutura com Uptime Kuma está documentado em:
+
+[docs/observabilidade-status.md](./observabilidade-status.md)

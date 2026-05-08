@@ -6,22 +6,21 @@ Cada equipe é responsável por entregar o próprio microsserviço dockerizado. 
 
 ---
 
-## Ambiente atual da VM
+## Ambiente atual de integração
 
 A VM de integração já está disponível no Google Cloud Platform.
 
-IP público atual:
+Acesso oficial:
 
-```text
-34.29.84.207
-```
+- API Gateway: http://34.8.17.245
+- Health do Gateway: http://34.8.17.245/health
+- produtos-service: http://34.8.17.245/api/produtos/health
+- Front produtos: http://34.8.17.245/produtos/
 
-Acessos:
+Diagnóstico direto:
 
-- API Gateway: http://34.29.84.207
-- Health do Gateway: http://34.29.84.207/health
-- PgAdmin: http://34.29.84.207:5050
-- Kafka UI: http://34.29.84.207:8080
+- VM principal: http://34.29.84.207
+- VM standby: http://104.197.23.241
 
 > **Atenção:** O acesso oficial das APIs é pelo Load Balancer: `http://34.8.17.245/api/{dominio}`. O IP da VM principal (`34.29.84.207`) e da VM standby (`104.197.23.241`) devem ser usados apenas para diagnóstico direto. As equipes de microsserviços e front-end não devem usar o IP da VM principal como endpoint oficial. Front-ends devem chamar APIs usando o Load Balancer ou rotas relativas (ex: `/api/produtos`).
 >
@@ -99,7 +98,9 @@ O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud 
 
 | Recurso | URL/Host | Porta | Uso |
 |---|---|---|---|
-| API Gateway | `http://34.29.84.207` | 80 | Entrada para APIs REST |
+| API Gateway / Load Balancer | `http://34.8.17.245` | 80 | Entrada oficial para APIs REST |
+| VM principal | `http://34.29.84.207` | 80 | Diagnóstico direto |
+| VM standby | `http://104.197.23.241` | 80 | Diagnóstico direto |
 | PostgreSQL (Cloud SQL) | `136.114.235.212` | 5432 | Banco oficial (Cloud SQL) |
 | PostgreSQL (local/legado) | `postgres` (container) / `34.29.84.207` (externo) | 5432 | Legado/fallback |
 | PgAdmin | `http://34.29.84.207:5050` | 5050 | Administração visual do banco |
@@ -396,10 +397,17 @@ curl http://localhost/api/produtos/health
 curl http://34.8.17.245/api/produtos/health
 ```
 
-**Teste direto na VM (apenas diagnóstico):**
+**Teste direto na VM principal, somente diagnóstico:**
 ```bash
 curl http://34.29.84.207/api/produtos/health
 ```
+
+**Teste direto na VM standby, somente diagnóstico:**
+```bash
+curl http://104.197.23.241/api/produtos/health
+```
+
+> **Observação:** Front-ends devem chamar APIs usando rotas relativas, como `/api/produtos`, ou o Load Balancer `http://34.8.17.245/api/produtos`. Não usar o IP da VM principal como endpoint oficial.
 
 O Gateway continua encaminhando pelo Nginx para a porta oficial publicada no host. O retorno esperado deve ser:
 ```json

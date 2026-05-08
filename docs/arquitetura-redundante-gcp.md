@@ -24,14 +24,14 @@ Se a VM cair, os microsserviços ficam indisponíveis, mas o banco permanece ace
 
 ---
 
-## 3. Arquitetura proposta
+## 3. Arquitetura implementada
 
-A proposta é separar o banco de dados em uma instância Cloud SQL PostgreSQL e manter duas VMs de aplicação: uma principal e uma standby.
+A proposta original evoluiu e separou o banco de dados em uma instância Cloud SQL PostgreSQL, mantendo duas VMs de aplicação: uma principal e uma standby, atrás de um Load Balancer.
 
 ```text
 Usuários / Frontend
         ↓
-Load Balancer ou IP/DNS
+Load Balancer HTTP externo - 34.8.17.245
         ↓
 ┌──────────────────┐    ┌──────────────────┐
 │  VM app-primary  │    │  VM app-standby  │
@@ -116,7 +116,7 @@ A VM principal é responsável por rodar:
 - Integração com Cloud SQL PostgreSQL
 - Integração com Kafka/Redpanda
 
-No dia a dia, o tráfego externo é direcionado pelo Load Balancer para esta VM ou para a VM standby.
+No dia a dia, o tráfego oficial chega pelo Load Balancer, que pode encaminhar para a VM principal ou para a VM standby conforme a saúde dos backends.
 
 ---
 
@@ -136,7 +136,7 @@ A VM standby deve estar preparada para subir a infraestrutura a qualquer momento
 
 ## 8. Estratégia de failover manual
 
-Inicialmente o failover será manual. Se a VM principal cair:
+Com o Load Balancer implementado, o failover do Gateway/API é automático quando uma VM deixa de responder ao health check. O procedimento manual permanece útil para diagnóstico, manutenção ou recuperação operacional. Se for necessário intervir manualmente na VM standby:
 
 1. Acessar a VM standby via SSH.
 2. Rodar `git pull` nos repositórios de infraestrutura e microsserviços.
@@ -164,11 +164,13 @@ bash /opt/portal-b2b/infra/portal-b2b-infra/scripts/check-services.sh
 
 ## 9. Load Balancer (implementado)
 
-O **Load Balancer HTTP externo** já foi implementado no GCP e é o ponto de entrada oficial do sistema.
+O **Load Balancer HTTP externo** já foi implementado e é o ponto oficial de entrada do sistema.
 
-```text
-Load Balancer: 34.8.17.245
-```
+- APIs: http://34.8.17.245/api/{dominio}
+- Front produtos: http://34.8.17.245/produtos/
+- Health: http://34.8.17.245/health
+
+O Load Balancer cobre a porta 80/Gateway. Serviços expostos em portas diretas, como 8081, só ficam redundantes automaticamente se forem publicados por uma rota no Gateway, como `/produtos/`.
 
 ```text
 Usuário

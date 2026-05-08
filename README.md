@@ -22,7 +22,12 @@ Cada equipe deve entregar seu serviço dockerizado contendo:
 A infraestrutura **não** instalará dependências (npm, pip, maven) manualmente para nenhuma equipe. O deploy e execução do microsserviço devem ocorrer exclusivamente via Docker utilizando a rede da infraestrutura.
 
 ## Arquitetura e Componentes Centrais
-A arquitetura atual utiliza uma VM de aplicação no GCP (`34.29.84.207`) com banco de dados oficial em **Cloud SQL PostgreSQL** (`136.114.235.212`). A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em [docs/arquitetura-redundante-gcp.md](./docs/arquitetura-redundante-gcp.md).
+A arquitetura atual utiliza um Load Balancer HTTP externo no GCP como ponto oficial de entrada, duas VMs de aplicação e banco oficial em Cloud SQL PostgreSQL. A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em [docs/arquitetura-redundante-gcp.md](./docs/arquitetura-redundante-gcp.md).
+
+- Load Balancer oficial: http://34.8.17.245
+- VM principal: 34.29.84.207
+- VM standby: 104.197.23.241
+- Cloud SQL: 136.114.235.212
 
 A infraestrutura fornece:
 - **API Gateway (Nginx):** Entrada única para as APIs REST. Encaminha requisições para os microsserviços rodando nas portas da VM via `host.docker.internal`.
@@ -92,24 +97,30 @@ bash scripts/check-infra.sh
 
 ## Ambiente atual de integração
 
-A infraestrutura está atualmente disponível em uma VM no Google Cloud Platform.
+A infraestrutura está atualmente disponível por meio de um Load Balancer no Google Cloud Platform, com duas VMs de aplicação por trás.
 
-IP público atual:
+Acesso oficial do sistema:
 
 ```text
-34.29.84.207
+http://34.8.17.245
 ```
 
-Acessos principais:
+**Acessos principais:**
 
-| Recurso | URL |
-|---|---|
-| API Gateway | http://34.29.84.207 |
-| Health do Gateway | http://34.29.84.207/health |
-| PgAdmin | http://34.29.84.207:5050 |
-| Kafka UI | http://34.29.84.207:8080 |
+| Recurso | URL | Observação |
+|---|---|---|
+| Load Balancer / Gateway | http://34.8.17.245 | Acesso oficial |
+| Health do Gateway | http://34.8.17.245/health | Acesso oficial |
+| produtos-service | http://34.8.17.245/api/produtos/health | Acesso oficial |
+| Front produtos | http://34.8.17.245/produtos/ | Acesso oficial, se o front estiver rodando na porta 8081 |
+| VM principal | http://34.29.84.207 | Diagnóstico direto |
+| VM standby | http://104.197.23.241 | Diagnóstico direto |
+| PgAdmin principal | http://34.29.84.207:5050 | Ferramenta de apoio |
+| Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
+| Uptime Kuma | http://104.197.23.241:3001 | Painel de status |
+| Status Page | http://104.197.23.241:3001/status/portal-b2b-status | Status público |
 
-> **Observação:** Este é o IP atual da VM de integração. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada. Nos demais exemplos da documentação, `IP_DA_VM` pode ser usado como placeholder genérico. Neste ambiente atual, substitua por `34.29.84.207`.
+> **Observação:** O IP da VM principal não deve ser usado como endpoint oficial por microsserviços ou front-ends. O acesso oficial externo deve passar pelo Load Balancer. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada.
 
 ## Acessos e Validação
 
@@ -245,14 +256,20 @@ Para o estado completo da infraestrutura, consulte: [docs/estado-atual-infra.md]
 ```text
 Usuário / Frontend
         ↓
-API Gateway - VM 34.29.84.207
+Load Balancer - 34.8.17.245
+        ↓
+VM principal ou VM standby
+        ↓
+API Gateway Nginx
         ↓
 Microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
-        ↓
-Kafka/Redpanda - VM 34.29.84.207
 ```
+
+Os IPs 34.29.84.207 e 104.197.23.241 devem ser usados apenas para diagnóstico direto. As equipes devem usar o Load Balancer 34.8.17.245 como entrada oficial.
+
+> **Observação:** Redpanda/Kafka ainda roda localmente em cada VM. Ainda não há cluster Kafka/Redpanda replicado.
 
 **VM principal:**
 
@@ -397,6 +414,12 @@ A operação redundante está documentada em:
 O roteiro atualizado de testes da infraestrutura, incluindo Cloud SQL, Gateway, Kafka e microsserviços, está em:
 
 [docs/testes-infra.md](./docs/testes-infra.md)
+
+## Observabilidade e Status
+
+O painel visual de status da infraestrutura com Uptime Kuma está documentado em:
+
+[docs/observabilidade-status.md](./docs/observabilidade-status.md)
 
 ## Estrutura recomendada da VM
 

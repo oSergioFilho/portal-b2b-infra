@@ -37,13 +37,11 @@ A infraestrutura principal está preparada para:
 
 A raiz:
 
-```
-http://34.29.84.207
+```text
+http://34.8.17.245
 ```
 
-é usada pelo Nginx API Gateway.
-
-Portanto, se a raiz retornar `404`, isso **não significa que a infraestrutura está com erro**. Significa apenas que ainda não existe um front-end principal publicado na raiz.
+O Load Balancer em `34.8.17.245` é o ponto de entrada oficial. A raiz do Load Balancer é usada pelo Nginx API Gateway. Se a raiz retornar `404`, isso não significa erro; significa apenas que ainda não existe um front-end principal publicado na raiz.
 
 ---
 
@@ -52,7 +50,7 @@ Portanto, se a raiz retornar `404`, isso **não significa que a infraestrutura e
 **Backend/microsserviço:**
 - expõe API REST;
 - responde pelo Gateway em `/api/{dominio}`;
-- exemplo: `http://34.29.84.207/api/produtos/health`
+- exemplo: `http://34.8.17.245/api/produtos/health`
 
 **Front-end:**
 - interface visual;
@@ -224,17 +222,20 @@ Depois do deploy:
 docker ps
 ```
 
-Testar no navegador:
+**Teste oficial pelo Load Balancer:**
 
-```
-http://34.29.84.207:PORTA_DO_FRONT
+```text
+http://34.8.17.245/produtos/
 ```
 
-Para produtos, exemplo:
+**Teste direto por porta, somente diagnóstico:**
 
-```
+```text
 http://34.29.84.207:8081
+http://104.197.23.241:8081
 ```
+
+> **Observação:** Se o front-end for servido em subpath, como `/produtos/`, a aplicação deve estar preparada para esse base path. Em projetos Vite, por exemplo, pode ser necessário configurar `base: '/produtos/'` no `vite.config.js`. Caso contrário, assets com caminho absoluto, como `/assets/...`, podem quebrar quando publicados atrás de `/produtos/`. Preferencialmente, o front-end deve chamar APIs com rotas relativas, por exemplo `/api/produtos`, em vez de fixar `http://34.29.84.207`.
 
 ---
 

@@ -48,8 +48,19 @@ bash scripts/check-infra.sh
 
 ## 4. Testar API Gateway
 
+**Teste oficial pelo Load Balancer:**
+```bash
+curl http://34.8.17.245/health
+```
+
+**Teste direto na VM principal, diagnóstico:**
 ```bash
 curl http://34.29.84.207/health
+```
+
+**Teste direto na VM standby, diagnóstico:**
+```bash
+curl http://104.197.23.241/health
 ```
 
 Resposta esperada:
@@ -144,8 +155,19 @@ http://34.29.84.207:8080
 
 ## 10. Testar produtos-service
 
+**Teste oficial pelo Load Balancer:**
+```bash
+curl http://34.8.17.245/api/produtos/health
+```
+
+**Teste direto na VM principal, diagnóstico:**
 ```bash
 curl http://34.29.84.207/api/produtos/health
+```
+
+**Teste direto na VM standby, diagnóstico:**
+```bash
+curl http://104.197.23.241/api/produtos/health
 ```
 
 Resposta esperada:
@@ -214,6 +236,8 @@ curl -I http://104.197.23.241:8081
 - Pelo Load Balancer, o front deve responder.
 - Se a VM principal cair, o acesso direto a `34.29.84.207:8081` falha, mas o acesso pelo Load Balancer deve continuar funcionando se a standby estiver saudável.
 
+> **Observação:** Se esse teste falhar, verificar se o produtos-front está rodando nas duas VMs e se a aplicação front-end suporta o subpath `/produtos/`.
+
 ---
 
 ## 14. Testar backends do Load Balancer
@@ -273,6 +297,7 @@ A infraestrutura atual está validada quando:
 - [ ] Kafka recebe mensagem de teste.
 - [ ] PgAdmin abre.
 - [ ] `produtos-service` responde pelo Load Balancer.
+- [ ] Front produtos responde pelo Load Balancer em `/produtos/`.
 - [ ] Backends do Load Balancer estão HEALTHY.
 - [ ] `check-infra.sh` conclui sem erro crítico.
 - [ ] `check-services.sh` mostra OK para os serviços já deployados.
