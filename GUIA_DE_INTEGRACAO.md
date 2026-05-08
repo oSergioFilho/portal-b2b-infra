@@ -10,17 +10,24 @@ Cada equipe é responsável por entregar o próprio microsserviço dockerizado. 
 
 A VM de integração já está disponível no Google Cloud Platform.
 
-Acesso oficial:
+Acesso oficial externo:
+http://34.8.17.245
 
-- API Gateway: http://34.8.17.245
-- Health do Gateway: http://34.8.17.245/health
-- produtos-service: http://34.8.17.245/api/produtos/health
-- Front produtos: http://34.8.17.245/produtos/
+- O Load Balancer `34.8.17.245` é o ponto oficial de entrada para APIs e rotas publicadas no Gateway.
+- A VM principal `34.29.84.207` e a VM standby `104.197.23.241` são acessos diretos para diagnóstico.
+- PgAdmin, Kafka UI e Uptime Kuma ainda podem ser acessados diretamente pelas portas das VMs, pois não estão publicados no Load Balancer.
 
-Diagnóstico direto:
-
-- VM principal: http://34.29.84.207
-- VM standby: http://104.197.23.241
+| Recurso | URL/Host | Uso |
+|---|---|---|
+| Load Balancer / Gateway | http://34.8.17.245 | Acesso oficial |
+| Health Gateway | http://34.8.17.245/health | Acesso oficial |
+| produtos-service | http://34.8.17.245/api/produtos/health | Acesso oficial |
+| Front produtos | http://34.8.17.245/produtos/ | Acesso oficial se o front estiver rodando |
+| VM principal | http://34.29.84.207 | Diagnóstico direto |
+| VM standby | http://104.197.23.241 | Diagnóstico direto |
+| PgAdmin principal | http://34.29.84.207:5050 | Ferramenta de apoio |
+| Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
+| Uptime Kuma | http://104.197.23.241:3001 | Painel de status |
 
 > **Atenção:** O acesso oficial das APIs é pelo Load Balancer: `http://34.8.17.245/api/{dominio}`. O IP da VM principal (`34.29.84.207`) e da VM standby (`104.197.23.241`) devem ser usados apenas para diagnóstico direto. As equipes de microsserviços e front-end não devem usar o IP da VM principal como endpoint oficial. Front-ends devem chamar APIs usando o Load Balancer ou rotas relativas (ex: `/api/produtos`).
 >
@@ -98,7 +105,7 @@ O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud 
 
 | Recurso | URL/Host | Porta | Uso |
 |---|---|---|---|
-| API Gateway / Load Balancer | `http://34.8.17.245` | 80 | Entrada oficial para APIs REST |
+| API Gateway oficial | `http://34.8.17.245` | 80 | Entrada oficial para APIs REST |
 | VM principal | `http://34.29.84.207` | 80 | Diagnóstico direto |
 | VM standby | `http://104.197.23.241` | 80 | Diagnóstico direto |
 | PostgreSQL (Cloud SQL) | `136.114.235.212` | 5432 | Banco oficial (Cloud SQL) |

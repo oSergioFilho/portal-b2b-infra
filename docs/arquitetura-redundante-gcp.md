@@ -24,24 +24,22 @@ Se a VM cair, os microsserviços ficam indisponíveis, mas o banco permanece ace
 
 ---
 
-## 3. Arquitetura implementada
+## 3. Arquitetura atual
 
 A proposta original evoluiu e separou o banco de dados em uma instância Cloud SQL PostgreSQL, mantendo duas VMs de aplicação: uma principal e uma standby, atrás de um Load Balancer.
 
 ```text
 Usuários / Frontend
         ↓
-Load Balancer HTTP externo - 34.8.17.245
+Load Balancer - 34.8.17.245
         ↓
-┌──────────────────┐    ┌──────────────────┐
-│  VM app-primary  │    │  VM app-standby  │
-│  Gateway         │    │  Gateway         │
-│  Microsserviços  │    │  Microsserviços  │
-└────────┬─────────┘    └────────┬─────────┘
-         │                       │
-         └───────────┬───────────┘
-                     ↓
-          Cloud SQL PostgreSQL
+VM principal ou VM standby
+        ↓
+API Gateway Nginx
+        ↓
+Microsserviços / Fronts publicados
+        ↓
+Cloud SQL PostgreSQL - 136.114.235.212
 ```
 
 As duas VMs terão a mesma estrutura de diretórios:
@@ -192,7 +190,7 @@ O Load Balancer envia tráfego apenas para a VM que responder com sucesso ao hea
 
 ## 10. Kafka/Redpanda
 
-Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso atende à demonstração acadêmica de redundância da aplicação e do Gateway, mas ainda não representa um cluster Kafka/Redpanda replicado.
+Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso atende à demonstração acadêmica de redundância da aplicação e do Gateway, mas ainda não representa um cluster Kafka/Redpanda replicado entre VMs.
 
 Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos brokers e fator de replicação maior que 1.
 
@@ -221,10 +219,9 @@ Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos
 
 - ❌ Cluster Kafka/Redpanda real
 - ❌ Replicação de eventos entre brokers
-- ❌ Múltiplas réplicas automáticas de microsserviços
-- ❌ Kubernetes
-- ❌ Escalabilidade horizontal automática
 - ❌ HTTPS/domínio
+- ❌ Escalabilidade horizontal automática
+- ❌ Kubernetes
 
 ---
 

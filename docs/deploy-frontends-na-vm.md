@@ -162,36 +162,26 @@ server {
 
 ## Modelos de Acesso ao Front-end
 
-Existem dois modelos de publicação de front-end:
+Existem dois modelos de acesso ao front:
 
-**1. Modelo atual por porta direta (Apenas para diagnóstico):**
+**Modelo direto por porta, usado apenas para diagnóstico:**
 
-produtos-front:
-- http://34.29.84.207:8081 (VM principal)
-- http://104.197.23.241:8081 (VM standby)
+```text
+http://34.29.84.207:8081
+http://104.197.23.241:8081
+```
 
-Esse modelo funciona, mas não é o acesso oficial redundante. Se a VM principal cair, o acesso direto a `http://34.29.84.207:8081` cai.
-
-**2. Modelo recomendado (Acesso oficial):**
-
-Publicar o front pelo Nginx Gateway e Load Balancer:
+**Modelo oficial redundante pelo Gateway/Load Balancer:**
 
 ```text
 http://34.8.17.245/produtos/
 ```
 
-**Fluxo:**
-
-```text
-Load Balancer
-        ↓
-Nginx Gateway da VM saudável
-        ↓
-produtos-front:8081
-```
-
 **Explicação:**
-Se a VM principal cair, o acesso direto cai. Porém, se o front estiver publicado pelo Gateway em `http://34.8.17.245/produtos/`, o Load Balancer redireciona para a VM standby automaticamente. O Nginx Gateway da infraestrutura deve ser configurado com uma rota `/produtos/` que aponta para a porta `8081` do container `produtos-front`.
+- O Load Balancer atual cobre a porta 80/Gateway.
+- O Nginx Gateway já possui rota `/produtos/` apontando para `produtos-front` na porta 8081.
+- Se a VM principal cair, o acesso direto a `34.29.84.207:8081` cai.
+- O acesso por `http://34.8.17.245/produtos/` deve continuar funcionando se a standby estiver saudável e com o `produtos-front` rodando.
 
 ---
 
@@ -224,15 +214,15 @@ docker ps
 
 **Teste oficial pelo Load Balancer:**
 
-```text
-http://34.8.17.245/produtos/
+```bash
+curl -I http://34.8.17.245/produtos/
 ```
 
 **Teste direto por porta, somente diagnóstico:**
 
-```text
-http://34.29.84.207:8081
-http://104.197.23.241:8081
+```bash
+curl -I http://34.29.84.207:8081
+curl -I http://104.197.23.241:8081
 ```
 
 > **Observação:** Se o front-end for servido em subpath, como `/produtos/`, a aplicação deve estar preparada para esse base path. Em projetos Vite, por exemplo, pode ser necessário configurar `base: '/produtos/'` no `vite.config.js`. Caso contrário, assets com caminho absoluto, como `/assets/...`, podem quebrar quando publicados atrás de `/produtos/`. Preferencialmente, o front-end deve chamar APIs com rotas relativas, por exemplo `/api/produtos`, em vez de fixar `http://34.29.84.207`.
@@ -258,18 +248,24 @@ Rodar `npm run dev` na VM pode ser usado apenas para **teste temporário**. A en
 
 ## Observação sobre Cloud SQL e Load Balancer
 
-Front-ends devem chamar as APIs pelo **Load Balancer oficial**:
+Front-ends devem chamar as APIs por rota relativa:
 
 ```text
-http://34.8.17.245/api/{dominio}
+/api/produtos
 ```
 
-Exemplo:
+ou pelo Load Balancer oficial:
 
 ```text
 http://34.8.17.245/api/produtos
 ```
 
+**Não usar no código do front:**
+
+```text
+http://34.29.84.207/api/produtos
+```
+
 **Não devem chamar o Cloud SQL diretamente.** O Cloud SQL (`136.114.235.212`) é acessado apenas pelos microsserviços/backend.
 
-> **Observação:** Na arquitetura atual, o Load Balancer oficial é `34.8.17.245`. As APIs devem ser consumidas por `http://34.8.17.245/api/{dominio}`. Acesso direto a `34.29.84.207` ou `104.197.23.241` deve ser usado apenas para diagnóstico ou para portas específicas de front-end ainda não publicadas no Load Balancer.
+> **Observação:** Na arquitetura atual, o Load Balancer oficial é `34.8.17.245`. As APIs devem ser consumidas por rotas relativas ou `http://34.8.17.245/api/{dominio}`. Acesso direto a `34.29.84.207` ou `104.197.23.241` deve ser usado apenas para diagnóstico.

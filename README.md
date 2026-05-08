@@ -126,7 +126,7 @@ http://34.8.17.245
 
 | Componente | URL / Conexão | Credenciais / Notas |
 |------------|---------------|---------------------|
-| API Gateway | http://34.29.84.207 | Retorna `API Gateway do Portal B2B ativo` em `/health` |
+| API Gateway / Load Balancer | http://34.8.17.245 | Retorna `API Gateway do Portal B2B ativo` em `/health` |
 | PgAdmin | http://34.29.84.207:5050 | `admin@portalb2b.com` / `***`. Permite visualizar as tabelas do PostgreSQL. |
 | Kafka UI | http://34.29.84.207:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
 | PostgreSQL (Cloud SQL) | `136.114.235.212:5432` | `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação). Banco oficial. |
