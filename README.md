@@ -305,32 +305,79 @@ A migração do PostgreSQL local para Cloud SQL está documentada em:
 
 [docs/migracao-cloud-sql.md](./docs/migracao-cloud-sql.md)
 
-## Operação redundante
+## Operação redundante validada
 
-A infraestrutura possui Load Balancer, VM principal, VM standby e Cloud SQL compartilhado.
+A infraestrutura atual já foi validada com operação redundante entre duas VMs de aplicação, Load Balancer e banco externo compartilhado.
 
-| Componente | Endereço |
-|---|---|
-| Load Balancer | http://34.8.17.245 |
-| VM principal | `34.29.84.207` |
-| VM standby | `104.197.23.241` |
-| Cloud SQL | `136.114.235.212` |
+Componentes atuais:
+
+| Componente | Endereço | Status |
+|---|---|---|
+| Load Balancer | http://34.8.17.245 | Validado |
+| VM principal | `34.29.84.207` | Validada |
+| VM standby | `104.197.23.241` | Validada |
+| Cloud SQL PostgreSQL | `136.114.235.212` | Validado |
+| produtos-service | `/api/produtos/health` | Validado |
+
+Fluxo atual:
+
+```text
+Usuário / Frontend
+        ↓
+Load Balancer - 34.8.17.245
+        ↓
+VM principal ou VM standby
+        ↓
+API Gateway Nginx
+        ↓
+Microsserviços dockerizados
+        ↓
+Cloud SQL PostgreSQL - 136.114.235.212
+```
+
+Acesso principal da aplicação:
+
+```text
+http://34.8.17.245
+```
+
+Health do Gateway:
+
+```text
+http://34.8.17.245/health
+```
+
+Health do produtos-service:
+
+```text
+http://34.8.17.245/api/produtos/health
+```
+
+Comando oficial para sincronizar a infraestrutura nas duas VMs:
+
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/sync-redundant.sh
+```
+
+Comando oficial para fazer deploy de um microsserviço nas duas VMs:
+
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
+```
+
+Exemplo:
+
+```bash
+bash scripts/deploy-service-redundant.sh produtos-service https://github.com/PedroVian9/SDI.Micro.Produto
+```
+
+> **Nota:** A chave SSH usada para a VM principal acessar a VM standby fica somente na VM principal em `~/.ssh/portal_b2b_standby`. Essa chave nunca deve ser versionada no Git.
 
 A operação redundante está documentada em:
 
 [docs/operacao-redundante.md](./docs/operacao-redundante.md)
-
-Para sincronizar a infraestrutura nas duas VMs:
-
-```bash
-bash scripts/sync-redundant.sh
-```
-
-Para fazer deploy de um microsserviço nas duas VMs:
-
-```bash
-bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
-```
 
 ## Testes da infraestrutura
 

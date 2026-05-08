@@ -253,3 +253,37 @@ A infraestrutura atual está validada quando:
 - [ ] Backends do Load Balancer estão HEALTHY.
 - [ ] `check-infra.sh` conclui sem erro crítico.
 - [ ] `check-services.sh` mostra OK para os serviços já deployados.
+
+---
+
+## 17. Testar sincronização redundante
+
+Na VM principal:
+
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/sync-redundant.sh
+```
+
+Resultado esperado:
+
+- A VM principal faz pull e sobe a infraestrutura.
+- A VM standby faz pull e sobe a infraestrutura.
+- O `check-infra.sh` passa nas duas VMs.
+- O Load Balancer continua respondendo.
+
+---
+
+## 18. Testar Load Balancer após sincronização
+
+```bash
+curl http://34.8.17.245/health
+curl http://34.8.17.245/api/produtos/health
+```
+
+Resultado esperado:
+
+```text
+API Gateway do Portal B2B ativo
+{"status":"ok","service":"produtos-service"}
+```

@@ -156,3 +156,70 @@ Para atualização de microsserviço:
 ```bash
 bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
 ```
+
+## 12. Validação realizada
+
+A operação redundante foi validada com sucesso.
+
+Foram executados os seguintes testes:
+
+```bash
+bash scripts/sync-redundant.sh
+```
+
+Resultado:
+
+- VM principal atualizada com `git pull origin main`;
+- infraestrutura da VM principal recriada com `docker compose up -d --build`;
+- `check-infra.sh` executado com sucesso na VM principal;
+- conexão SSH da VM principal para a VM standby funcionando;
+- VM standby atualizada com `git pull origin main`;
+- infraestrutura da VM standby recriada com `docker compose up -d --build`;
+- `check-infra.sh` executado com sucesso na VM standby;
+- Load Balancer validado.
+
+Endpoints validados:
+
+```bash
+curl http://34.8.17.245/health
+curl http://34.8.17.245/api/produtos/health
+```
+
+Retornos obtidos:
+
+```text
+API Gateway do Portal B2B ativo
+{"status":"ok","service":"produtos-service"}
+```
+
+## 13. Configuração SSH entre as VMs
+
+Para que `sync-redundant.sh` funcione, a VM principal precisa acessar a VM standby via SSH.
+
+Na VM principal, a chave privada esperada é:
+
+```text
+~/.ssh/portal_b2b_standby
+```
+
+A chave pública correspondente deve estar no arquivo:
+
+```text
+~/.ssh/authorized_keys
+```
+
+da VM standby.
+
+Comando para testar a conexão a partir da VM principal:
+
+```bash
+ssh -i ~/.ssh/portal_b2b_standby sergiofilho_almeida@104.197.23.241 "hostname && date"
+```
+
+Resultado esperado:
+
+```text
+portal-b2b-vm-standby
+```
+
+> **Nunca commitar chave SSH no repositório.**

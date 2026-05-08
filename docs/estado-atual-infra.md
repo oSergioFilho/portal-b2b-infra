@@ -20,12 +20,12 @@ Cloud SQL PostgreSQL - 136.114.235.212
 
 ## 2. Componentes
 
-| Componente | Endereço | Função |
-|---|---|---|
-| Load Balancer | `34.8.17.245` | Entrada principal do sistema |
-| VM principal | `34.29.84.207` | Aplicação principal |
-| VM standby | `104.197.23.241` | Aplicação redundante |
-| Cloud SQL | `136.114.235.212` | Banco oficial compartilhado |
+| Componente | Endereço | Função | Status |
+|---|---|---|---|
+| Load Balancer | `34.8.17.245` | Entrada principal do sistema | ✅ Validado |
+| VM principal | `34.29.84.207` | Aplicação principal | ✅ Validada |
+| VM standby | `104.197.23.241` | Aplicação redundante | ✅ Validada |
+| Cloud SQL | `136.114.235.212` | Banco oficial compartilhado | ✅ Validado |
 
 ---
 
@@ -133,13 +133,16 @@ O PostgreSQL local permanece no `docker-compose.yml` por compatibilidade e teste
 - [x] VM principal funcionando
 - [x] Cloud SQL PostgreSQL
 - [x] VM standby criada
-- [x] Load Balancer HTTP criado
+- [x] Load Balancer HTTP criado e validado
 - [x] produtos-service validado nas duas VMs
 - [x] Cloud SQL acessível pelas duas VMs
+- [x] sync-redundant.sh validado
+- [x] Deploy redundante documentado
 
 ## 10. Próximas etapas
 
-- [ ] Documentar teste de falha controlada
-- [ ] Validar cada novo microsserviço nas duas VMs
+- [ ] Validar os próximos microsserviços nas duas VMs
+- [ ] Fazer teste de falha controlada quando for conveniente
 - [ ] Definir rotina oficial de backup/exportação do Cloud SQL
 - [ ] Avaliar cluster Redpanda/Kafka futuramente
+- [ ] Avaliar HTTPS/domínio futuramente

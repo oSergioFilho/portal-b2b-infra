@@ -233,9 +233,10 @@ Na arquitetura redundante, existem duas possibilidades:
 | 2 | Cloud SQL PostgreSQL | ✅ Implementado |
 | 3 | VM standby | ✅ Implementado |
 | 4 | Load Balancer HTTP | ✅ Implementado |
-| 5 | Failover manual/controlado | 🔜 Próxima etapa |
-| 6 | Redpanda cluster | 📋 Evolução futura |
-| 7 | Kubernetes | 📋 Evolução futura |
+| 5 | Sincronização principal → standby | ✅ Implementado |
+| 6 | Teste de falha controlada | 🔜 Próxima etapa |
+| 7 | Redpanda cluster | 📋 Evolução futura |
+| 8 | Kubernetes | 📋 Evolução futura |
 
 **Endereços atuais:**
 
@@ -246,7 +247,7 @@ Na arquitetura redundante, existem duas possibilidades:
 | VM standby | `104.197.23.241` |
 | Cloud SQL | `136.114.235.212` |
 
-O acesso recomendado ao sistema é pelo **Load Balancer** (`34.8.17.245`), não diretamente pela VM principal.
+O acesso recomendado ao sistema é pelo **Load Balancer** (`http://34.8.17.245`), não diretamente pela VM principal.
 
 ---
 

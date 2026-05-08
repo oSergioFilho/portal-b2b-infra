@@ -15,3 +15,11 @@ Thumbs.db
 
 # Backups
 backups/
+
+# Chaves SSH
+*.pem
+*.key
+id_rsa
+id_ed25519
+portal_b2b_standby
+portal_b2b_standby.pub
