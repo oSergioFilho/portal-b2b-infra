@@ -35,16 +35,16 @@ svc_portal_b2b
 Todo microsserviço deve rodar em container na rede `portal-b2b-network`. As variáveis de ambiente obrigatórias são:
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
 **Regras importantes:**
-- Dentro do container, **não usar `localhost`** para PostgreSQL. O host correto é `postgres`.
+- O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`.
 - Dentro do container, **não usar `localhost`** para Kafka. O host correto é `redpanda`.
-- O `localhost` dentro de um container aponta para o próprio container, não para os outros serviços.
-- O container do microsserviço **precisa estar na rede `portal-b2b-network`** para que os nomes `postgres` e `redpanda` funcionem.
+- O host `postgres` (Docker Compose local) é **legado** e não deve mais ser usado como banco oficial.
+- O container do microsserviço **precisa estar na rede `portal-b2b-network`** para que o nome `redpanda` funcione.
 
 ---
 
@@ -60,7 +60,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 - URL: http://34.29.84.207:8080
 
 **DBeaver / DataGrip / psql (ferramenta externa no seu PC):**
-- Host: `34.29.84.207`
+- Host: `136.114.235.212` (Cloud SQL — banco oficial)
 - Porta: `5432`
 - Banco: `portal_b2b`
 - Usuário: `db_portal_b2b` (equipe de banco) ou `svc_portal_b2b` (microsserviços)

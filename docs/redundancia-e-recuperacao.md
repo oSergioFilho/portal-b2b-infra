@@ -8,9 +8,9 @@ Este documento descreve como a infraestrutura do Portal B2B lida com falhas de c
 
 ## 2. Ponto único de falha atual
 
-Na arquitetura atual, a **VM central concentra toda a infraestrutura e todos os microsserviços**. Isso significa que, se a VM cair completamente, o sistema inteiro fica indisponível.
+Na arquitetura atual, a **VM central concentra a aplicação e os serviços**. O banco de dados oficial já foi migrado para **Cloud SQL PostgreSQL** (`136.114.235.212`), eliminando o ponto único de falha do banco. Se a VM cair, os microsserviços ficam indisponíveis, mas o banco permanece acessível externamente.
 
-Esse modelo é aceitável como **primeira versão acadêmica**, pois simplifica o deploy e a operação. No entanto, é fundamental ter um **plano de recuperação** para minimizar o tempo de indisponibilidade caso ocorra uma falha.
+Esse modelo é aceitável como **primeira versão acadêmica**, pois simplifica o deploy e a operação. No entanto, é fundamental ter um **plano de recuperação** para minimizar o tempo de indisponibilidade caso ocorra uma falha na VM.
 
 ---
 
@@ -74,8 +74,9 @@ Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **
 
 ### VM Principal
 
-- Roda a infraestrutura oficial (PostgreSQL, Redpanda, Nginx, PgAdmin, Kafka UI).
+- Roda a infraestrutura oficial (Redpanda, Nginx, PgAdmin, Kafka UI).
 - Roda os microsserviços das equipes.
+- Conecta ao Cloud SQL PostgreSQL (`136.114.235.212`).
 - Recebe as chamadas do grupo.
 - É o ambiente de produção acadêmica.
 
@@ -84,7 +85,7 @@ Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **
 - Tem **Docker** e **Docker Compose** instalados.
 - Tem o repositório `portal-b2b-infra` **clonado e atualizado**.
 - Tem a mesma estrutura de diretórios: `/opt/portal-b2b/`.
-- **Recebe cópias dos backups** do banco periodicamente.
+- Conecta ao mesmo **Cloud SQL PostgreSQL** (`136.114.235.212`).
 - Pode ser **ativada rapidamente** se a VM principal cair.
 
 ### Diagrama da estratégia
@@ -93,13 +94,17 @@ Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **
 ┌──────────────────────────┐         ┌──────────────────────────┐
 │      VM PRINCIPAL        │         │       VM STANDBY         │
 │                          │         │                          │
-│  Docker Compose (infra)  │  ───▶   │  Docker + Docker Compose │
-│  PostgreSQL              │ backup  │  portal-b2b-infra clonado│
-│  Redpanda/Kafka          │  ───▶   │  Backups do PostgreSQL   │
+│  Docker Compose (infra)  │         │  Docker + Docker Compose │
+│  Redpanda/Kafka          │         │  portal-b2b-infra clonado│
 │  Nginx API Gateway       │         │  Mesma estrutura /opt/   │
 │  Microsserviços          │         │                          │
 │                          │         │  (Inativa até necessário)│
 └──────────────────────────┘         └──────────────────────────┘
+         │                                │
+         └────────────────┬───────────────┘
+                          │
+              Cloud SQL PostgreSQL
+              136.114.235.212:5432
 ```
 
 ---
@@ -218,7 +223,7 @@ Essas evoluções estão fora do escopo da versão acadêmica atual, mas represe
 
 ## 10. Explicação curta para apresentação
 
-> "A infraestrutura possui uma primeira camada de resiliência com restart automático dos containers e health checks. Além disso, foi definido um plano de recuperação com backups do PostgreSQL e uma VM standby. Caso a VM principal falhe, a infraestrutura pode ser restaurada na VM standby, o banco pode ser recuperado a partir do último backup e os microsserviços podem ser reiniciados. Para produção, a arquitetura poderia evoluir para replicação em tempo real, load balancer e cluster Kafka."
+> "A infraestrutura possui uma primeira camada de resiliência com restart automático dos containers e health checks. O banco de dados oficial foi migrado para Cloud SQL PostgreSQL, eliminando o ponto único de falha do banco local. Além disso, foi definido um plano de recuperação com uma VM standby. Caso a VM principal falhe, a VM standby pode ser ativada apontando para o mesmo banco Cloud SQL, e os microsserviços podem ser reiniciados. Para produção, a arquitetura poderia evoluir para load balancer e cluster Kafka."
 
 ---
 

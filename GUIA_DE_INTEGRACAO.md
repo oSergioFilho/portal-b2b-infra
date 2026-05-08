@@ -23,7 +23,7 @@ Acessos:
 - PgAdmin: http://34.29.84.207:5050
 - Kafka UI: http://34.29.84.207:8080
 
-> **Observação:** Esse IP deve ser usado pelas equipes para acessar o Gateway, PgAdmin e Kafka UI durante a integração. Dentro dos containers dos microsserviços, o banco e o Kafka continuam sendo acessados por `postgres:5432` e `redpanda:9092`, não pelo IP público.
+> **Observação:** Esse IP deve ser usado pelas equipes para acessar o Gateway, PgAdmin e Kafka UI durante a integração. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. Dentro dos containers, o Kafka continua sendo acessado por `redpanda:9092`.
 
 ---
 
@@ -40,7 +40,7 @@ A divisão de responsabilidades é muito clara:
 
 ## 2. Visão geral da arquitetura
 
-A arquitetura do Portal B2B exige que **todos os serviços e ferramentas rodem na mesma VM central. A infraestrutura roda via Docker Compose, e cada microsserviço deve rodar como container próprio conectado à rede externa portal-b2b-network.**
+A arquitetura atual utiliza uma VM de aplicação no GCP (`34.29.84.207`) com banco de dados oficial em **Cloud SQL PostgreSQL** (`136.114.235.212`). A infraestrutura roda via Docker Compose, e cada microsserviço deve rodar como container próprio conectado à rede externa portal-b2b-network. A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em `docs/arquitetura-redundante-gcp.md`.
 
 O fluxo de dados funciona assim:
 
@@ -51,7 +51,7 @@ API Gateway - Porta 80
     ↓
 Microsserviço na VM - Porta 5001 a 5009
     ↓
-PostgreSQL central - Porta 5432
+Cloud SQL PostgreSQL - 136.114.235.212:5432
     ↓
 Kafka/Redpanda - Porta 9092
     ↓
@@ -94,14 +94,17 @@ Absolutamente tudo roda na VM central:
 | Recurso | URL/Host | Porta | Uso |
 |---|---|---|---|
 | API Gateway | `http://34.29.84.207` | 80 | Entrada para APIs REST |
-| PostgreSQL | `postgres` (container) / `34.29.84.207` (externo) | 5432 | Banco central |
+| PostgreSQL (Cloud SQL) | `136.114.235.212` | 5432 | Banco oficial (Cloud SQL) |
+| PostgreSQL (local/legado) | `postgres` (container) / `34.29.84.207` (externo) | 5432 | Legado/fallback |
 | PgAdmin | `http://34.29.84.207:5050` | 5050 | Administração visual do banco |
 | Kafka/Redpanda | `redpanda` (container) / `34.29.84.207` (externo) | 9092 | Broker de eventos |
 | Kafka UI | `http://34.29.84.207:8080` | 8080 | Visualizar tópicos e mensagens |
 
 **Atenção:**
-- Se o seu microsserviço roda **em container na VM** (padrão obrigatório), aponte para `postgres` e `redpanda` — os nomes dos serviços na rede Docker.
-- Se estiver acessando visualmente **de fora** da VM (ex: DBeaver no seu PC), use o `34.29.84.207`.
+- O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. Os microsserviços devem apontar para este IP.
+- O host `postgres` (Docker Compose local) é **legado** e não deve mais ser usado como banco oficial.
+- O Kafka/Redpanda continua sendo acessado por `redpanda:9092` dentro dos containers.
+- Se estiver acessando visualmente **de fora** (ex: DBeaver no seu PC), use `136.114.235.212` para o banco.
 
 ---
 
@@ -147,35 +150,39 @@ Absolutamente tudo roda na VM central:
 
 ## 7. Como cada equipe deve configurar o .env
 
-Todo microsserviço deve conter um arquivo `.env` para carregar as configurações dinamicamente. Como o padrão oficial é rodar em container, as conexões de banco e mensageria devem apontar para os nomes dos serviços na rede Docker.
+Todo microsserviço no Portal B2B deve conter um arquivo `.env` para carregar as configurações dinamicamente.
 
 Regras importantes:
-- Dentro de container, **NÃO usar localhost** para PostgreSQL. O host correto é `postgres`.
+- O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`.
+- Dentro de container, **NÃO usar localhost** para PostgreSQL. O host correto é `136.114.235.212`.
 - Dentro de container, **NÃO usar localhost** para Kafka. O host correto é `redpanda`.
 - O `localhost` só resolve dentro do próprio container, não alcança os outros serviços da rede Docker.
+- O host `postgres` (Docker Compose local) é legado e não deve mais ser usado como banco oficial.
 
-### Padrão OBRIGATÓRIO (Microsserviço em Container)
+### Padrão OBRIGATÓRIO (Cloud SQL)
 
 ```env
 SERVICE_NAME=produtos-service
 PORT=5002
 
-DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-Esses nomes, postgres e redpanda, só funcionam porque o container do microsserviço está conectado à rede externa portal-b2b-network. Se a equipe esquecer essa rede no docker-compose.yml, a conexão com banco e Kafka vai falhar.
+> **Nota:** O host `postgres` do Docker Compose local é legado. O banco oficial é `136.114.235.212` (Cloud SQL). O container ainda precisa estar na rede `portal-b2b-network` para acessar o Kafka (`redpanda:9092`). Se a equipe esquecer essa rede no docker-compose.yml, a conexão com Kafka vai falhar.
 
 ### Alternativa emergencial: rodar direto no host da VM (sem Docker)
 
-Se por algum motivo emergencial o serviço precisar rodar diretamente no host da VM, sem Docker, as conexões mudam para `localhost` porque nesse caso o processo está no mesmo host que o PostgreSQL e o Redpanda:
+Se por algum motivo emergencial o serviço precisar rodar diretamente no host da VM, sem Docker:
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:***@localhost:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 ```
+
+> O banco continua sendo o Cloud SQL (`136.114.235.212`). O Kafka muda para `localhost:9092` pois sem Docker o Redpanda é acessado diretamente no host.
 
 **Este não é o padrão oficial.** A entrega sem Docker será aceita apenas em situações emergenciais justificadas.
 
@@ -395,11 +402,14 @@ O Gateway continua encaminhando pelo Nginx para a porta oficial publicada no hos
 
 ## 11. Como conectar ao PostgreSQL
 
-O banco de dados do projeto é completamente centralizado.
+O banco de dados oficial do projeto é o **Cloud SQL PostgreSQL**.
 
+- **Host:** `136.114.235.212`
 - **Banco:** `portal_b2b`
 - **Schema:** `portal_b2b`
 - **Porta:** `5432`
+
+> **Nota:** O PostgreSQL local do Docker Compose (`postgres:5432`) é legado. O banco oficial é o Cloud SQL.
 
 Existem credenciais separadas por responsabilidade.
 
@@ -436,12 +446,14 @@ O PgAdmin é a interface web de banco providenciada pela infraestrutura.
 - **Login:** `admin@portalb2b.com`
 - **Senha:** `***`
 
-Para cadastrar a conexão com o banco de dados **dentro do PgAdmin**:
-- **Host:** `postgres` *(Usa-se "postgres" porque o PgAdmin roda no Docker na mesma rede)*
+Para cadastrar a conexão com o banco de dados **dentro do PgAdmin**, aponte para o Cloud SQL:
+- **Host:** `136.114.235.212`
 - **Port:** `5432`
 - **Database:** `portal_b2b`
 - **User:** `db_portal_b2b` (Se for equipe de banco)
 - **Password:** `***` *(fornecida pela equipe de infraestrutura)*
+
+> **Nota:** O host `postgres` (Docker Compose local) ainda funciona para o banco legado, mas o banco oficial é o Cloud SQL.
 
 ---
 
@@ -449,7 +461,7 @@ Para cadastrar a conexão com o banco de dados **dentro do PgAdmin**:
 
 Se preferir usar sua ferramenta favorita instalada no seu PC:
 
-- **Host:** `34.29.84.207`
+- **Host:** `136.114.235.212`
 - **Port:** `5432`
 - **Database:** `portal_b2b`
 - **User:** `db_portal_b2b` ou `svc_portal_b2b`
@@ -457,7 +469,7 @@ Se preferir usar sua ferramenta favorita instalada no seu PC:
 
 Exemplo de string de conexão para `psql`:
 ```bash
-psql "postgresql://svc_portal_b2b:***@34.29.84.207:5432/portal_b2b"
+psql "postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b"
 ```
 
 ---
@@ -771,21 +783,25 @@ Se o repositório da equipe tiver front-end, ele também deve ser dockerizado. A
 
 ---
 
-## 29. Observação sobre arquitetura redundante
+## 29. Banco de dados oficial — Cloud SQL PostgreSQL
 
-Na arquitetura atual de VM única, os microsserviços usam:
+O banco oficial do projeto é o **Cloud SQL PostgreSQL**:
 
-```env
-DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
+```text
+Host: 136.114.235.212
+Banco: portal_b2b
+Schema: portal_b2b
 ```
 
-Na arquitetura redundante com duas VMs, o banco deve ser externo e compartilhado, preferencialmente **Cloud SQL PostgreSQL**. Nesse caso, o `DATABASE_URL` dos microsserviços deve apontar para o IP ou endpoint do Cloud SQL:
+Todos os microsserviços devem usar:
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:***@IP_DO_CLOUD_SQL:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 ```
 
-Para detalhes, consulte:
+> **Importante:** O host `postgres:5432` do Docker Compose local é legado. Não usar como banco oficial.
+
+Para detalhes sobre a arquitetura redundante e a migração, consulte:
 
 [docs/arquitetura-redundante-gcp.md](./docs/arquitetura-redundante-gcp.md)
 

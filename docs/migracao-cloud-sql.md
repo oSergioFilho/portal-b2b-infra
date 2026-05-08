@@ -1,14 +1,18 @@
 # Migração do PostgreSQL Local para Cloud SQL
 
-## 1. Objetivo
+## 1. Status
 
-Este documento descreve como migrar o banco PostgreSQL local da VM para uma instância **Cloud SQL PostgreSQL** gerenciada pelo GCP.
+> **Migração concluída.** O banco oficial do projeto agora é o Cloud SQL PostgreSQL em `136.114.235.212`.
+
+## 2. Objetivo
+
+Este documento descreve como foi feita a migração do banco PostgreSQL local da VM para a instância **Cloud SQL PostgreSQL** gerenciada pelo GCP.
 
 A migração permite que o banco seja acessado por múltiplas VMs de aplicação, eliminando a dependência do PostgreSQL local e habilitando a arquitetura redundante.
 
 ---
 
-## 2. Criar backup do banco atual
+## 3. Backup do banco local (referência)
 
 Antes de qualquer migração, gerar um dump completo do banco atual:
 
@@ -27,37 +31,36 @@ docker compose exec -T postgres pg_dump \
 
 ---
 
-## 3. Criar instância Cloud SQL
+## 4. Instância Cloud SQL atual
 
-Criar uma instância Cloud SQL PostgreSQL no console do GCP ou via `gcloud`:
+A instância Cloud SQL PostgreSQL está ativa no GCP.
 
-**Configuração esperada:**
+**Configuração atual:**
 
 | Item | Valor |
 |---|---|
 | Tipo | PostgreSQL |
+| Host | `136.114.235.212` |
 | Banco | `portal_b2b` |
 | Usuário de aplicação | `svc_portal_b2b` |
 | Usuário de banco (DDL) | `db_portal_b2b` |
 
-> **Observação:** Anotar o IP privado ou público da instância Cloud SQL para configurar os microsserviços.
-
 ---
 
-## 4. Restaurar dump no Cloud SQL
+## 5. Restaurar dump no Cloud SQL (referência)
 
 Com a instância criada e o banco `portal_b2b` configurado, restaurar o dump:
 
 ```bash
-psql "postgresql://USUARIO:SENHA@IP_DO_CLOUD_SQL:5432/portal_b2b" \
+psql "postgresql://USUARIO:SENHA@136.114.235.212:5432/portal_b2b" \
   < backups/postgres/portal_b2b_cloudsql_migration.sql
 ```
 
-> **Substituir** `USUARIO`, `SENHA` e `IP_DO_CLOUD_SQL` pelos valores reais da instância.
+> **Substituir** `USUARIO`, `SENHA` e `136.114.235.212` pelos valores reais da instância.
 
 ---
 
-## 5. Garantir permissões
+## 6. Garantir permissões
 
 Após a restauração, aplicar as permissões nos usuários do Cloud SQL:
 
@@ -75,7 +78,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA portal_b2b GRANT ALL ON TABLES TO db_portal_b
 
 ---
 
-## 6. Atualizar .env dos microsserviços
+## 7. Atualizar .env dos microsserviços
 
 Alterar o `DATABASE_URL` em cada microsserviço para apontar para o Cloud SQL.
 
@@ -85,41 +88,56 @@ Alterar o `DATABASE_URL` em cada microsserviço para apontar para o Cloud SQL.
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
 ```
 
-**Depois (Cloud SQL PostgreSQL):**
+**Atual (Cloud SQL PostgreSQL):**
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@IP_DO_CLOUD_SQL:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/portal_b2b
 ```
 
 > **Atenção:** Fazer essa alteração em **todas as VMs** que rodam microsserviços (app-primary e app-standby).
 
 ---
 
-## 7. Testar conexão
+## 8. Testar conexão
 
 Após atualizar o `DATABASE_URL`, testar a conectividade com o Cloud SQL:
 
 ```bash
-psql "postgresql://svc_portal_b2b:SENHA@IP_DO_CLOUD_SQL:5432/portal_b2b" \
+psql "postgresql://svc_portal_b2b:SENHA@136.114.235.212:5432/portal_b2b" \
   -c "SELECT * FROM portal_b2b.health_check;"
 ```
 
 Se a consulta retornar resultado, a conexão está funcionando corretamente.
 
-> **Substituir** `SENHA` e `IP_DO_CLOUD_SQL` pelos valores reais.
+> **Substituir** `SENHA` e `136.114.235.212` pelos valores reais.
 
 ---
 
-## 8. Observação importante
+## 9. Validação da migração
 
-**Não apagar o PostgreSQL local imediatamente.**
+A migração inicial do PostgreSQL local para o Cloud SQL foi realizada com sucesso.
 
-O procedimento seguro é:
+Teste validado:
 
-1. Configurar o Cloud SQL.
-2. Restaurar o dump.
-3. Atualizar o `DATABASE_URL` de **pelo menos um microsserviço**.
-4. Validar que o microsserviço funciona normalmente com o Cloud SQL.
-5. Somente após validação completa, considerar desativar o PostgreSQL local.
+```bash
+export CLOUDSQL_IP="136.114.235.212"
+export SVC_PASSWORD="senha_portal_b2b"
 
-O PostgreSQL local pode continuar rodando como fallback durante o período de transição.
+PGPASSWORD="$SVC_PASSWORD" psql \
+  -h "$CLOUDSQL_IP" \
+  -U svc_portal_b2b \
+  -d portal_b2b \
+  -c "SELECT * FROM portal_b2b.health_check;"
+```
+
+**Resultado esperado/obtido:**
+
+A tabela `portal_b2b.health_check` retornou os registros dos serviços.
+
+---
+
+## 10. Observação importante
+
+O PostgreSQL local continua rodando como legado/fallback. Ele pode ser desativado no futuro após validação completa de todos os microsserviços no Cloud SQL.
+
+O próximo passo é atualizar os `.env` dos microsserviços para apontarem para o Cloud SQL.

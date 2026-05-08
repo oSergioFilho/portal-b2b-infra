@@ -10,16 +10,17 @@ O objetivo é reduzir o ponto único de falha da VM central, permitindo que o si
 
 ## 2. Limitação da arquitetura atual
 
-Hoje a VM central (`34.29.84.207`) concentra todos os componentes:
+Hoje a VM central (`34.29.84.207`) concentra os componentes de aplicação:
 
 - API Gateway (Nginx)
 - Microsserviços de todas as equipes
-- PostgreSQL
 - Kafka/Redpanda
 - PgAdmin
 - Kafka UI
 
-Se essa VM cair, **o sistema inteiro fica indisponível**. Não há redundância de aplicação nem de banco de dados.
+O banco de dados oficial já foi migrado para **Cloud SQL PostgreSQL** (`136.114.235.212`), reduzindo a dependência do banco local.
+
+Se a VM cair, os microsserviços ficam indisponíveis, mas o banco permanece acessível externamente.
 
 ---
 
@@ -65,12 +66,13 @@ As duas VMs terão a mesma estrutura de diretórios:
 
 ## 4. Banco compartilhado com Cloud SQL
 
-Na arquitetura redundante, o PostgreSQL deixará de depender da VM principal. O banco oficial será uma instância **Cloud SQL PostgreSQL** gerenciada pelo GCP.
+O banco oficial já é uma instância **Cloud SQL PostgreSQL** gerenciada pelo GCP.
 
-**Configuração do banco:**
+**Configuração atual do banco:**
 
 | Item | Valor |
 |---|---|
+| Host | `136.114.235.212` |
 | Banco | `portal_b2b` |
 | Schema | `portal_b2b` |
 | Usuário de aplicação | `svc_portal_b2b` |
@@ -90,10 +92,10 @@ DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b
 
 O host `postgres` resolve dentro da rede Docker (`portal-b2b-network`) porque o banco roda como container na mesma VM.
 
-### Depois — arquitetura redundante com Cloud SQL
+### Atual — Cloud SQL
 
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@IP_PRIVADO_OU_PUBLICO_DO_CLOUD_SQL:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/portal_b2b
 ```
 
 **Observações importantes:**
@@ -228,7 +230,7 @@ Na arquitetura redundante, existem duas possibilidades:
 | Fase | Entrega | Status |
 |------|---------|--------|
 | 1 | VM atual funcionando | ✅ Implementado |
-| 2 | Cloud SQL PostgreSQL | 🔜 Próxima etapa |
+| 2 | Cloud SQL PostgreSQL | ✅ Implementado |
 | 3 | VM standby | 🔜 Próxima etapa |
 | 4 | Failover manual documentado | 🔜 Próxima etapa |
 | 5 | Load Balancer | 📋 Evolução |
@@ -239,4 +241,4 @@ Na arquitetura redundante, existem duas possibilidades:
 
 ## 14. Texto para apresentação
 
-> A infraestrutura inicialmente foi validada em uma VM central. Para reduzir o ponto único de falha, a próxima evolução separa o banco em Cloud SQL PostgreSQL e cria duas VMs de aplicação: uma principal e uma standby. As duas VMs utilizam o mesmo banco, permitindo que a standby assuma caso a principal falhe. Inicialmente o failover pode ser manual; posteriormente, um Load Balancer pode automatizar o redirecionamento para a VM saudável.
+> A infraestrutura inicialmente foi validada em uma VM central. O banco foi migrado para Cloud SQL PostgreSQL, eliminando o ponto único de falha do banco local. Para reduzir o ponto único de falha da aplicação, a próxima evolução cria duas VMs de aplicação: uma principal e uma standby. As duas VMs utilizam o mesmo banco Cloud SQL, permitindo que a standby assuma caso a principal falhe. Inicialmente o failover pode ser manual; posteriormente, um Load Balancer pode automatizar o redirecionamento para a VM saudável.

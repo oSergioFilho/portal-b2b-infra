@@ -227,3 +227,21 @@ http://34.29.84.207:8081
 ## Observação sobre ambiente de desenvolvimento
 
 Rodar `npm run dev` na VM pode ser usado apenas para **teste temporário**. A entrega final deve ser via Docker.
+
+---
+
+## Observação sobre Cloud SQL
+
+Front-ends devem chamar as APIs pelo Gateway da VM:
+
+```text
+http://34.29.84.207/api/{dominio}
+```
+
+Exemplo:
+
+```text
+http://34.29.84.207/api/produtos
+```
+
+**Não devem chamar o Cloud SQL diretamente.** O Cloud SQL (`136.114.235.212`) é acessado apenas pelos microsserviços/backend.

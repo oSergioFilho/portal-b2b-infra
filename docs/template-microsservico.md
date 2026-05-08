@@ -17,7 +17,7 @@ nome-service/
 SERVICE_NAME=nome-service
 PORT=5000
 
-DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
@@ -28,10 +28,12 @@ Cada equipe deve trocar:
 - `PORT`
 
 E não deve trocar:
-- `postgres`
+- `136.114.235.212` (Cloud SQL oficial)
 - `redpanda`
 - `portal_b2b`
 - `svc_portal_b2b`
+
+> **Nota:** O host `postgres` (Docker Compose local) é legado. O banco oficial é o Cloud SQL.
 
 ## docker-compose.yml mínimo
 

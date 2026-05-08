@@ -22,12 +22,12 @@ Cada equipe deve entregar seu serviço dockerizado contendo:
 A infraestrutura **não** instalará dependências (npm, pip, maven) manualmente para nenhuma equipe. O deploy e execução do microsserviço devem ocorrer exclusivamente via Docker utilizando a rede da infraestrutura.
 
 ## Arquitetura e Componentes Centrais
-A arquitetura final define que **todos os microsserviços e a infraestrutura rodam na mesma VM central**.
+A arquitetura atual utiliza uma VM de aplicação no GCP (`34.29.84.207`) com banco de dados oficial em **Cloud SQL PostgreSQL** (`136.114.235.212`). A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em [docs/arquitetura-redundante-gcp.md](./docs/arquitetura-redundante-gcp.md).
 
 A infraestrutura fornece:
 - **API Gateway (Nginx):** Entrada única para as APIs REST. Encaminha requisições para os microsserviços rodando nas portas da VM via `host.docker.internal`.
 - **Kafka-compatible Broker (Redpanda):** Barramento central de eventos Kafka para comunicação assíncrona.
-- **Banco de Dados Centralizado (PostgreSQL):** Instância física única usando um schema geral (`portal_b2b`).
+- **Banco de Dados Oficial (Cloud SQL PostgreSQL):** Instância gerenciada pelo GCP usando banco `portal_b2b` e schema `portal_b2b`. O PostgreSQL local do Docker Compose permanece apenas como legado/fallback.
 - **Ferramentas de Suporte:** PgAdmin (Banco) e Kafka UI (Eventos) para testes e visualização.
 
 ## Divisão de Responsabilidades
@@ -51,7 +51,7 @@ A infraestrutura fornece:
 - Entregar .env.example.
 - Garantir que o container use a rede portal-b2b-network.
 - Garantir que o serviço publique a porta oficial no host.
-- Usar postgres:5432 para PostgreSQL quando rodar em container.
+- Usar `136.114.235.212:5432` (Cloud SQL) para PostgreSQL. O host `postgres:5432` do Docker Compose local é legado.
 - Usar redpanda:9092 para Kafka quando rodar em container.
 - Publicar e consumir eventos Kafka.
 - Fornecer endpoint `/health`.
@@ -116,20 +116,24 @@ Acessos principais:
 | API Gateway | http://34.29.84.207 | Retorna `API Gateway do Portal B2B ativo` em `/health` |
 | PgAdmin | http://34.29.84.207:5050 | `admin@portalb2b.com` / `***`. Permite visualizar as tabelas do PostgreSQL. |
 | Kafka UI | http://34.29.84.207:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
-| PostgreSQL | `34.29.84.207:5432` | `postgres` (Admin), `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação) |
+| PostgreSQL (Cloud SQL) | `136.114.235.212:5432` | `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação). Banco oficial. |
+| PostgreSQL (local/legado) | `34.29.84.207:5432` | Legado. Mantido apenas como fallback ou ambiente de desenvolvimento local. |
 | Redpanda/Kafka| `34.29.84.207:9092` | Broker Kafka principal |
 
 **Acesso da Equipe de Banco:**
 
-Se usar o **PgAdmin web (já incluso na infra)**:
-- Host: `postgres` (Pois o PgAdmin roda dentro do Docker e acessa o banco pelo nome interno).
+O banco oficial é o **Cloud SQL PostgreSQL**:
+- Host: `136.114.235.212`
 - Port: `5432`
 - Database: `portal_b2b`
+- Schema: `portal_b2b`
 - User: `db_portal_b2b`
 - Password: `***` *(senha fornecida diretamente pela equipe de infraestrutura)*
 
+> **Nota:** O PgAdmin da VM ainda pode ser utilizado para visualização, mas o banco oficial agora é externo (Cloud SQL).
+
 Se usar **Ferramenta Externa (DBeaver, DataGrip, psql no seu PC)**:
-- Host: `34.29.84.207` (Ou `localhost` se estiver rodando a infra na sua própria máquina).
+- Host: `136.114.235.212`
 - Port: `5432`
 - Database: `portal_b2b`
 - User: `db_portal_b2b`
@@ -137,14 +141,14 @@ Se usar **Ferramenta Externa (DBeaver, DataGrip, psql no seu PC)**:
 
 **Acesso das Equipes de Microsserviços (.env):**
 
-**Padrão em container (Obrigatório):**
+**Padrão oficial (Cloud SQL):**
 ```env
-DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-*(Se rodar direto na VM sem Docker, use `localhost` no lugar de `postgres` e `redpanda`).*
+> **Importante:** O host `postgres:5432` do Docker Compose local é legado. O banco oficial é `136.114.235.212:5432` (Cloud SQL).
 
 **Regras de Integração:**
 - `Dockerfile` é obrigatório.
@@ -226,9 +230,68 @@ Para o plano completo de redundância e recuperação, consulte:
 
 [docs/redundancia-e-recuperacao.md](./docs/redundancia-e-recuperacao.md)
 
-## Arquitetura redundante
+## Arquitetura atual
 
-A evolução para uma arquitetura redundante com duas VMs de aplicação e Cloud SQL PostgreSQL está documentada em:
+A arquitetura atual do Portal B2B utiliza uma VM de aplicação no GCP e um banco PostgreSQL externo no Cloud SQL.
+
+Para o estado completo da infraestrutura, consulte: [docs/estado-atual-infra.md](./docs/estado-atual-infra.md)
+
+```text
+Usuário / Frontend
+        ↓
+API Gateway - VM 34.29.84.207
+        ↓
+Microsserviços dockerizados
+        ↓
+Cloud SQL PostgreSQL - 136.114.235.212
+        ↓
+Kafka/Redpanda - VM 34.29.84.207
+```
+
+**VM principal:**
+
+```text
+34.29.84.207
+```
+
+O que roda na VM:
+- API Gateway (Nginx)
+- Redpanda/Kafka
+- Kafka UI
+- PgAdmin
+- Microsserviços dockerizados
+- Rede Docker `portal-b2b-network`
+
+### Banco oficial
+
+O banco oficial do projeto é o **Cloud SQL PostgreSQL**:
+
+```text
+136.114.235.212
+```
+
+| Item | Valor |
+|---|---|
+| Banco | `portal_b2b` |
+| Schema | `portal_b2b` |
+| Usuário de aplicação | `svc_portal_b2b` |
+| Usuário de banco (DDL) | `db_portal_b2b` |
+
+Os microsserviços não devem mais usar `postgres:5432` como banco oficial em ambiente de integração com Cloud SQL. Em vez disso, devem usar:
+
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/portal_b2b
+DB_SCHEMA=portal_b2b
+KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+```
+
+### PostgreSQL local
+
+O container PostgreSQL local ainda existe no `docker-compose.yml` por compatibilidade, testes locais e fallback. Porém, ele **não é mais o banco oficial** da integração principal.
+
+Não remover o container ainda, mas o Cloud SQL é a fonte principal de dados.
+
+A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em:
 
 [docs/arquitetura-redundante-gcp.md](./docs/arquitetura-redundante-gcp.md)
 

@@ -110,16 +110,19 @@ docker logs -f produtos-service
 SERVICE_NAME=produtos-service
 PORT=5002
 
-DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
+DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
 > **Atenção:**
-> - Dentro do container, **não usar `localhost`** para banco. O host correto é `postgres`.
+> - O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`.
+> - O host `postgres` (Docker Compose local) é **legado** e não deve mais ser usado.
 > - Dentro do container, **não usar `localhost`** para Kafka. O host correto é `redpanda`.
 > - O `localhost` dentro de um container aponta para o próprio container, não para os serviços da infraestrutura.
+
+> **Nota:** Se a equipe estiver rodando tudo localmente em ambiente próprio, pode usar outro banco local. Mas na VM oficial de integração, o banco deve ser o Cloud SQL.
 
 ---
 
@@ -188,7 +191,7 @@ bash scripts/check-services.sh
 | `Arquivo docker-compose.yml não encontrado` | Equipe não entregou compose | Pedir correção à equipe |
 | `Arquivo .env.example não encontrado` | Equipe não padronizou variáveis | Pedir correção à equipe |
 | Gateway retorna `502` | Container não está rodando ou porta errada | Verificar `docker ps` e `docker logs` |
-| Banco não conecta | Usou `localhost` dentro do container | Trocar para `postgres:5432` |
+| Banco não conecta | Usou host errado para o banco | Usar `136.114.235.212:5432` (Cloud SQL). O host `postgres` é legado. |
 | Kafka não conecta | Usou `localhost` dentro do container | Trocar para `redpanda:9092` |
 | Porta já em uso | Outro serviço usa a mesma porta | Conferir porta oficial |
 | `/health` não responde | Serviço não implementou endpoint ou iniciou com erro | Verificar logs e pedir correção à equipe |
