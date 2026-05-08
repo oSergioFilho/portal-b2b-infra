@@ -134,7 +134,7 @@ A VM standby deve estar preparada para subir a infraestrutura a qualquer momento
 
 ## 8. Estratégia de failover manual
 
-Com o Load Balancer implementado, o failover do Gateway/API é automático quando uma VM deixa de responder ao health check. O procedimento manual permanece útil para diagnóstico, manutenção ou recuperação operacional. Se for necessário intervir manualmente na VM standby:
+Com o Load Balancer implementado, o failover de tráfego HTTP é automático entre as VMs saudáveis. O procedimento manual abaixo fica como fallback operacional ou diagnóstico. Se for necessário intervir manualmente na VM standby:
 
 1. Acessar a VM standby via SSH.
 2. Rodar `git pull` nos repositórios de infraestrutura e microsserviços.
@@ -162,11 +162,15 @@ bash /opt/portal-b2b/infra/portal-b2b-infra/scripts/check-services.sh
 
 ## 9. Load Balancer (implementado)
 
-O **Load Balancer HTTP externo** já foi implementado e é o ponto oficial de entrada do sistema.
+O Load Balancer HTTP externo já foi implementado no GCP e é o ponto oficial de entrada do sistema.
 
-- APIs: http://34.8.17.245/api/{dominio}
-- Front produtos: http://34.8.17.245/produtos/
-- Health: http://34.8.17.245/health
+Load Balancer atual:
+http://34.8.17.245
+
+Health check:
+GET /health
+
+O Load Balancer distribui para a VM principal ou standby conforme o health check.
 
 O Load Balancer cobre a porta 80/Gateway. Serviços expostos em portas diretas, como 8081, só ficam redundantes automaticamente se forem publicados por uma rota no Gateway, como `/produtos/`.
 
@@ -190,7 +194,7 @@ O Load Balancer envia tráfego apenas para a VM que responder com sucesso ao hea
 
 ## 10. Kafka/Redpanda
 
-Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso atende à demonstração acadêmica de redundância da aplicação e do Gateway, mas ainda não representa um cluster Kafka/Redpanda replicado entre VMs.
+Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Ainda não existe cluster Kafka/Redpanda replicado entre VMs.
 
 Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos brokers e fator de replicação maior que 1.
 

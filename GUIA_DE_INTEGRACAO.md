@@ -403,6 +403,7 @@ curl http://localhost/api/produtos/health
 ```bash
 curl http://34.8.17.245/api/produtos/health
 ```
+Esse é o teste externo oficial, pois passa pelo Load Balancer.
 
 **Teste direto na VM principal, somente diagnóstico:**
 ```bash
@@ -413,6 +414,8 @@ curl http://34.29.84.207/api/produtos/health
 ```bash
 curl http://104.197.23.241/api/produtos/health
 ```
+
+Os IPs das VMs são apenas para diagnóstico direto, não para uso oficial pelas equipes.
 
 > **Observação:** Front-ends devem chamar APIs usando rotas relativas, como `/api/produtos`, ou o Load Balancer `http://34.8.17.245/api/produtos`. Não usar o IP da VM principal como endpoint oficial.
 
