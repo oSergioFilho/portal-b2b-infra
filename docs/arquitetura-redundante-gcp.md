@@ -229,16 +229,27 @@ Na arquitetura redundante, existem duas possibilidades:
 
 | Fase | Entrega | Status |
 |------|---------|--------|
-| 1 | VM atual funcionando | ✅ Implementado |
+| 1 | VM principal funcionando | ✅ Implementado |
 | 2 | Cloud SQL PostgreSQL | ✅ Implementado |
-| 3 | VM standby | 🔜 Próxima etapa |
-| 4 | Failover manual documentado | 🔜 Próxima etapa |
-| 5 | Load Balancer | 📋 Evolução |
+| 3 | VM standby | ✅ Implementado |
+| 4 | Load Balancer HTTP | ✅ Implementado |
+| 5 | Failover manual/controlado | 🔜 Próxima etapa |
 | 6 | Redpanda cluster | 📋 Evolução futura |
 | 7 | Kubernetes | 📋 Evolução futura |
+
+**Endereços atuais:**
+
+| Componente | Endereço |
+|---|---|
+| Load Balancer | `34.8.17.245` |
+| VM principal | `34.29.84.207` |
+| VM standby | `104.197.23.241` |
+| Cloud SQL | `136.114.235.212` |
+
+O acesso recomendado ao sistema é pelo **Load Balancer** (`34.8.17.245`), não diretamente pela VM principal.
 
 ---
 
 ## 14. Texto para apresentação
 
-> A infraestrutura inicialmente foi validada em uma VM central. O banco foi migrado para Cloud SQL PostgreSQL, eliminando o ponto único de falha do banco local. Para reduzir o ponto único de falha da aplicação, a próxima evolução cria duas VMs de aplicação: uma principal e uma standby. As duas VMs utilizam o mesmo banco Cloud SQL, permitindo que a standby assuma caso a principal falhe. Inicialmente o failover pode ser manual; posteriormente, um Load Balancer pode automatizar o redirecionamento para a VM saudável.
+> A infraestrutura inicialmente foi validada em uma VM central. O banco foi migrado para Cloud SQL PostgreSQL, eliminando o ponto único de falha do banco local. Para reduzir o ponto único de falha da aplicação, foram criadas duas VMs: uma principal e uma standby. As duas VMs utilizam o mesmo banco Cloud SQL. Um Load Balancer HTTP externo distribui as requisições entre as VMs, verificando a saúde de cada uma via `/health`. Se uma VM cair, o Load Balancer redireciona automaticamente para a VM saudável.

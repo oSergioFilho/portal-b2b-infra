@@ -6,7 +6,9 @@ Este documento centraliza os testes operacionais para validar a infraestrutura a
 
 A arquitetura atual usa:
 
+- Load Balancer: `34.8.17.245`
 - VM principal: `34.29.84.207`
+- VM standby: `104.197.23.241`
 - Cloud SQL PostgreSQL oficial: `136.114.235.212`
 - Redpanda/Kafka na VM
 - API Gateway na VM
@@ -167,7 +169,59 @@ Resultado esperado atual:
 
 ---
 
-## 12. Testes legados do PostgreSQL local
+## 12. Testar Load Balancer
+
+```bash
+curl http://34.8.17.245/health
+```
+
+Resposta esperada:
+
+```text
+API Gateway do Portal B2B ativo
+```
+
+```bash
+curl http://34.8.17.245/api/produtos/health
+```
+
+Resposta esperada:
+
+```json
+{"status":"ok","service":"produtos-service"}
+```
+
+---
+
+## 13. Testar backends do Load Balancer
+
+No Cloud Shell do GCP:
+
+```bash
+gcloud compute backend-services get-health portal-b2b-backend-service --global
+```
+
+Resultado esperado:
+
+```text
+portal-b2b-vm         HEALTHY
+portal-b2b-vm-standby HEALTHY
+```
+
+---
+
+## 14. Testar VM standby diretamente
+
+```bash
+curl http://104.197.23.241/health
+curl http://104.197.23.241/api/produtos/health
+```
+
+Resultado esperado: mesmas respostas que a VM principal.
+
+---
+
+## 15. Testes legados do PostgreSQL local
 
 Esses testes só são necessários se a equipe quiser validar o PostgreSQL local/fallback.
 
@@ -183,16 +237,19 @@ docker compose exec -T postgres psql -U postgres -d portal_b2b -c "SELECT * FROM
 
 ---
 
-## 13. Resultado esperado geral
+## 16. Resultado esperado geral
 
 A infraestrutura atual está validada quando:
 
-- [ ] Gateway responde `/health`.
+- [ ] Gateway responde `/health` na VM principal.
+- [ ] Gateway responde `/health` na VM standby.
+- [ ] Load Balancer responde `/health`.
 - [ ] Cloud SQL responde com `svc_portal_b2b`.
 - [ ] Cloud SQL responde com `db_portal_b2b`.
 - [ ] Kafka UI abre.
 - [ ] Kafka recebe mensagem de teste.
 - [ ] PgAdmin abre.
-- [ ] `produtos-service` responde pelo Gateway.
+- [ ] `produtos-service` responde pelo Load Balancer.
+- [ ] Backends do Load Balancer estão HEALTHY.
 - [ ] `check-infra.sh` conclui sem erro crítico.
 - [ ] `check-services.sh` mostra OK para os serviços já deployados.

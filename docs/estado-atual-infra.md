@@ -2,23 +2,34 @@
 
 ## 1. Visão geral
 
-A infraestrutura atual do Portal B2B está dividida entre uma **VM de aplicação** no GCP e um **Cloud SQL PostgreSQL** como banco oficial.
+A infraestrutura atual do Portal B2B utiliza Load Balancer, duas VMs de aplicação e Cloud SQL PostgreSQL como banco oficial.
 
 ```text
 Usuário / Frontend
         ↓
-API Gateway - VM 34.29.84.207
+Load Balancer - 34.8.17.245
+        ↓
+VM principal ou VM standby
         ↓
 Microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
-        ↓
-Kafka/Redpanda - VM 34.29.84.207
 ```
 
 ---
 
-## 2. VM principal
+## 2. Componentes
+
+| Componente | Endereço | Função |
+|---|---|---|
+| Load Balancer | `34.8.17.245` | Entrada principal do sistema |
+| VM principal | `34.29.84.207` | Aplicação principal |
+| VM standby | `104.197.23.241` | Aplicação redundante |
+| Cloud SQL | `136.114.235.212` | Banco oficial compartilhado |
+
+---
+
+## 3. VM principal
 
 ```text
 IP: 34.29.84.207
@@ -37,7 +48,17 @@ O que roda na VM:
 
 ---
 
-## 3. Cloud SQL
+## 4. VM standby
+
+```text
+IP: 104.197.23.241
+```
+
+Mesma estrutura da VM principal. Roda os mesmos containers e microsserviços.
+
+---
+
+## 5. Cloud SQL
 
 ```text
 IP: 136.114.235.212
@@ -50,7 +71,7 @@ IP: 136.114.235.212
 | Usuário de aplicação | `svc_portal_b2b` |
 | Usuário de banco (DDL) | `db_portal_b2b` |
 
-O Cloud SQL é o banco oficial. Os microsserviços devem usar:
+O Cloud SQL é o banco oficial. As duas VMs usam o mesmo banco. Os microsserviços devem usar:
 
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/portal_b2b
@@ -60,25 +81,42 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 
 ---
 
-## 4. Microsserviços integrados
+## 6. Load Balancer
 
-| Serviço | Status | Endpoint |
-|---|---|---|
-| produtos-service | ✅ Integrado | http://34.29.84.207/api/produtos/health |
-| usuarios-service | ⏳ Aguardando deploy | http://34.29.84.207/api/usuarios/health |
-| fornecimentos-service | ⏳ Aguardando deploy | http://34.29.84.207/api/fornecimentos/health |
-| demanda-service | ⏳ Aguardando deploy | http://34.29.84.207/api/demandas/health |
-| mercado-service | ⏳ Aguardando deploy | http://34.29.84.207/api/mercado/health |
-| negociacao-service | ⏳ Aguardando deploy | http://34.29.84.207/api/negociacoes/health |
-| pedidos-service | ⏳ Aguardando deploy | http://34.29.84.207/api/pedidos/health |
-| logistica-service | ⏳ Aguardando deploy | http://34.29.84.207/api/logistica/health |
-| transportadoras-service | ⏳ Aguardando deploy | http://34.29.84.207/api/transportadoras/health |
+```text
+IP: 34.8.17.245
+```
+
+O acesso principal ao sistema é pelo Load Balancer:
+
+```text
+http://34.8.17.245/health
+http://34.8.17.245/api/produtos/health
+```
+
+O Load Balancer distribui requisições entre a VM principal e a VM standby com base no health check (`GET /health`).
 
 ---
 
-## 5. Serviços ainda locais na VM
+## 7. Microsserviços integrados
 
-Os seguintes serviços continuam rodando localmente na VM via Docker Compose:
+| Serviço | Status | Endpoint (via LB) |
+|---|---|---|
+| produtos-service | ✅ Integrado | http://34.8.17.245/api/produtos/health |
+| usuarios-service | ⏳ Aguardando deploy | http://34.8.17.245/api/usuarios/health |
+| fornecimentos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/fornecimentos/health |
+| demanda-service | ⏳ Aguardando deploy | http://34.8.17.245/api/demandas/health |
+| mercado-service | ⏳ Aguardando deploy | http://34.8.17.245/api/mercado/health |
+| negociacao-service | ⏳ Aguardando deploy | http://34.8.17.245/api/negociacoes/health |
+| pedidos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/pedidos/health |
+| logistica-service | ⏳ Aguardando deploy | http://34.8.17.245/api/logistica/health |
+| transportadoras-service | ⏳ Aguardando deploy | http://34.8.17.245/api/transportadoras/health |
+
+---
+
+## 8. Serviços ainda locais nas VMs
+
+Os seguintes serviços continuam rodando localmente em cada VM via Docker Compose:
 
 - Redpanda/Kafka
 - Kafka UI
@@ -90,13 +128,18 @@ O PostgreSQL local permanece no `docker-compose.yml` por compatibilidade e teste
 
 ---
 
-## 6. Próximas etapas
+## 9. O que já foi implementado
 
-- [ ] Atualizar `.env` de cada novo microsserviço para Cloud SQL durante o deploy
-- [ ] Validar cada microsserviço com endpoint real que consulte o Cloud SQL, não apenas `/health`
+- [x] VM principal funcionando
+- [x] Cloud SQL PostgreSQL
+- [x] VM standby criada
+- [x] Load Balancer HTTP criado
+- [x] produtos-service validado nas duas VMs
+- [x] Cloud SQL acessível pelas duas VMs
+
+## 10. Próximas etapas
+
+- [ ] Documentar teste de falha controlada
+- [ ] Validar cada novo microsserviço nas duas VMs
 - [ ] Definir rotina oficial de backup/exportação do Cloud SQL
-- [ ] Criar VM standby
-- [ ] Autorizar IP da VM standby no Cloud SQL
-- [ ] Replicar deploy dos microsserviços na VM standby
-- [ ] Avaliar Load Balancer
-- [ ] Documentar failover manual
+- [ ] Avaliar cluster Redpanda/Kafka futuramente

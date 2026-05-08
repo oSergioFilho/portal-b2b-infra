@@ -305,6 +305,33 @@ A migração do PostgreSQL local para Cloud SQL está documentada em:
 
 [docs/migracao-cloud-sql.md](./docs/migracao-cloud-sql.md)
 
+## Operação redundante
+
+A infraestrutura possui Load Balancer, VM principal, VM standby e Cloud SQL compartilhado.
+
+| Componente | Endereço |
+|---|---|
+| Load Balancer | http://34.8.17.245 |
+| VM principal | `34.29.84.207` |
+| VM standby | `104.197.23.241` |
+| Cloud SQL | `136.114.235.212` |
+
+A operação redundante está documentada em:
+
+[docs/operacao-redundante.md](./docs/operacao-redundante.md)
+
+Para sincronizar a infraestrutura nas duas VMs:
+
+```bash
+bash scripts/sync-redundant.sh
+```
+
+Para fazer deploy de um microsserviço nas duas VMs:
+
+```bash
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
+```
+
 ## Testes da infraestrutura
 
 O roteiro atualizado de testes da infraestrutura, incluindo Cloud SQL, Gateway, Kafka e microsserviços, está em:
