@@ -2,14 +2,27 @@
 
 ## Ambiente atual
 
-IP atual da VM de integração: **34.29.84.207**
+Acesso oficial de integração:
+http://34.8.17.245
+
+VM principal:
+34.29.84.207 apenas diagnóstico
+
+VM standby:
+104.197.23.241 apenas diagnóstico
 
 | Recurso | URL |
 |---|---|
-| API Gateway | http://34.29.84.207 |
-| Health do Gateway | http://34.29.84.207/health |
-| PgAdmin | http://34.29.84.207:5050 |
-| Kafka UI | http://34.29.84.207:8080 |
+| API Gateway oficial | http://34.8.17.245 |
+| Health oficial | http://34.8.17.245/health |
+| produtos-service oficial | http://34.8.17.245/api/produtos/health |
+| Front produtos oficial | http://34.8.17.245/produtos/ |
+| PgAdmin principal | http://34.29.84.207:5050 |
+| PgAdmin standby | http://104.197.23.241:5050 |
+| Kafka UI principal | http://34.29.84.207:8080 |
+| Kafka UI standby | http://104.197.23.241:8080 |
+| Uptime Kuma | http://104.197.23.241:3001 |
+| Status Page | http://104.197.23.241:3001/status/portal-b2b-status |
 
 ---
 
@@ -54,7 +67,9 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 - URL: http://34.29.84.207:5050
 - Login: `admin@portalb2b.com`
 - Senha: `***`
-- Host do banco dentro do PgAdmin: `postgres` (não usar o IP externo dentro do PgAdmin)
+- Host do banco oficial no PgAdmin: `136.114.235.212`
+
+> O host `postgres` só deve ser usado para visualizar o PostgreSQL local legado/fallback. Para o banco oficial, usar Cloud SQL em `136.114.235.212`.
 
 **Kafka UI:**
 - URL: http://34.29.84.207:8080

@@ -15,16 +15,22 @@ O padrão atual definido para a arquitetura é:
 ### Caminho da requisição
 
 ```text
-Cliente (Browser/Frontend)
+Cliente / Frontend
     ↓
-API Gateway (Nginx) — porta 80
+Load Balancer - 34.8.17.245
     ↓
-host.docker.internal:5002 (porta publicada no host)
+Nginx Gateway da VM saudável
     ↓
-Container produtos-service — porta 5002
+host.docker.internal:PORTA
+    ↓
+Container do microsserviço
 ```
 
-**Exemplo:** `GET /api/produtos/health` → Gateway encaminha para `host.docker.internal:5002` → chega no container `produtos-service` como `GET /health`.
+**Exemplo:** `GET /api/produtos/health` → Load Balancer encaminha para VM saudável → Gateway Nginx encaminha para `host.docker.internal:5002` → chega no container `produtos-service` como `GET /health`.
+
+Rotas principais documentadas:
+- `/api/produtos/` -> `host.docker.internal:5002`
+- `/produtos/` -> `host.docker.internal:8081`
 
 Para o Gateway conseguir acessar o container do microsserviço, o docker-compose.yml do microsserviço precisa publicar a porta oficial no host da VM.
 
@@ -51,8 +57,10 @@ Este é o **padrão oficial**:
 - Microsserviço recebe a rota **sem** o prefixo `/api/{dominio}`.
 
 **Exemplos de Roteamento:**
-- `GET http://34.29.84.207/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
-- `GET http://34.29.84.207/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
+- `GET http://34.8.17.245/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
+- `GET http://34.8.17.245/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
+
+As portas e URLs diretas das VMs, como `http://34.29.84.207` e `http://104.197.23.241`, servem apenas como diagnóstico direto.
 
 ## Evolução futura (opcional)
 

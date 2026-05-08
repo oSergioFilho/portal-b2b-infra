@@ -4,17 +4,18 @@ Este guia descreve o passo a passo para subir e configurar a infraestrutura cent
 
 ## VM atual no GCP
 
-- IP público atual: 34.29.84.207
-- API Gateway: http://34.29.84.207
-- Health: http://34.29.84.207/health
-- PgAdmin: http://34.29.84.207:5050
-- Kafka UI: http://34.29.84.207:8080
+Deve ficar claro:
+
+- Acesso oficial: http://34.8.17.245
+- VM principal: http://34.29.84.207 apenas diagnóstico
+- VM standby: http://104.197.23.241 apenas diagnóstico
+- Cloud SQL: 136.114.235.212
+- PgAdmin/Kafka UI podem continuar por IP direto das VMs
 
 > **Observação importante:** No arquivo `.env` da VM, a variável `REDPANDA_EXTERNAL_HOST` deve estar configurada como:
-> ```env
-> REDPANDA_EXTERNAL_HOST=34.29.84.207
-> ```
-> Atenção: isso deve ser feito no `.env` da VM, não no `.env.example`.
+> - Na VM principal: `REDPANDA_EXTERNAL_HOST=34.29.84.207`
+> - Na VM standby: `REDPANDA_EXTERNAL_HOST=104.197.23.241`
+> Não colocar isso no `.env.example`.
 
 ## Passo a Passo
 
@@ -91,11 +92,18 @@ docker compose logs -f
 
 ## Como Subir um Microsserviço na VM
 
-Os microsserviços devem ser executados na mesma VM. A equipe responsável deve iniciar o serviço mapeando para a porta oficial definida.
+Os microsserviços devem ser executados na VM usando o Docker. O padrão oficial é Docker. Qualquer exemplo de rodar microsserviço direto com `uvicorn`, `npm` ou `java` (ex: `uvicorn main:app --host 0.0.0.0 --port 5002`) é **emergencial/não oficial**.
 
-Exemplo de execução de um serviço FastAPI (produtos-service na porta 5002):
+**Sincronizar infra nas duas VMs:**
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 5002
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/sync-redundant.sh
+```
+
+**Deploy redundante de microsserviço:**
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
 ```
 
 ## Como Testar o Roteamento via API Gateway

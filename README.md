@@ -249,7 +249,7 @@ Para o plano completo de redundância e recuperação, consulte:
 
 ## Arquitetura atual
 
-A arquitetura atual do Portal B2B utiliza uma VM de aplicação no GCP e um banco PostgreSQL externo no Cloud SQL.
+A arquitetura atual utiliza Load Balancer HTTP externo, duas VMs de aplicação e Cloud SQL PostgreSQL como banco oficial.
 
 Para o estado completo da infraestrutura, consulte: [docs/estado-atual-infra.md](./docs/estado-atual-infra.md)
 

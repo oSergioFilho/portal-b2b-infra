@@ -24,7 +24,7 @@ Se a VM cair, os microsserviços ficam indisponíveis, mas o banco permanece ace
 
 ---
 
-## 3. Arquitetura atual
+## 3. Arquitetura implementada
 
 A proposta original evoluiu e separou o banco de dados em uma instância Cloud SQL PostgreSQL, mantendo duas VMs de aplicação: uma principal e uma standby, atrás de um Load Balancer.
 
@@ -35,9 +35,9 @@ Load Balancer - 34.8.17.245
         ↓
 VM principal ou VM standby
         ↓
-API Gateway Nginx
+Nginx Gateway
         ↓
-Microsserviços / Fronts publicados
+Microsserviços / Front publicado no Gateway
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
 ```
@@ -132,7 +132,11 @@ A VM standby deve estar preparada para subir a infraestrutura a qualquer momento
 
 ---
 
-## 8. Estratégia de failover manual
+## 8. Contingência/diagnóstico manual
+
+- O failover HTTP principal já é feito pelo Load Balancer.
+- O acesso direto às VMs é somente diagnóstico/contingência.
+- O teste de falha controlada ainda pode ser feito depois.
 
 Com o Load Balancer implementado, o failover de tráfego HTTP é automático entre as VMs saudáveis. O procedimento manual abaixo fica como fallback operacional ou diagnóstico. Se for necessário intervir manualmente na VM standby:
 
@@ -194,9 +198,7 @@ O Load Balancer envia tráfego apenas para a VM que responder com sucesso ao hea
 
 ## 10. Kafka/Redpanda
 
-Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Ainda não existe cluster Kafka/Redpanda replicado entre VMs.
-
-Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos brokers e fator de replicação maior que 1.
+Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso mantém a infraestrutura de apoio disponível em cada VM, mas ainda não representa um cluster Kafka/Redpanda real com replicação entre brokers. Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos brokers e replication factor maior que 1.
 
 ### Opção futura
 
@@ -221,11 +223,11 @@ Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos
 
 ## 12. O que ainda não cobre
 
-- ❌ Cluster Kafka/Redpanda real
-- ❌ Replicação de eventos entre brokers
+- ❌ cluster Kafka/Redpanda real
+- ❌ replicação de eventos entre brokers
 - ❌ HTTPS/domínio
-- ❌ Escalabilidade horizontal automática
-- ❌ Kubernetes
+- ❌ métricas detalhadas com Prometheus/Grafana
+- ❌ escalabilidade horizontal automática
 
 ---
 
