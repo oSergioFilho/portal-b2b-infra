@@ -226,6 +226,16 @@ Para o plano completo de redundância e recuperação, consulte:
 
 [docs/redundancia-e-recuperacao.md](./docs/redundancia-e-recuperacao.md)
 
+## Arquitetura redundante
+
+A evolução para uma arquitetura redundante com duas VMs de aplicação e Cloud SQL PostgreSQL está documentada em:
+
+[docs/arquitetura-redundante-gcp.md](./docs/arquitetura-redundante-gcp.md)
+
+A migração do PostgreSQL local para Cloud SQL está documentada em:
+
+[docs/migracao-cloud-sql.md](./docs/migracao-cloud-sql.md)
+
 ## Estrutura recomendada da VM
 
 ```text

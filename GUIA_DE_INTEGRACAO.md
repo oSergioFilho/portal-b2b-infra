@@ -768,3 +768,25 @@ Para o plano completo, consulte: [docs/redundancia-e-recuperacao.md](./docs/redu
 Se o repositório da equipe tiver front-end, ele também deve ser dockerizado. A infraestrutura **não executará** `npm install` ou `npm run dev` manualmente como solução final. Para o padrão recomendado, consulte:
 
 [docs/deploy-frontends-na-vm.md](./docs/deploy-frontends-na-vm.md)
+
+---
+
+## 29. Observação sobre arquitetura redundante
+
+Na arquitetura atual de VM única, os microsserviços usam:
+
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:***@postgres:5432/portal_b2b
+```
+
+Na arquitetura redundante com duas VMs, o banco deve ser externo e compartilhado, preferencialmente **Cloud SQL PostgreSQL**. Nesse caso, o `DATABASE_URL` dos microsserviços deve apontar para o IP ou endpoint do Cloud SQL:
+
+```env
+DATABASE_URL=postgresql://svc_portal_b2b:***@IP_DO_CLOUD_SQL:5432/portal_b2b
+```
+
+Para detalhes, consulte:
+
+[docs/arquitetura-redundante-gcp.md](./docs/arquitetura-redundante-gcp.md)
+
+[docs/migracao-cloud-sql.md](./docs/migracao-cloud-sql.md)
