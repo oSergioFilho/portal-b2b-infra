@@ -2,7 +2,7 @@
 
 ## Regra principal de integração
 
-Cada equipe é responsável por entregar o próprio microsserviço dockerizado. A equipe de infraestrutura mantém PostgreSQL, Kafka/Redpanda, Kafka UI, PgAdmin, API Gateway e a rede Docker compartilhada. A infraestrutura não instalará dependências manualmente de cada projeto.
+Cada equipe é responsável por entregar o próprio microsserviço dockerizado. A equipe de infraestrutura mantém a configuração de acesso ao Cloud SQL PostgreSQL, Kafka/Redpanda, Kafka UI, PgAdmin, API Gateway e a rede Docker compartilhada. O PostgreSQL local permanece apenas como legado/fallback. A infraestrutura não instalará dependências manualmente de cada projeto.
 
 ---
 
@@ -608,7 +608,7 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 
 | Erro | Causa provável | Solução |
 |---|---|---|
-| `connection refused` no PostgreSQL | usou `localhost` dentro do container | usar `postgres:5432` |
+| `connection refused` no PostgreSQL | host incorreto, Cloud SQL inacessível ou IP de origem não autorizado no Cloud SQL | usar `136.114.235.212:5432` no `DATABASE_URL` e confirmar se o IP de origem está autorizado no Cloud SQL |
 | `connection refused` no Kafka | usou `localhost` dentro do container | usar `redpanda:9092` |
 | `network portal-b2b-network not found` | infra não foi subida | subir infra primeiro |
 | Gateway `502` | container não está rodando ou porta errada | verificar `docker ps`, logs e ports |
