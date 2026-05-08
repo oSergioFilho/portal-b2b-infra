@@ -230,18 +230,20 @@ Rodar `npm run dev` na VM pode ser usado apenas para **teste temporário**. A en
 
 ---
 
-## Observação sobre Cloud SQL
+## Observação sobre Cloud SQL e Load Balancer
 
-Front-ends devem chamar as APIs pelo Gateway da VM:
+Front-ends devem chamar as APIs pelo **Load Balancer oficial**:
 
 ```text
-http://34.29.84.207/api/{dominio}
+http://34.8.17.245/api/{dominio}
 ```
 
 Exemplo:
 
 ```text
-http://34.29.84.207/api/produtos
+http://34.8.17.245/api/produtos
 ```
 
 **Não devem chamar o Cloud SQL diretamente.** O Cloud SQL (`136.114.235.212`) é acessado apenas pelos microsserviços/backend.
+
+> **Observação:** Na arquitetura atual, o Load Balancer oficial é `34.8.17.245`. As APIs devem ser consumidas por `http://34.8.17.245/api/{dominio}`. Acesso direto a `34.29.84.207` ou `104.197.23.241` deve ser usado apenas para diagnóstico ou para portas específicas de front-end ainda não publicadas no Load Balancer.

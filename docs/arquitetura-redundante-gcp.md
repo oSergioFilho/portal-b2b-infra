@@ -116,7 +116,7 @@ A VM principal é responsável por rodar:
 - Integração com Cloud SQL PostgreSQL
 - Integração com Kafka/Redpanda
 
-No dia a dia, todo o tráfego é direcionado para esta VM.
+No dia a dia, o tráfego externo é direcionado pelo Load Balancer para esta VM ou para a VM standby.
 
 ---
 
@@ -162,39 +162,37 @@ bash /opt/portal-b2b/infra/portal-b2b-infra/scripts/check-services.sh
 
 ---
 
-## 9. Estratégia com Load Balancer
+## 9. Load Balancer (implementado)
 
-Como evolução, um **Load Balancer** do GCP pode ser colocado na frente das duas VMs para automatizar o redirecionamento de tráfego.
+O **Load Balancer HTTP externo** já foi implementado no GCP e é o ponto de entrada oficial do sistema.
+
+```text
+Load Balancer: 34.8.17.245
+```
 
 ```text
 Usuário
   ↓
-Load Balancer
+Load Balancer - 34.8.17.245
   ↓
 VM saudável
 ```
 
-**Health check sugerido:**
+**Health check configurado:**
 
 ```text
 GET /health
 ```
 
-O Load Balancer deve enviar tráfego apenas para a VM que responder com sucesso ao health check. Se a VM principal parar de responder, o tráfego é automaticamente redirecionado para a VM standby.
+O Load Balancer envia tráfego apenas para a VM que responder com sucesso ao health check. Se a VM principal parar de responder, o tráfego é automaticamente redirecionado para a VM standby.
 
 ---
 
 ## 10. Kafka/Redpanda
 
-A versão atual usa **Redpanda/Kafka em broker único** rodando na VM principal.
+Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso atende à demonstração acadêmica de redundância da aplicação e do Gateway, mas ainda não representa um cluster Kafka/Redpanda replicado.
 
-Na arquitetura redundante, existem duas possibilidades:
-
-### Opção acadêmica inicial (recomendada)
-
-- Manter Redpanda como broker único na VM principal.
-- Documentar a limitação: se a VM principal cair, o broker Kafka também cai.
-- Priorizar o banco compartilhado e a redundância de aplicação.
+Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos brokers e fator de replicação maior que 1.
 
 ### Opção futura
 
@@ -212,16 +210,19 @@ Na arquitetura redundante, existem duas possibilidades:
 - ✅ Banco compartilhado entre VMs
 - ✅ Menor risco de perda de dados
 - ✅ Deploy reproduzível por Git e Docker
+- ✅ Load Balancer HTTP com health check
+- ✅ Sincronização automatizada via script
 
 ---
 
 ## 12. O que ainda não cobre
 
-- ❌ Failover instantâneo sem Load Balancer
-- ❌ Kafka cluster real
+- ❌ Cluster Kafka/Redpanda real
+- ❌ Replicação de eventos entre brokers
 - ❌ Múltiplas réplicas automáticas de microsserviços
 - ❌ Kubernetes
 - ❌ Escalabilidade horizontal automática
+- ❌ HTTPS/domínio
 
 ---
 
