@@ -1,4 +1,4 @@
-# Guia Oficial de Integração
+﻿# Guia Oficial de Integração
 
 ## Regra principal de integração
 
@@ -14,7 +14,7 @@ Acesso oficial externo:
 http://34.8.17.245
 
 - O Load Balancer `34.8.17.245` é o ponto oficial de entrada para APIs e rotas publicadas no Gateway.
-- A VM principal `34.29.84.207` e a VM standby `104.197.23.241` são acessos diretos para diagnóstico.
+- A VM principal `34.29.84.207` e a VM standby `34.59.229.37` são acessos diretos para diagnóstico.
 - PgAdmin, Kafka UI e Uptime Kuma ainda podem ser acessados diretamente pelas portas das VMs, pois não estão publicados no Load Balancer.
 
 | Recurso | URL/Host | Uso |
@@ -24,12 +24,12 @@ http://34.8.17.245
 | produtos-service | http://34.8.17.245/api/produtos/health | Acesso oficial |
 | Front produtos | http://34.8.17.245/produtos/ | Acesso oficial se o front estiver rodando |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
-| VM standby | http://104.197.23.241 | Diagnóstico direto |
+| VM standby | http://34.59.229.37 | Diagnóstico direto |
 | PgAdmin principal | http://34.29.84.207:5050 | Ferramenta de apoio |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
-| Uptime Kuma | http://104.197.23.241:3001 | Painel de status |
+| Uptime Kuma | http://34.59.229.37:3001 | Painel de status |
 
-> **Atenção:** O acesso oficial das APIs é pelo Load Balancer: `http://34.8.17.245/api/{dominio}`. O IP da VM principal (`34.29.84.207`) e da VM standby (`104.197.23.241`) devem ser usados apenas para diagnóstico direto. As equipes de microsserviços e front-end não devem usar o IP da VM principal como endpoint oficial. Front-ends devem chamar APIs usando o Load Balancer ou rotas relativas (ex: `/api/produtos`).
+> **Atenção:** O acesso oficial das APIs é pelo Load Balancer: `http://34.8.17.245/api/{dominio}`. O IP da VM principal (`34.29.84.207`) e da VM standby (`34.59.229.37`) devem ser usados apenas para diagnóstico direto. As equipes de microsserviços e front-end não devem usar o IP da VM principal como endpoint oficial. Front-ends devem chamar APIs usando o Load Balancer ou rotas relativas (ex: `/api/produtos`).
 >
 > Esse IP da VM principal pode ser usado pelas equipes para acessar o PgAdmin e Kafka UI durante a integração ou para testes diretos de diagnóstico. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. Dentro dos containers, o Kafka continua sendo acessado por `redpanda:9092`.
 
@@ -48,7 +48,7 @@ A divisão de responsabilidades é muito clara:
 
 ## 2. Visão geral da arquitetura
 
-A arquitetura atual utiliza um Load Balancer HTTP externo no GCP (34.8.17.245), duas VMs de aplicação (34.29.84.207 e 104.197.23.241) e banco oficial em Cloud SQL PostgreSQL (136.114.235.212). A infraestrutura roda via Docker Compose, e cada microsserviço deve rodar como container próprio conectado à rede externa portal-b2b-network. A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em `docs/arquitetura-redundante-gcp.md`.
+A arquitetura atual utiliza um Load Balancer HTTP externo no GCP (34.8.17.245), duas VMs de aplicação (34.29.84.207 e 34.59.229.37) e banco oficial em Cloud SQL PostgreSQL (136.114.235.212). A infraestrutura roda via Docker Compose, e cada microsserviço deve rodar como container próprio conectado à rede externa portal-b2b-network. A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em `docs/arquitetura-redundante-gcp.md`.
 
 O fluxo de dados funciona assim:
 
@@ -109,7 +109,7 @@ O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud 
 |---|---|---|---|
 | API Gateway oficial | `http://34.8.17.245` | 80 | Entrada oficial para APIs REST |
 | VM principal | `http://34.29.84.207` | 80 | Diagnóstico direto |
-| VM standby | `http://104.197.23.241` | 80 | Diagnóstico direto |
+| VM standby | `http://34.59.229.37` | 80 | Diagnóstico direto |
 | PostgreSQL (Cloud SQL) | `136.114.235.212` | 5432 | Banco oficial (Cloud SQL) |
 | PostgreSQL (local/legado) | `postgres` (container) / `34.29.84.207` (externo) | 5432 | Legado/fallback |
 | PgAdmin | `http://34.29.84.207:5050` | 5050 | Administração visual do banco |
@@ -414,7 +414,7 @@ curl http://34.29.84.207/api/produtos/health
 
 **Teste direto na VM standby, somente diagnóstico:**
 ```bash
-curl http://104.197.23.241/api/produtos/health
+curl http://34.59.229.37/api/produtos/health
 ```
 
 Os IPs das VMs são apenas para diagnóstico direto, não para uso oficial pelas equipes.

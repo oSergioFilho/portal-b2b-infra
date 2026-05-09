@@ -1,8 +1,8 @@
-#!/bin/bash
+﻿#!/bin/bash
 set -e
 
 STANDBY_USER="${STANDBY_USER:-sergiofilho_almeida}"
-STANDBY_HOST="${STANDBY_HOST:-104.197.23.241}"
+STANDBY_HOST="${STANDBY_HOST:-34.59.229.37}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/portal_b2b_standby}"
 
 INFRA_DIR="${INFRA_DIR:-/opt/portal-b2b/infra/portal-b2b-infra}"

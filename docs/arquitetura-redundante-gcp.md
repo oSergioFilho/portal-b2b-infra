@@ -130,6 +130,8 @@ A VM standby é responsável por:
 
 A VM standby deve estar preparada para subir a infraestrutura a qualquer momento, sem depender de transferências de dados ou configurações manuais longas.
 
+> **Observação:** O IP público da VM standby deve permanecer reservado como IP estático no GCP para evitar novas mudanças após reinicialização.
+
 ---
 
 ## 8. Contingência/diagnóstico manual
@@ -250,7 +252,7 @@ Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso mantém a infra
 |---|---|
 | Load Balancer | `34.8.17.245` |
 | VM principal | `34.29.84.207` |
-| VM standby | `104.197.23.241` |
+| VM standby | `34.59.229.37` |
 | Cloud SQL | `136.114.235.212` |
 
 O acesso recomendado ao sistema é pelo **Load Balancer** (`http://34.8.17.245`), não diretamente pela VM principal.

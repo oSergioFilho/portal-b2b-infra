@@ -26,8 +26,10 @@ A arquitetura atual utiliza um Load Balancer HTTP externo no GCP como ponto ofic
 
 - Load Balancer oficial: http://34.8.17.245
 - VM principal: 34.29.84.207
-- VM standby: 104.197.23.241
+- VM standby: 34.59.229.37
 - Cloud SQL: 136.114.235.212
+
+> **Observação:** O IP público da VM standby deve permanecer reservado como IP estático no GCP para evitar novas mudanças após reinicialização.
 
 A infraestrutura fornece:
 - **API Gateway (Nginx):** Entrada única para as APIs REST. Encaminha requisições para os microsserviços rodando nas portas da VM via `host.docker.internal`.
@@ -113,11 +115,11 @@ http://34.8.17.245
 | produtos-service | http://34.8.17.245/api/produtos/health | Acesso oficial |
 | Front produtos | http://34.8.17.245/produtos/ | Acesso oficial, se o front estiver rodando na porta 8081 |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
-| VM standby | http://104.197.23.241 | Diagnóstico direto |
+| VM standby | http://34.59.229.37 | Diagnóstico direto |
 | PgAdmin principal | http://34.29.84.207:5050 | Ferramenta de apoio |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
-| Uptime Kuma | http://104.197.23.241:3001 | Painel de status |
-| Status Page | http://104.197.23.241:3001/status/portal-b2b-status | Status público |
+| Uptime Kuma | http://34.59.229.37:3001 | Painel de status |
+| Status Page | http://34.59.229.37:3001/status/portal-b2b-status | Status público |
 
 > **Observação:** O IP da VM principal não deve ser usado como endpoint oficial por microsserviços ou front-ends. O acesso oficial externo deve passar pelo Load Balancer. Caso a VM seja recriada ou o IP mude, esta seção deve ser atualizada.
 
@@ -266,7 +268,7 @@ Microsserviços dockerizados
 Cloud SQL PostgreSQL - 136.114.235.212
 ```
 
-Os IPs 34.29.84.207 e 104.197.23.241 devem ser usados apenas para diagnóstico direto. As equipes devem usar o Load Balancer 34.8.17.245 como entrada oficial.
+Os IPs 34.29.84.207 e 34.59.229.37 devem ser usados apenas para diagnóstico direto. As equipes devem usar o Load Balancer 34.8.17.245 como entrada oficial.
 
 > **Observação:** Redpanda/Kafka ainda roda localmente em cada VM. Ainda não há cluster Kafka/Redpanda replicado.
 
@@ -331,7 +333,7 @@ Componentes atuais:
 |---|---|---|
 | Load Balancer | http://34.8.17.245 | Validado |
 | VM principal | `34.29.84.207` | Validada |
-| VM standby | `104.197.23.241` | Validada |
+| VM standby | `34.59.229.37` | Validada |
 | Cloud SQL PostgreSQL | `136.114.235.212` | Validado |
 | produtos-service | `/api/produtos/health` | Validado |
 
@@ -367,7 +369,7 @@ Acessos diretos às VMs são apenas para diagnóstico:
 
 ```text
 http://34.29.84.207
-http://104.197.23.241
+http://34.59.229.37
 ```
 
 Health do Gateway:

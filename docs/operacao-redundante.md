@@ -1,4 +1,4 @@
-# Operação Redundante
+﻿# Operação Redundante
 
 ## 1. Objetivo
 
@@ -10,7 +10,7 @@ Documentar como operar a infraestrutura redundante do Portal B2B com VM principa
 |---|---|---|
 | Load Balancer | `34.8.17.245` | Entrada principal do sistema |
 | VM principal | `34.29.84.207` | Aplicação principal |
-| VM standby | `104.197.23.241` | Aplicação redundante |
+| VM standby | `34.59.229.37` | Aplicação redundante |
 | Cloud SQL | `136.114.235.212` | Banco oficial compartilhado |
 
 ## 3. Fluxo atual
@@ -120,7 +120,7 @@ Também é possível testar diretamente:
 
 ```bash
 curl http://34.29.84.207/health
-curl http://104.197.23.241/health
+curl http://34.59.229.37/health
 ```
 
 ## 9. Observação sobre banco
@@ -213,7 +213,7 @@ da VM standby.
 Comando para testar a conexão a partir da VM principal:
 
 ```bash
-ssh -i ~/.ssh/portal_b2b_standby sergiofilho_almeida@104.197.23.241 "hostname && date"
+ssh -i ~/.ssh/portal_b2b_standby sergiofilho_almeida@34.59.229.37 "hostname && date"
 ```
 
 Resultado esperado:

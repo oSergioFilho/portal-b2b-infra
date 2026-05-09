@@ -1,4 +1,4 @@
-# Roteiro de Testes da Infraestrutura Atual
+﻿# Roteiro de Testes da Infraestrutura Atual
 
 ## 1. Objetivo
 
@@ -8,7 +8,7 @@ A arquitetura atual usa:
 
 - Load Balancer: `34.8.17.245`
 - VM principal: `34.29.84.207`
-- VM standby: `104.197.23.241`
+- VM standby: `34.59.229.37`
 - Cloud SQL PostgreSQL oficial: `136.114.235.212`
 - Redpanda/Kafka na VM
 - API Gateway na VM
@@ -60,7 +60,7 @@ curl http://34.29.84.207/health
 
 **Teste direto na VM standby, diagnóstico:**
 ```bash
-curl http://104.197.23.241/health
+curl http://34.59.229.37/health
 ```
 
 Resposta esperada:
@@ -167,7 +167,7 @@ curl http://34.29.84.207/api/produtos/health
 
 **Teste direto na VM standby, diagnóstico:**
 ```bash
-curl http://104.197.23.241/api/produtos/health
+curl http://34.59.229.37/api/produtos/health
 ```
 
 Resposta esperada:
@@ -229,7 +229,7 @@ curl -I http://34.29.84.207:8081
 
 **Teste direto na VM standby, somente diagnóstico:**
 ```bash
-curl -I http://104.197.23.241:8081
+curl -I http://34.59.229.37:8081
 ```
 
 **Resultado esperado:**
@@ -260,8 +260,8 @@ portal-b2b-vm-standby HEALTHY
 ## 15. Testar VM standby diretamente
 
 ```bash
-curl http://104.197.23.241/health
-curl http://104.197.23.241/api/produtos/health
+curl http://34.59.229.37/health
+curl http://34.59.229.37/api/produtos/health
 ```
 
 Resultado esperado: mesmas respostas que a VM principal.

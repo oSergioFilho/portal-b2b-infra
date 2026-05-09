@@ -1,4 +1,4 @@
-# API Gateway
+﻿# API Gateway
 
 ## O Papel do Gateway
 O API Gateway funciona como ponto único de entrada (Porta `80`) para todas as APIs REST dos microsserviços do Portal B2B. O Nginx atua como proxy reverso, recebendo requisições externas e encaminhando-as para o serviço adequado rodando na VM.
@@ -60,7 +60,7 @@ Este é o **padrão oficial**:
 - `GET http://34.8.17.245/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
 - `GET http://34.8.17.245/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
 
-As portas e URLs diretas das VMs, como `http://34.29.84.207` e `http://104.197.23.241`, servem apenas como diagnóstico direto.
+As portas e URLs diretas das VMs, como `http://34.29.84.207` e `http://34.59.229.37`, servem apenas como diagnóstico direto.
 
 ## Evolução futura (opcional)
 

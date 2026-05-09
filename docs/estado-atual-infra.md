@@ -26,11 +26,11 @@ Cloud SQL PostgreSQL - 136.114.235.212
 |---|---|---|---|
 | Load Balancer | `34.8.17.245` | Entrada principal do sistema | ✅ Validado |
 | VM principal | `34.29.84.207` | Aplicação principal | ✅ Validada |
-| VM standby | `104.197.23.241` | Aplicação redundante | ✅ Validada |
+| VM standby | `34.59.229.37` | Aplicação redundante | ✅ Validada |
 | Cloud SQL | `136.114.235.212` | Banco oficial compartilhado | ✅ Validado |
 | Front produtos | `http://34.8.17.245/produtos/` | Front publicado via Gateway/Load Balancer | A validar |
-| Uptime Kuma | `http://104.197.23.241:3001` | Painel de status | ✅ Implementado |
-| Status Page | `http://104.197.23.241:3001/status/portal-b2b-status` | Página pública de status | ✅ Implementado |
+| Uptime Kuma | `http://34.59.229.37:3001` | Painel de status | ✅ Implementado |
+| Status Page | `http://34.59.229.37:3001/status/portal-b2b-status` | Página pública de status | ✅ Implementado |
 
 ---
 
@@ -56,10 +56,12 @@ O que roda na VM:
 ## 4. VM standby
 
 ```text
-IP: 104.197.23.241
+IP: 34.59.229.37
 ```
 
 Mesma estrutura da VM principal. Roda os mesmos containers e microsserviços.
+
+> **Observação:** O IP público da VM standby deve permanecer reservado como IP estático no GCP para evitar novas mudanças após reinicialização.
 
 ---
 
@@ -102,7 +104,7 @@ http://34.8.17.245/produtos/
 
 O Load Balancer distribui requisições entre a VM principal e a VM standby com base no health check (`GET /health`).
 
-> **Observação:** O acesso oficial do sistema (APIs e Front-end) é feito pelo Load Balancer. Os IPs diretos da VM principal (`34.29.84.207`) e da VM standby (`104.197.23.241`) devem ser usados apenas para diagnóstico.
+> **Observação:** O acesso oficial do sistema (APIs e Front-end) é feito pelo Load Balancer. Os IPs diretos da VM principal (`34.29.84.207`) e da VM standby (`34.59.229.37`) devem ser usados apenas para diagnóstico.
 
 ---
 

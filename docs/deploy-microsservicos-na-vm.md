@@ -1,4 +1,4 @@
-# Deploy Controlado de Microsserviços na VM
+﻿# Deploy Controlado de Microsserviços na VM
 
 ## Objetivo
 
@@ -177,7 +177,7 @@ curl http://34.8.17.245/api/produtos/health
 curl http://34.29.84.207/api/produtos/health
 ```
 
-> **Observação:** A partir da arquitetura redundante, o endereço oficial externo é o Load Balancer `34.8.17.245`. Os IPs das VMs (`34.29.84.207` e `104.197.23.241`) devem ser usados apenas para diagnóstico direto.
+> **Observação:** A partir da arquitetura redundante, o endereço oficial externo é o Load Balancer `34.8.17.245`. Os IPs das VMs (`34.29.84.207` e `34.59.229.37`) devem ser usados apenas para diagnóstico direto.
 
 ---
 

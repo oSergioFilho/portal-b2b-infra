@@ -1,4 +1,4 @@
-# Deploy de Front-ends na VM
+﻿# Deploy de Front-ends na VM
 
 ## Objetivo
 
@@ -173,7 +173,7 @@ http://34.8.17.245/produtos/
 
 **Acessos diretos para diagnóstico:**
 http://34.29.84.207:8081
-http://104.197.23.241:8081
+http://34.59.229.37:8081
 
 O Load Balancer atual atende a porta 80/Gateway. Por isso, o front de produtos deve ser publicado pelo Nginx Gateway na rota `/produtos/`. A porta 8081 continua existindo nas VMs, mas deve ser usada apenas para diagnóstico direto.
 
@@ -216,7 +216,7 @@ curl -I http://34.8.17.245/produtos/
 
 ```bash
 curl -I http://34.29.84.207:8081
-curl -I http://104.197.23.241:8081
+curl -I http://34.59.229.37:8081
 ```
 
 > **Observação:** Se o front-end for servido em subpath, como `/produtos/`, a aplicação deve estar preparada para esse base path. Em projetos Vite, por exemplo, pode ser necessário configurar `base: '/produtos/'` no `vite.config.js`. Caso contrário, assets com caminho absoluto, como `/assets/...`, podem quebrar quando publicados atrás de `/produtos/`. Preferencialmente, o front-end deve chamar APIs com rotas relativas, por exemplo `/api/produtos`, em vez de fixar `http://34.29.84.207`.
@@ -262,4 +262,4 @@ http://34.29.84.207/api/produtos
 
 **Não devem chamar o Cloud SQL diretamente.** O Cloud SQL (`136.114.235.212`) é acessado apenas pelos microsserviços/backend.
 
-> **Observação:** Na arquitetura atual, o Load Balancer oficial é `34.8.17.245`. As APIs devem ser consumidas por rotas relativas ou `http://34.8.17.245/api/{dominio}`. Acesso direto a `34.29.84.207` ou `104.197.23.241` deve ser usado apenas para diagnóstico.
+> **Observação:** Na arquitetura atual, o Load Balancer oficial é `34.8.17.245`. As APIs devem ser consumidas por rotas relativas ou `http://34.8.17.245/api/{dominio}`. Acesso direto a `34.29.84.207` ou `34.59.229.37` deve ser usado apenas para diagnóstico.

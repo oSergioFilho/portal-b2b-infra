@@ -1,4 +1,4 @@
-# Conexão das Equipes
+﻿# Conexão das Equipes
 
 ## Ambiente atual
 
@@ -9,7 +9,7 @@ VM principal:
 34.29.84.207 apenas diagnóstico
 
 VM standby:
-104.197.23.241 apenas diagnóstico
+34.59.229.37 apenas diagnóstico
 
 | Recurso | URL |
 |---|---|
@@ -18,11 +18,11 @@ VM standby:
 | produtos-service oficial | http://34.8.17.245/api/produtos/health |
 | Front produtos oficial | http://34.8.17.245/produtos/ |
 | PgAdmin principal | http://34.29.84.207:5050 |
-| PgAdmin standby | http://104.197.23.241:5050 |
+| PgAdmin standby | http://34.59.229.37:5050 |
 | Kafka UI principal | http://34.29.84.207:8080 |
-| Kafka UI standby | http://104.197.23.241:8080 |
-| Uptime Kuma | http://104.197.23.241:3001 |
-| Status Page | http://104.197.23.241:3001/status/portal-b2b-status |
+| Kafka UI standby | http://34.59.229.37:8080 |
+| Uptime Kuma | http://34.59.229.37:3001 |
+| Status Page | http://34.59.229.37:3001/status/portal-b2b-status |
 
 ---
 
