@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 set -e
 
 STANDBY_USER="${STANDBY_USER:-sergiofilho_almeida}"
