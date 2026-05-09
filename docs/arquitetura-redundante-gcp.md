@@ -82,13 +82,14 @@ Os microsserviços de **ambas as VMs** apontam para o mesmo banco Cloud SQL. Iss
 
 ## 5. Mudança na conexão dos microsserviços
 
-### Antes — arquitetura de VM única
+### Antes — ambiente antigo (PostgreSQL local, já removido)
 
 ```env
+# AMBIENTE ANTIGO — não usar mais
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
 ```
 
-O host `postgres` resolve dentro da rede Docker (`portal-b2b-network`) porque o banco roda como container na mesma VM.
+O host `postgres` resolvia dentro da rede Docker (`portal-b2b-network`) quando o banco rodava como container local. Esse container foi removido.
 
 ### Atual — Cloud SQL
 
@@ -98,8 +99,8 @@ DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/p
 
 **Observações importantes:**
 
-- `postgres:5432` é usado quando o banco roda dentro do Docker Compose local.
-- Na arquitetura redundante, o Cloud SQL deve ser usado quando houver duas VMs compartilhando o mesmo banco.
+- O host `postgres:5432` não existe mais na infraestrutura. O PostgreSQL local foi removido.
+- Na arquitetura redundante, o Cloud SQL é o único banco, compartilhado pelas duas VMs.
 - O arquivo `.env.example` **não deve conter senha real** nem IP fixo obrigatório — use placeholders.
 
 ---

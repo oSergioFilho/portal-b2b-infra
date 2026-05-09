@@ -52,4 +52,4 @@ DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 ```
 
-> **Nota:** O host `postgres:5432` (Docker Compose local) é legado. O banco oficial é o Cloud SQL PostgreSQL em `136.114.235.212`.
+> **Nota:** O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. Não há PostgreSQL local no Docker Compose.

@@ -12,9 +12,11 @@ A migração permite que o banco seja acessado por múltiplas VMs de aplicação
 
 ---
 
-## 3. Backup do banco local (referência)
+## 3. Backup do banco local (referência histórica)
 
-Antes de qualquer migração, gerar um dump completo do banco atual:
+> **Nota:** Os comandos abaixo referem-se ao ambiente antigo antes da migração, quando o PostgreSQL rodava como container local. O PostgreSQL local foi removido da infraestrutura.
+
+Antes da migração, foi gerado um dump completo do banco local:
 
 ```bash
 cd /opt/portal-b2b/infra/portal-b2b-infra
@@ -82,9 +84,10 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA portal_b2b GRANT ALL ON TABLES TO db_portal_b
 
 Alterar o `DATABASE_URL` em cada microsserviço para apontar para o Cloud SQL.
 
-**Antes (PostgreSQL local via Docker):**
+**Antes (ambiente antigo — PostgreSQL local via Docker, já removido):**
 
 ```env
+# AMBIENTE ANTIGO — não usar mais
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@postgres:5432/portal_b2b
 ```
 
@@ -138,8 +141,8 @@ A tabela `portal_b2b.health_check` retornou os registros dos serviços.
 
 ## 10. Observação importante
 
-O PostgreSQL local continua rodando como legado/fallback. Ele pode ser desativado no futuro após validação completa de todos os microsserviços no Cloud SQL.
+O PostgreSQL local foi removido da infraestrutura. O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`.
 
 Para cada novo microsserviço implantado, validar se o `.env` aponta para o Cloud SQL. O `produtos-service` já foi validado na arquitetura atual; os demais serviços devem seguir o mesmo padrão durante o deploy.
 
-Após a migração, os scripts `backup-postgres.sh` e `restore-postgres.sh` continuam úteis apenas para o PostgreSQL local legado. Para o banco oficial em Cloud SQL, deve-se utilizar backups automáticos, exportações ou snapshots gerenciados pelo GCP.
+Os scripts `backup-postgres.sh` e `restore-postgres.sh` servem apenas como aviso de que o banco local não existe mais. Para backups do banco oficial, utilizar backups automáticos, exportações ou snapshots gerenciados pelo GCP.
