@@ -1,4 +1,4 @@
-﻿# Conexão das Equipes
+# Conexão das Equipes
 
 ## Ambiente atual
 
@@ -17,8 +17,7 @@ VM standby:
 | Health oficial | http://34.8.17.245/health |
 | produtos-service oficial | http://34.8.17.245/api/produtos/health |
 | Front produtos oficial | http://34.8.17.245/produtos/ |
-| PgAdmin principal | http://34.29.84.207:5050 |
-| PgAdmin standby | http://34.59.229.37:5050 |
+| PgAdmin (Redundante) | http://34.8.17.245/pgadmin/ |
 | Kafka UI principal | http://34.29.84.207:8080 |
 | Kafka UI standby | http://34.59.229.37:8080 |
 | Uptime Kuma | http://34.59.229.37:3001 |
@@ -64,7 +63,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ## Conexão externa para ferramentas
 
 **PgAdmin (interface web):**
-- URL: http://34.29.84.207:5050
+- URL: http://34.8.17.245/pgadmin/
 - Login: `admin@portalb2b.com`
 - Senha: `***`
 - Host do banco oficial no PgAdmin: `136.114.235.212`

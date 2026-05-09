@@ -116,7 +116,7 @@ http://34.8.17.245
 | Front produtos | http://34.8.17.245/produtos/ | Acesso oficial, se o front estiver rodando na porta 8081 |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
-| PgAdmin principal | http://34.29.84.207:5050 | Ferramenta de apoio |
+| PgAdmin (Redundante) | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
 | Uptime Kuma | http://34.59.229.37:3001 | Painel de status |
 | Status Page | http://34.59.229.37:3001/status/portal-b2b-status | Status público |
@@ -128,7 +128,7 @@ http://34.8.17.245
 | Componente | URL / Conexão | Credenciais / Notas |
 |------------|---------------|---------------------|
 | API Gateway / Load Balancer | http://34.8.17.245 | Retorna `API Gateway do Portal B2B ativo` em `/health` |
-| PgAdmin | http://34.29.84.207:5050 | `admin@portalb2b.com` / `***`. Permite visualizar as tabelas do PostgreSQL. |
+| PgAdmin | http://34.8.17.245/pgadmin/ | `admin@portalb2b.com` / `***`. Permite visualizar as tabelas. Redundante via Load Balancer. |
 | Kafka UI | http://34.29.84.207:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
 | PostgreSQL (Cloud SQL) | `136.114.235.212:5432` | `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação). Banco oficial. |
 | PostgreSQL (local/legado) | `34.29.84.207:5432` | Legado. Mantido apenas como fallback ou ambiente de desenvolvimento local. |

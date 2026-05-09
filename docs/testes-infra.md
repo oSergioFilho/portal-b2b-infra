@@ -1,4 +1,4 @@
-﻿# Roteiro de Testes da Infraestrutura Atual
+# Roteiro de Testes da Infraestrutura Atual
 
 ## 1. Objetivo
 
@@ -114,7 +114,7 @@ O schema `portal_b2b` deve aparecer.
 Abrir:
 
 ```text
-http://34.29.84.207:5050
+http://34.8.17.245/pgadmin/
 ```
 
 A conexão cadastrada no PgAdmin deve apontar para:
@@ -295,7 +295,7 @@ A infraestrutura atual está validada quando:
 - [ ] Cloud SQL responde com `db_portal_b2b`.
 - [ ] Kafka UI abre.
 - [ ] Kafka recebe mensagem de teste.
-- [ ] PgAdmin abre.
+- [ ] PgAdmin abre via Load Balancer em `/pgadmin/`.
 - [ ] `produtos-service` responde pelo Load Balancer.
 - [ ] Front produtos responde pelo Load Balancer em `/produtos/`.
 - [ ] Backends do Load Balancer estão HEALTHY.

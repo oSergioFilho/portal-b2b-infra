@@ -1,4 +1,4 @@
-﻿# Guia Oficial de Integração
+# Guia Oficial de Integração
 
 ## Regra principal de integração
 
@@ -25,7 +25,7 @@ http://34.8.17.245
 | Front produtos | http://34.8.17.245/produtos/ | Acesso oficial se o front estiver rodando |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
-| PgAdmin principal | http://34.29.84.207:5050 | Ferramenta de apoio |
+| PgAdmin (Redundante) | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
 | Uptime Kuma | http://34.59.229.37:3001 | Painel de status |
 
@@ -112,7 +112,7 @@ O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud 
 | VM standby | `http://34.59.229.37` | 80 | Diagnóstico direto |
 | PostgreSQL (Cloud SQL) | `136.114.235.212` | 5432 | Banco oficial (Cloud SQL) |
 | PostgreSQL (local/legado) | `postgres` (container) / `34.29.84.207` (externo) | 5432 | Legado/fallback |
-| PgAdmin | `http://34.29.84.207:5050` | 5050 | Administração visual do banco |
+| PgAdmin | `http://34.8.17.245/pgadmin/` | Redundante | Administração visual do banco |
 | Kafka/Redpanda | `redpanda` (container) / `34.29.84.207` (externo) | 9092 | Broker de eventos |
 | Kafka UI | `http://34.29.84.207:8080` | 8080 | Visualizar tópicos e mensagens |
 
@@ -129,7 +129,7 @@ O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud 
 **Infraestrutura:**
 - API Gateway: `80`
 - PostgreSQL: `5432`
-- PgAdmin: `5050`
+- PgAdmin: `80` (Acessível via `/pgadmin/` no Load Balancer)
 - Kafka/Redpanda: `9092`
 - Kafka UI: `8080`
 
@@ -473,7 +473,7 @@ Os microsserviços **não devem fazer DDL**. Você deve **desativar** qualquer f
 
 O PgAdmin é a interface web de banco providenciada pela infraestrutura.
 
-- **URL:** `http://34.29.84.207:5050`
+- **URL:** `http://34.8.17.245/pgadmin/`
 - **Login:** `admin@portalb2b.com`
 - **Senha:** `***`
 

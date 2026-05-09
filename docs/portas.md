@@ -4,7 +4,7 @@
 
 - **API Gateway:** `80`
 - **PostgreSQL:** `5432`
-- **PgAdmin:** `5050`
+- **PgAdmin:** `5050` (Acessível via `/pgadmin/` no Load Balancer)
 - **Kafka/Redpanda:** `9092`
 - **Kafka UI:** `8080`
 

@@ -1,4 +1,4 @@
-﻿# Guia de Configuração das VMs de Aplicação
+# Guia de Configuração das VMs de Aplicação
 
 Este guia descreve o passo a passo para subir e configurar a infraestrutura central do Portal B2B na Máquina Virtual (VM) principal.
 
@@ -10,7 +10,8 @@ Deve ficar claro:
 - VM principal: http://34.29.84.207 apenas diagnóstico
 - VM standby: http://34.59.229.37 apenas diagnóstico
 - Cloud SQL: 136.114.235.212
-- PgAdmin/Kafka UI podem continuar por IP direto das VMs
+- PgAdmin acessível via Load Balancer (/pgadmin/)
+- Kafka UI acessível por IP direto das VMs
 
 > **Observação importante:** No arquivo `.env` da VM, a variável `REDPANDA_EXTERNAL_HOST` deve estar configurada como:
 > - Na VM principal: `REDPANDA_EXTERNAL_HOST=34.29.84.207`
@@ -79,7 +80,8 @@ Você pode acessar os serviços da infraestrutura externamente:
 - API Gateway oficial: http://34.8.17.245
 - API Gateway VM principal, diagnóstico: http://34.29.84.207
 - API Gateway VM standby, diagnóstico: http://34.59.229.37
-- PgAdmin/Kafka UI podem continuar por IP direto das VMs
+- PgAdmin via Load Balancer oficial: http://34.8.17.245/pgadmin/
+- Kafka UI via IP direto das VMs
 
 ### 8. Conferir Logs e Status dos Containers
 Para ver o status atual dos containers:
@@ -117,7 +119,7 @@ Para teste externo oficial, use http://34.8.17.245/api/produtos/health. Os IPs 3
 
 ## Checklist Final da VM
 - [ ] PostgreSQL ativo (porta 5432)
-- [ ] PgAdmin ativo (porta 5050)
+- [ ] PgAdmin ativo (acessível via /pgadmin/ no Load Balancer)
 - [ ] Redpanda ativo (porta 9092)
 - [ ] Kafka UI ativo (porta 8080)
 - [ ] API Gateway ativo (porta 80)
