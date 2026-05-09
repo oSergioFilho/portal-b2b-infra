@@ -49,7 +49,7 @@ O que roda na VM:
 - Microsserviços dockerizados (portas 5001 a 5009)
 - Scripts de deploy e verificação
 - Rede Docker `portal-b2b-network`
-- PostgreSQL local (legado/opcional — porta 5432)
+
 
 ---
 
@@ -132,9 +132,7 @@ Os seguintes serviços continuam rodando localmente em cada VM via Docker Compos
 - Kafka UI
 - Nginx Gateway
 - PgAdmin
-- PostgreSQL local (legado/opcional)
-
-O PostgreSQL local permanece no `docker-compose.yml` por compatibilidade e testes locais, mas **não é mais o banco oficial da integração principal**.
+O PostgreSQL local foi removido da VM e do `docker-compose.yml`.
 
 ---
 

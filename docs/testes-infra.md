@@ -13,7 +13,6 @@ A arquitetura atual usa:
 - Redpanda/Kafka na VM
 - API Gateway na VM
 - Microsserviços dockerizados na VM
-- PostgreSQL local apenas como legado/fallback
 
 ---
 
@@ -30,9 +29,8 @@ Serviços esperados:
 - `portal-b2b-redpanda`
 - `portal-b2b-kafka-ui`
 - `portal-b2b-pgadmin`
-- `portal-b2b-postgres`
 
-> **Observação:** `portal-b2b-postgres` é legado/fallback. O banco oficial é Cloud SQL.
+> **Observação:** O PostgreSQL local foi removido. O banco oficial é Cloud SQL.
 
 ---
 
@@ -42,7 +40,7 @@ Serviços esperados:
 bash scripts/check-infra.sh
 ```
 
-> **Observação:** Esse script valida Gateway, Kafka/Redpanda, Kafka UI, PgAdmin e também o PostgreSQL local legado. O banco oficial Cloud SQL deve ser testado separadamente (seções 5 e 6).
+> **Observação:** Esse script valida Gateway, Kafka/Redpanda, Kafka UI, PgAdmin e o Cloud SQL PostgreSQL oficial.
 
 ---
 
@@ -123,7 +121,7 @@ A conexão cadastrada no PgAdmin deve apontar para:
 136.114.235.212:5432
 ```
 
-e não para o PostgreSQL local, exceto em testes legados.
+O PostgreSQL local foi removido.
 
 ---
 
@@ -268,21 +266,7 @@ Resultado esperado: mesmas respostas que a VM principal.
 
 ---
 
-## 16. Testes legados do PostgreSQL local
 
-Esses testes só são necessários se a equipe quiser validar o PostgreSQL local/fallback.
-
-```bash
-docker compose exec -T postgres pg_isready -U postgres
-```
-
-```bash
-docker compose exec -T postgres psql -U postgres -d portal_b2b -c "SELECT * FROM portal_b2b.health_check;"
-```
-
-> **Observação:** O PostgreSQL local não é mais o banco oficial.
-
----
 
 ## 17. Resultado esperado geral
 

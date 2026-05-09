@@ -34,7 +34,7 @@ A arquitetura atual utiliza um Load Balancer HTTP externo no GCP como ponto ofic
 A infraestrutura fornece:
 - **API Gateway (Nginx):** Entrada única para as APIs REST. Encaminha requisições para os microsserviços rodando nas portas da VM via `host.docker.internal`.
 - **Kafka-compatible Broker (Redpanda):** Barramento central de eventos Kafka para comunicação assíncrona.
-- **Banco de Dados Oficial (Cloud SQL PostgreSQL):** Instância gerenciada pelo GCP usando banco `portal_b2b` e schema `portal_b2b`. O PostgreSQL local do Docker Compose permanece apenas como legado/fallback.
+- **Banco de Dados Oficial (Cloud SQL PostgreSQL):** Instância gerenciada pelo GCP usando banco `portal_b2b` e schema `portal_b2b`. O PostgreSQL local foi removido da infraestrutura. O banco oficial é exclusivamente o Cloud SQL PostgreSQL em 136.114.235.212.
 - **Ferramentas de Suporte:** PgAdmin (Banco) e Kafka UI (Eventos) para testes e visualização.
 
 ## Divisão de Responsabilidades
@@ -43,7 +43,7 @@ A infraestrutura fornece:
 - Manter e documentar a VM de aplicação.
 - Manter API Gateway, Redpanda/Kafka, Kafka UI, PgAdmin e scripts de deploy.
 - Manter a configuração de acesso ao Cloud SQL PostgreSQL.
-- Manter o PostgreSQL local apenas como legado/fallback, se necessário.
+
 - Criar o schema geral `portal_b2b` e usuários base (`db_portal_b2b` e `svc_portal_b2b`).
 - Fornecer documentação de portas, acessos, Cloud SQL, Kafka e Gateway.
 
@@ -60,14 +60,14 @@ A infraestrutura fornece:
 - Entregar .env.example.
 - Garantir que o container use a rede portal-b2b-network.
 - Garantir que o serviço publique a porta oficial no host.
-- Usar `136.114.235.212:5432` (Cloud SQL) para PostgreSQL. O host `postgres:5432` do Docker Compose local é legado.
+- Usar `136.114.235.212:5432` (Cloud SQL) para PostgreSQL. O host `postgres:5432` do Docker Compose local foi removido.
 - Usar redpanda:9092 para Kafka quando rodar em container.
 - Publicar e consumir eventos Kafka.
 - Fornecer endpoint `/health`.
 
 ## O que são as VMs de aplicação?
 O ambiente possui duas VMs de aplicação atrás do Load Balancer. Cada VM roda API Gateway, Redpanda/Kafka, Kafka UI, PgAdmin, microsserviços dockerizados e scripts de deploy. O banco oficial é externo, no Cloud SQL PostgreSQL.
-- **Banco oficial:** O banco oficial é o Cloud SQL PostgreSQL, usando o banco `portal_b2b` e o schema `portal_b2b`. O PostgreSQL local do Docker Compose não é mais o banco oficial.
+- **Banco oficial:** O banco oficial é o Cloud SQL PostgreSQL, usando o banco `portal_b2b` e o schema `portal_b2b`. O PostgreSQL local do Docker Compose foi removido.
 
 *Observação opcional:* Dependendo das limitações acadêmicas, desenvolvedores podem testar localmente usando Tailscale/ZeroTier antes de implantar na VM Central, mas o foco da arquitetura é rodar na VM.
 
@@ -131,7 +131,7 @@ http://34.8.17.245
 | PgAdmin | http://34.8.17.245/pgadmin/ | `admin@portalb2b.com` / `***`. Permite visualizar as tabelas. Redundante via Load Balancer. |
 | Kafka UI | http://34.29.84.207:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
 | PostgreSQL (Cloud SQL) | `136.114.235.212:5432` | `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação). Banco oficial. |
-| PostgreSQL (local/legado) | `34.29.84.207:5432` | Legado. Mantido apenas como fallback ou ambiente de desenvolvimento local. |
+
 | Redpanda/Kafka| `34.29.84.207:9092` | Broker Kafka principal |
 
 **Acesso da Equipe de Banco:**
@@ -162,7 +162,7 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-> **Importante:** O host `postgres:5432` do Docker Compose local é legado. O banco oficial é `136.114.235.212:5432` (Cloud SQL).
+> **Importante:** O host `postgres:5432` do Docker Compose local foi removido. O banco oficial é `136.114.235.212:5432` (Cloud SQL).
 
 **Regras de Integração:**
 - `Dockerfile` é obrigatório.
@@ -222,27 +222,9 @@ A infraestrutura possui mecanismos de resiliência e um plano de recuperação p
 
 Em caso de falha da VM principal, a infraestrutura pode ser restaurada na VM standby seguindo o procedimento documentado. O banco Cloud SQL permanece acessível externamente.
 
-### Backup do PostgreSQL local (legado)
+### Backup e Restore do Banco
 
-Os scripts `backup-postgres.sh` e `restore-postgres.sh` se referem ao **PostgreSQL local legado** que ainda existe no Docker Compose. Eles **não substituem** os backups oficiais do Cloud SQL. Para o Cloud SQL, a estratégia principal deve usar os backups/exportações do próprio GCP.
-
-```bash
-bash scripts/backup-postgres.sh
-```
-* **Atenção:** Backups gerados em `backups/postgres/` não devem ser commitados no Git.
-* **Recomendação:** Após gerar backup, copie o arquivo para fora da VM principal.
-
-### Restore do PostgreSQL local (legado)
-
-```bash
-bash scripts/restore-postgres.sh backups/postgres/NOME_DO_BACKUP.sql
-```
-* **Recomendação:** A restauração deve ser feita preferencialmente em VM standby ou ambiente limpo.
-* O script possui uma **confirmação interativa** para evitar sobrescrever dados por engano.
-* Para automação, é possível usar `--force` (use apenas quando tiver certeza):
-  ```bash
-  bash scripts/restore-postgres.sh backups/postgres/NOME_DO_BACKUP.sql --force
-  ```
+O PostgreSQL local foi removido da infraestrutura. O banco oficial é o Cloud SQL PostgreSQL. Use backups/exportações gerenciadas do Cloud SQL no GCP. Não existe mais banco PostgreSQL local na VM. Qualquer tabela criada deve ser criada no Cloud SQL.
 
 Para o plano completo de redundância e recuperação, consulte:
 
@@ -311,9 +293,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 
 ### PostgreSQL local
 
-O container PostgreSQL local ainda existe no `docker-compose.yml` por compatibilidade, testes locais e fallback. Porém, ele **não é mais o banco oficial** da integração principal.
-
-Não remover o container ainda, mas o Cloud SQL é a fonte principal de dados.
+O container PostgreSQL local foi removido da infraestrutura. O banco oficial é exclusivamente o Cloud SQL PostgreSQL.
 
 A evolução para uma arquitetura redundante com duas VMs de aplicação está documentada em:
 

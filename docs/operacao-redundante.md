@@ -1,4 +1,4 @@
-﻿# Operação Redundante
+# Operação Redundante
 
 ## 1. Objetivo
 
@@ -133,7 +133,7 @@ O banco oficial é o Cloud SQL PostgreSQL:
 
 As duas VMs usam o mesmo banco.
 
-O PostgreSQL local continua apenas como legado/fallback.
+O PostgreSQL local foi removido.
 
 ## 10. Observação sobre Kafka
 

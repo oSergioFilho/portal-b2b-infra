@@ -2,7 +2,7 @@
 
 ## Regra principal de integração
 
-Cada equipe é responsável por entregar o próprio microsserviço dockerizado. A equipe de infraestrutura mantém a configuração de acesso ao Cloud SQL PostgreSQL, Kafka/Redpanda, Kafka UI, PgAdmin, API Gateway e a rede Docker compartilhada. O PostgreSQL local permanece apenas como legado/fallback. A infraestrutura não instalará dependências manualmente de cada projeto.
+Cada equipe é responsável por entregar o próprio microsserviço dockerizado. A equipe de infraestrutura mantém a configuração de acesso ao Cloud SQL PostgreSQL, Kafka/Redpanda, Kafka UI, PgAdmin, API Gateway e a rede Docker compartilhada. O PostgreSQL local foi removido da infraestrutura. O banco oficial é exclusivamente o Cloud SQL PostgreSQL. A infraestrutura não instalará dependências manualmente de cada projeto.
 
 ---
 
@@ -79,12 +79,11 @@ A VM central roda os componentes de aplicação e suporte. O banco oficial é ex
 - Redpanda/Kafka
 - Kafka UI
 - PgAdmin
-- PostgreSQL local (legado/fallback, ainda presente no Docker Compose)
 
 **Banco oficial (externo à VM):**
 - Cloud SQL PostgreSQL em `136.114.235.212`
 
-O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud SQL PostgreSQL em `136.114.235.212`.
+O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O PostgreSQL local foi removido.
 
 **Microsserviços das equipes:**
 - rodam como containers próprios.
@@ -111,14 +110,13 @@ O banco oficial **não é mais o PostgreSQL local**. O banco oficial é o Cloud 
 | VM principal | `http://34.29.84.207` | 80 | Diagnóstico direto |
 | VM standby | `http://34.59.229.37` | 80 | Diagnóstico direto |
 | PostgreSQL (Cloud SQL) | `136.114.235.212` | 5432 | Banco oficial (Cloud SQL) |
-| PostgreSQL (local/legado) | `postgres` (container) / `34.29.84.207` (externo) | 5432 | Legado/fallback |
 | PgAdmin | `http://34.8.17.245/pgadmin/` | Redundante | Administração visual do banco |
 | Kafka/Redpanda | `redpanda` (container) / `34.29.84.207` (externo) | 9092 | Broker de eventos |
 | Kafka UI | `http://34.29.84.207:8080` | 8080 | Visualizar tópicos e mensagens |
 
 **Atenção:**
 - O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. Os microsserviços devem apontar para este IP.
-- O host `postgres` (Docker Compose local) é **legado** e não deve mais ser usado como banco oficial.
+- O host `postgres` (Docker Compose local) foi removido e não deve ser usado.
 - O Kafka/Redpanda continua sendo acessado por `redpanda:9092` dentro dos containers.
 - Se estiver acessando visualmente **de fora** (ex: DBeaver no seu PC), use `136.114.235.212` para o banco.
 
@@ -173,7 +171,7 @@ Regras importantes:
 - Dentro de container, **NÃO usar localhost** para PostgreSQL. O host correto é `136.114.235.212`.
 - Dentro de container, **NÃO usar localhost** para Kafka. O host correto é `redpanda`.
 - O `localhost` só resolve dentro do próprio container, não alcança os outros serviços da rede Docker.
-- O host `postgres` (Docker Compose local) é legado e não deve mais ser usado como banco oficial.
+- O host `postgres` (Docker Compose local) foi removido.
 
 ### Padrão OBRIGATÓRIO (Cloud SQL)
 
@@ -187,7 +185,7 @@ DB_SCHEMA=portal_b2b
 KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 ```
 
-> **Nota:** O host `postgres` do Docker Compose local é legado. O banco oficial é `136.114.235.212` (Cloud SQL). O container ainda precisa estar na rede `portal-b2b-network` para acessar o Kafka (`redpanda:9092`). Se a equipe esquecer essa rede no docker-compose.yml, a conexão com Kafka vai falhar.
+> **Nota:** O host `postgres` do Docker Compose local foi removido. O banco oficial é `136.114.235.212` (Cloud SQL). O container ainda precisa estar na rede `portal-b2b-network` para acessar o Kafka (`redpanda:9092`). Se a equipe esquecer essa rede no docker-compose.yml, a conexão com Kafka vai falhar.
 
 ### Alternativa emergencial: rodar direto no host da VM (sem Docker)
 
@@ -440,7 +438,7 @@ O banco de dados oficial do projeto é o **Cloud SQL PostgreSQL**.
 - **Schema:** `portal_b2b`
 - **Porta:** `5432`
 
-> **Nota:** O PostgreSQL local do Docker Compose (`postgres:5432`) é legado. O banco oficial é o Cloud SQL.
+> **Nota:** O PostgreSQL local do Docker Compose (`postgres:5432`) foi removido. O banco oficial é exclusivamente o Cloud SQL.
 
 Existem credenciais separadas por responsabilidade.
 
@@ -484,7 +482,7 @@ Para cadastrar a conexão com o banco de dados **dentro do PgAdmin**, aponte par
 - **User:** `db_portal_b2b` (Se for equipe de banco)
 - **Password:** `***` *(fornecida pela equipe de infraestrutura)*
 
-> **Nota:** O host `postgres` (Docker Compose local) ainda funciona para o banco legado, mas o banco oficial é o Cloud SQL.
+> **Nota:** O banco oficial é exclusivamente o Cloud SQL. O host `postgres` local foi removido.
 
 ---
 
@@ -796,8 +794,7 @@ A infraestrutura possui mecanismos básicos de resiliência e um plano de recupe
 
 - **Se um container cair**, o Docker tenta reiniciar automaticamente (política `restart: unless-stopped`).
 - **O banco oficial está no Cloud SQL**, que possui backups automáticos e exportações gerenciadas pelo GCP.
-- **Os scripts `backup-postgres.sh` e `restore-postgres.sh` validam backup e restore do PostgreSQL local legado.** O banco oficial atual está no Cloud SQL, e os backups principais devem ser feitos pelas ferramentas do GCP/Cloud SQL.
-  - **Aviso:** Os backups do banco local são responsabilidade operacional da infraestrutura.
+- **O PostgreSQL local foi removido.** Os scripts `backup-postgres.sh` e `restore-postgres.sh` agora servem apenas para lembrar que os backups principais devem ser feitos pelas ferramentas do GCP/Cloud SQL.
   - As equipes de microsserviços não devem executar restore do banco.
   - Restore deve ser feito apenas pela equipe de infraestrutura, preferencialmente na VM standby ou ambiente limpo.
 - **Existe um plano de VM standby** para recuperação em caso de queda completa da VM principal. A VM standby pode ser ativada com a infraestrutura clonada, apontando para o mesmo Cloud SQL.

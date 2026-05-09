@@ -28,43 +28,15 @@ Isso significa que:
 - O container **só não reinicia** se for parado manualmente com `docker compose stop` ou `docker compose down`.
 
 Além disso, os serviços críticos possuem **health checks** configurados:
-- **PostgreSQL:** verifica se o banco está aceitando conexões via `pg_isready`.
 - **Redpanda:** verifica se o broker Kafka está respondendo via endpoint de saúde.
 
 Esses health checks permitem identificar quando um serviço está em estado degradado. A política de restart automático cobre falhas em que o processo do container encerra. Em caso de container unhealthy sem encerramento do processo, a equipe de infraestrutura deve investigar usando docker compose ps e docker logs.
 
 ---
 
-## 4. Camada 2: Backups do PostgreSQL
+## 4. Camada 2: Backups do Cloud SQL
 
-O banco central `portal_b2b` deve ter **backup periódico** utilizando `pg_dump`. Os backups garantem que, mesmo em caso de perda total da VM, os dados podem ser recuperados.
-
-### Como gerar um backup
-
-```bash
-bash scripts/backup-postgres.sh
-```
-
-O script salva o dump do banco na pasta:
-
-```
-backups/postgres/
-```
-
-Cada arquivo é nomeado com timestamp, por exemplo:
-```
-backups/postgres/portal_b2b_20260505_143000.sql
-```
-
-### Onde armazenar os backups
-
-Os backups devem ser **copiados para fora da VM** regularmente. Opções recomendadas:
-- Google Drive (via rclone ou upload manual).
-- Outra VM ou servidor.
-- Armazenamento externo (pendrive, HD externo).
-- Repositório privado (apenas para backups pequenos).
-
-> **Recomendação:** Gerar backup antes de qualquer atualização significativa e pelo menos uma vez por dia durante o período de desenvolvimento ativo.
+O banco central `portal_b2b` está no Cloud SQL PostgreSQL, que possui backups automáticos e exportações gerenciadas pelo GCP. Em caso de necessidade de restauração, a equipe de infraestrutura deve usar o console do GCP para restaurar um backup ou exportação.
 
 ---
 
@@ -111,9 +83,7 @@ Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **
 
 ## 6. Processo de recuperação em caso de queda da VM principal
 
-> **Atenção:** Antes de restaurar um backup, confirme se o banco atual pode receber a restauração. O script `restore-postgres.sh` executa o SQL do backup sobre o banco `portal_b2b` existente. Em uma VM standby recém-criada isso é esperado. Em uma VM com dados existentes, pode haver conflito com tabelas, constraints ou registros já presentes.
->
-> **Recomendação:** Para testes de recuperação, prefira restaurar o backup em uma VM limpa ou em um ambiente local descartável.
+
 
 Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
 
@@ -132,13 +102,8 @@ Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
    docker compose up -d
    ```
 
-4. **Restaurar o último backup do PostgreSQL:**
-   - Restaurar backup preferencialmente em ambiente limpo.
-   - Se a infraestrutura já foi usada antes na VM standby, avaliar se precisa limpar volumes antes de restaurar (`docker compose down -v`).
-   - Não rodar restore em ambiente de produção acadêmica sem confirmar com a equipe.
-   ```bash
-   bash scripts/restore-postgres.sh backups/postgres/NOME_DO_ULTIMO_BACKUP.sql
-   ```
+4. **Verificar Cloud SQL:**
+   - O banco de dados está fora da VM (Cloud SQL). Portanto, não é necessário rodar restore de banco de dados na VM. Apenas certifique-se de que a VM Standby tem conectividade com `136.114.235.212`.
 
 5. **Subir os microsserviços das equipes:**
    ```bash
@@ -184,7 +149,7 @@ Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
 
 ✅ Recuperação manual em outra VM — procedimento documentado com VM standby.
 
-✅ Restauração do banco via backup — scripts `backup-postgres.sh` e `restore-postgres.sh`.
+✅ Restauração do banco via backup — gerenciado pelo GCP no Cloud SQL.
 
 ---
 
@@ -192,7 +157,7 @@ Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
 
 ❌ **Failover automático** — a troca para a VM standby é manual.
 
-❌ **Replicação em tempo real do PostgreSQL** — não há primary/replica configurado.
+
 
 ❌ **Cluster real de Kafka/Redpanda** — roda com broker único.
 
