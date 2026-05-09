@@ -1,4 +1,4 @@
-﻿# Deploy Controlado de Microsserviços na VM
+# Deploy Controlado de Microsserviços na VM
 
 ## Objetivo
 
@@ -118,7 +118,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 
 > **Atenção:**
 > - O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`.
-> - O host `postgres` (Docker Compose local) é **legado** e não deve mais ser usado.
+> - O host `postgres` foi removido e não deve ser usado. O banco oficial é o Cloud SQL em 136.114.235.212.
 > - Dentro do container, **não usar `localhost`** para Kafka. O host correto é `redpanda`.
 > - O `localhost` dentro de um container aponta para o próprio container, não para os serviços da infraestrutura.
 
@@ -198,7 +198,7 @@ bash scripts/check-services.sh
 | `Arquivo docker-compose.yml não encontrado` | Equipe não entregou compose | Pedir correção à equipe |
 | `Arquivo .env.example não encontrado` | Equipe não padronizou variáveis | Pedir correção à equipe |
 | Gateway retorna `502` | Container não está rodando ou porta errada | Verificar `docker ps` e `docker logs` |
-| Banco não conecta | Usou host errado para o banco | Usar `136.114.235.212:5432` (Cloud SQL). O host `postgres` é legado. |
+| Banco não conecta | Usou host errado para o banco | Usar `136.114.235.212:5432` (Cloud SQL). O host `postgres` não existe mais na infraestrutura. |
 | Kafka não conecta | Usou `localhost` dentro do container | Trocar para `redpanda:9092` |
 | Porta já em uso | Outro serviço usa a mesma porta | Conferir porta oficial |
 | `/health` não responde | Serviço não implementou endpoint ou iniciou com erro | Verificar logs e pedir correção à equipe |

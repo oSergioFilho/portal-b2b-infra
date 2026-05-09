@@ -268,7 +268,7 @@ Resultado esperado: mesmas respostas que a VM principal.
 
 
 
-## 17. Resultado esperado geral
+## 16. Resultado esperado geral
 
 A infraestrutura atual está validada quando:
 
@@ -288,7 +288,7 @@ A infraestrutura atual está validada quando:
 
 ---
 
-## 18. Testar sincronização redundante
+## 17. Testar sincronização redundante
 
 Na VM principal:
 
@@ -306,7 +306,7 @@ Resultado esperado:
 
 ---
 
-## 19. Testar Load Balancer após sincronização
+## 18. Testar Load Balancer após sincronização
 
 ```bash
 curl http://34.8.17.245/health

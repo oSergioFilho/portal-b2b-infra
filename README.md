@@ -216,7 +216,7 @@ O banco oficial atual é o **Cloud SQL PostgreSQL** em `136.114.235.212`.
 A infraestrutura possui mecanismos de resiliência e um plano de recuperação para lidar com falhas:
 
 - **Restart automático:** Todos os containers utilizam `restart: unless-stopped`. Se um container cair, o Docker reinicia automaticamente.
-- **Health checks:** PostgreSQL e Redpanda possuem health checks configurados para detectar estados degradados.
+- **Health checks:** Redpanda possui health check no Docker Compose. O Cloud SQL é monitorado externamente por testes de conexão, PgAdmin e recursos do GCP.
 - **Cloud SQL:** O banco oficial está no Cloud SQL, que possui backups automáticos e exportações gerenciadas pelo GCP.
 - **VM Standby:** Estratégia acadêmica recomendada de manter uma segunda VM preparada para assumir em caso de falha da VM principal.
 

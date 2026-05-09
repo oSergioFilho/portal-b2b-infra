@@ -828,7 +828,7 @@ Todos os microsserviços devem usar:
 DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 ```
 
-> **Importante:** O host `postgres:5432` do Docker Compose local é legado. Não usar como banco oficial.
+> **Importante:** O PostgreSQL local foi removido. O banco oficial é exclusivamente o Cloud SQL PostgreSQL em 136.114.235.212.
 
 Para detalhes sobre a arquitetura redundante e a migração, consulte:
 

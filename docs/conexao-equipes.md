@@ -55,7 +55,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 **Regras importantes:**
 - O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`.
 - Dentro do container, **não usar `localhost`** para Kafka. O host correto é `redpanda`.
-- O host `postgres` (Docker Compose local) é **legado** e não deve mais ser usado como banco oficial.
+- O host `postgres` não existe mais na infraestrutura. O banco oficial é exclusivamente o Cloud SQL em 136.114.235.212.
 - O container do microsserviço **precisa estar na rede `portal-b2b-network`** para que o nome `redpanda` funcione.
 
 ---
@@ -68,7 +68,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 - Senha: `***`
 - Host do banco oficial no PgAdmin: `136.114.235.212`
 
-> O host `postgres` só deve ser usado para visualizar o PostgreSQL local legado/fallback. Para o banco oficial, usar Cloud SQL em `136.114.235.212`.
+> O host `postgres` não existe mais na infraestrutura. O banco oficial é exclusivamente o Cloud SQL em `136.114.235.212`.
 
 **Kafka UI:**
 - URL: http://34.29.84.207:8080
