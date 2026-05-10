@@ -18,6 +18,7 @@ services:
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
     container_name: portal-b2b-redpanda
+    restart: unless-stopped
     command:
       - redpanda
       - start
