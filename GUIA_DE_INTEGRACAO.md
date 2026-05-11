@@ -697,6 +697,12 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 - Gateway `/api/logistica/`
 - Eventos `solicitacao_frete_criada`, `frete_selecionado`, `cotacao_frete_enviada`
 
+> **Aviso Importante sobre Logística e Transportadoras:**
+> - Não existe mais `transportadoras-service` separado.
+> - A parte de transporte/transportadoras está integrada ao módulo de Logística.
+> - Front logística: http://34.8.17.245/logistica/ (Porta front logística: 8088)
+> - API logística: http://34.8.17.245/api/logistica/ (Porta API logística: 5008)
+
 ---
 
 ## 24. Contrato obrigatório do endpoint /health

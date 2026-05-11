@@ -123,6 +123,10 @@ O Load Balancer distribui requisições entre a VM principal e a VM standby com 
 | pedidos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/pedidos/health |
 | logistica-service | ⏳ Aguardando deploy | http://34.8.17.245/api/logistica/health |
 
+> **Nota sobre Transportadoras:** Não existe mais o microsserviço `transportadoras-service` separado. A parte de transporte/transportadoras está integrada ao módulo de **Logística**.
+> - Front logística: http://34.8.17.245/logistica/ (Porta: 8088)
+> - API logística: http://34.8.17.245/api/logistica/ (Porta: 5008)
+
 
 ---
 
