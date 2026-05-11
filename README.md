@@ -409,6 +409,12 @@ O painel visual de status da infraestrutura com Uptime Kuma está documentado em
 
 [docs/observabilidade-status.md](./docs/observabilidade-status.md)
 
+## Comandos operacionais das VMs
+
+Os principais comandos usados para operação, deploy, validação, logs e troubleshooting das VMs estão documentados em:
+
+[docs/comandos-operacionais-vm.md](./docs/comandos-operacionais-vm.md)
+
 ## Estrutura recomendada da VM
 
 ```text
