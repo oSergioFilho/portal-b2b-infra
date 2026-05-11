@@ -60,7 +60,7 @@ Load Balancer - 34.8.17.245
     ↓
 Nginx Gateway da VM saudável
     ↓
-Microsserviço dockerizado - portas 5001 a 5009
+Microsserviço dockerizado - portas 5001 a 5008
     ↓
 Cloud SQL PostgreSQL - 136.114.235.212:5432
     ↓

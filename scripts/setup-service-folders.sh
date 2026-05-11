@@ -13,7 +13,7 @@ sudo mkdir -p "$BASE_DIR/mercado-service"
 sudo mkdir -p "$BASE_DIR/negociacao-service"
 sudo mkdir -p "$BASE_DIR/pedidos-service"
 sudo mkdir -p "$BASE_DIR/logistica-service"
-sudo mkdir -p "$BASE_DIR/transportadoras-service"
+
 
 sudo chown -R "$USER:$USER" "$BASE_DIR"
 

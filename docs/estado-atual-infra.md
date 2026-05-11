@@ -47,7 +47,7 @@ O que roda na VM:
 - Redpanda/Kafka (porta 9092)
 - Kafka UI (porta 8080)
 - PgAdmin (acesso via /pgadmin/ no Load Balancer)
-- Microsserviços dockerizados (portas 5001 a 5009)
+- Microsserviços dockerizados (portas 5001 a 5008)
 - Scripts de deploy e verificação
 - Rede Docker `portal-b2b-network`
 

@@ -86,9 +86,6 @@ INSERT INTO portal_b2b.health_check (service_name)
 SELECT 'logistica-service'
 WHERE NOT EXISTS (SELECT 1 FROM portal_b2b.health_check WHERE service_name = 'logistica-service');
 
-INSERT INTO portal_b2b.health_check (service_name)
-SELECT 'transportadoras-service'
-WHERE NOT EXISTS (SELECT 1 FROM portal_b2b.health_check WHERE service_name = 'transportadoras-service');
 
 -- Garantir privilégios na tabela health_check (e em possíveis tabelas recriadas)
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA portal_b2b TO db_portal_b2b;

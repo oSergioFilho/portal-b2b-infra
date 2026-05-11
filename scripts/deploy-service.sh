@@ -46,10 +46,7 @@ case "$SERVICE_NAME" in
     PORT=5008
     DOMAIN="logistica"
     ;;
-  transportadoras-service)
-    PORT=5009
-    DOMAIN="transportadoras"
-    ;;
+
   *)
     echo "Serviço inválido: $SERVICE_NAME"
     echo "Serviços válidos:"
@@ -61,7 +58,7 @@ case "$SERVICE_NAME" in
     echo "  - negociacao-service"
     echo "  - pedidos-service"
     echo "  - logistica-service"
-    echo "  - transportadoras-service"
+
     exit 1
     ;;
 esac

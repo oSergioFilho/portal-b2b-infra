@@ -13,7 +13,7 @@ SERVICES=(
     "negociacoes"
     "pedidos"
     "logistica"
-    "transportadoras"
+
 )
 
 HAS_ERROR=0
