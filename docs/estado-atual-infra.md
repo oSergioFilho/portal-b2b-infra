@@ -122,7 +122,7 @@ O Load Balancer distribui requisições entre a VM principal e a VM standby com 
 | negociacao-service | ⏳ Aguardando deploy | http://34.8.17.245/api/negociacoes/health |
 | pedidos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/pedidos/health |
 | logistica-service | ⏳ Aguardando deploy | http://34.8.17.245/api/logistica/health |
-| transportadoras-service | ⏳ Aguardando deploy | http://34.8.17.245/api/transportadoras/health |
+
 
 ---
 

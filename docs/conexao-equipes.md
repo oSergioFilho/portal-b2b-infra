@@ -94,7 +94,7 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 | negociacao-service | 5006 | /api/negociacoes/ |
 | pedidos-service | 5007 | /api/pedidos/ |
 | logistica-service | 5008 | /api/logistica/ |
-| transportadoras-service | 5009 | /api/transportadoras/ |
+
 
 ---
 

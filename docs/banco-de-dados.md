@@ -23,8 +23,7 @@ Como todos usam o mesmo schema, deve haver alinhamento rigoroso na nomenclatura 
 - **Mercado:** `mercado_processo_negociacao`, `mercado_modo_negociacao`
 - **Negociação:** `negociacao_lance`, `negociacao_resultado`
 - **Pedidos:** `pedidos_pedido`, `pedidos_item_pedido`
-- **Logística:** `logistica_solicitacao_frete`, `logistica_frete_selecionado`
-- **Transportadoras:** `transportadoras_cotacao_frete`, `transportadoras_area_atuacao`
+- **Logística:** `logistica_solicitacao_frete`, `logistica_frete_selecionado`, `logistica_cotacao_frete`, `logistica_area_atuacao`
 
 Esta organização permite que o banco permaneça estruturado em um modelo único sem que tabelas de domínios diferentes se misturem.
 

@@ -191,7 +191,7 @@ O Load Balancer atual atende a porta 80/Gateway. Por isso, o front de produtos d
 | Negociação | 5006 | 8086 |
 | Pedidos | 5007 | 8087 |
 | Logística | 5008 | 8088 |
-| Transportadoras | 5009 | 8089 |
+
 
 **Observação:**
 Se apenas uma equipe tiver front-end, a porta pode ser combinada manualmente. O importante é **não repetir porta**.

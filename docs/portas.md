@@ -18,7 +18,7 @@
 - **negociacao-service:** `5006`
 - **pedidos-service:** `5007`
 - **logistica-service:** `5008`
-- **transportadoras-service:** `5009`
+
 
 ## Segurança
 

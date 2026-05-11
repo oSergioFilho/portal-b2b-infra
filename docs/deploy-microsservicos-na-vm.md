@@ -34,7 +34,7 @@ Inicialmente, será usado o modelo **controlado pela infraestrutura**:
     ├── negociacao-service/
     ├── pedidos-service/
     ├── logistica-service/
-    └── transportadoras-service/
+
 ```
 
 ---

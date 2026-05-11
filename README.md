@@ -208,7 +208,7 @@ Esse script testa:
 - negociacao-service
 - pedidos-service
 - logistica-service
-- transportadoras-service
+
 
 ## Redundância e recuperação
 
@@ -418,7 +418,7 @@ O painel visual de status da infraestrutura com Uptime Kuma está documentado em
     ├── negociacao-service/
     ├── pedidos-service/
     ├── logistica-service/
-    └── transportadoras-service/
+
 ```
 
 - `portal-b2b-infra` guarda a infraestrutura.

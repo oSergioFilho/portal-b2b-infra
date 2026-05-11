@@ -99,7 +99,6 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 - negociacao-service
 - pedidos-service
 - logistica-service
-- transportadoras-service
 
 ---
 
@@ -141,7 +140,6 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 - negociacao-service: `5006`
 - pedidos-service: `5007`
 - logistica-service: `5008`
-- transportadoras-service: `5009`
 
 **Regra inegociável:** Nenhuma equipe pode trocar a porta do serviço sem avisar a equipe de infraestrutura.
 
@@ -158,8 +156,7 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 | Mercado | mercado-service | 5005 | `/api/mercado/` | `modo_negociacao_definido`, `leilao_iniciado` |
 | Negociação | negociacao-service | 5006 | `/api/negociacoes/` | `lance_realizado`, `negociacao_fechada` |
 | Pedidos | pedidos-service | 5007 | `/api/pedidos/` | `pedido_criado`, `pedido_atualizado` |
-| Logística | logistica-service | 5008 | `/api/logistica/` | `solicitacao_frete_criada`, `frete_selecionado` |
-| Transportadoras | transportadoras-service | 5009 | `/api/transportadoras/` | `cotacao_frete_enviada` |
+| Logística | logistica-service | 5008 | `/api/logistica/` | `solicitacao_frete_criada`, `frete_selecionado`, `cotacao_frete_enviada` |
 
 ---
 
@@ -379,7 +376,6 @@ O Nginx **remove o prefixo** `/api/produtos/` e encaminha apenas `/health` para 
 | `/api/negociacoes/health`| `/health` na porta 5006 |
 | `/api/pedidos/health` | `/health` na porta 5007 |
 | `/api/logistica/health` | `/health` na porta 5008 |
-| `/api/transportadoras/health`| `/health` na porta 5009 |
 
 **Aviso:**
 O seu microsserviço **NÃO DEVE** criar rotas internas começando com `/api/produtos` ou `/api/pedidos`. A rota no seu código deve ser apenas `/health`, `/listar`, `/cadastrar`. O prefixo `/api/...` é responsabilidade exclusiva do Gateway.
@@ -588,8 +584,7 @@ Todo evento postado no barramento **deve obrigatoriamente** ser envelopado neste
 | `mercado-service` | `modo_negociacao_definido`, `leilao_iniciado` |
 | `negociacao-service` | `lance_realizado`, `negociacao_fechada` |
 | `pedidos-service` | `pedido_criado`, `pedido_atualizado` |
-| `logistica-service` | `solicitacao_frete_criada`, `frete_selecionado` |
-| `transportadoras-service`| `cotacao_frete_enviada` |
+| `logistica-service` | `solicitacao_frete_criada`, `frete_selecionado`, `cotacao_frete_enviada` |
 
 ---
 
@@ -602,8 +597,7 @@ Sugestão de fluxo inicial de mensageria assíncrona (A confirmar com alinhament
 - `mercado-service` consome `fornecimento_criado`, `estoque_atualizado` e `demanda_criada`.
 - `negociacao-service` consome `modo_negociacao_definido` e `leilao_iniciado`.
 - `pedidos-service` consome `negociacao_fechada`.
-- `logistica-service` consome `pedido_criado`.
-- `transportadoras-service` consome `solicitacao_frete_criada`.
+- `logistica-service` consome `pedido_criado` e `solicitacao_frete_criada`.
 
 **Aviso:**
 Os eventos consumidos devem ser confirmados entre as equipes de acordo com o mapeamento e a regra de negócio estabelecida.
@@ -701,12 +695,7 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 ### Logística
 - Porta `5008`
 - Gateway `/api/logistica/`
-- Eventos `solicitacao_frete_criada`, `frete_selecionado`
-
-### Transportadoras
-- Porta `5009`
-- Gateway `/api/transportadoras/`
-- Evento `cotacao_frete_enviada`
+- Eventos `solicitacao_frete_criada`, `frete_selecionado`, `cotacao_frete_enviada`
 
 ---
 
@@ -756,8 +745,7 @@ curl http://localhost/api/produtos/health
     ├── mercado-service/
     ├── negociacao-service/
     ├── pedidos-service/
-    ├── logistica-service/
-    └── transportadoras-service/
+    └── logistica-service/
 ```
 
 Cada equipe deve clonar o próprio repositório dentro de `/opt/portal-b2b/services`.

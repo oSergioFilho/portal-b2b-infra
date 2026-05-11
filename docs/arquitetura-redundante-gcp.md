@@ -57,7 +57,7 @@ As duas VMs terão a mesma estrutura de diretórios:
     ├── negociacao-service/
     ├── pedidos-service/
     ├── logistica-service/
-    └── transportadoras-service/
+
 ```
 
 ---

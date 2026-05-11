@@ -35,8 +35,7 @@ Todos os eventos devem ter o seguinte formato de envelope (wrapper):
 - **mercado-service** publica: `modo_negociacao_definido`, `leilao_iniciado`
 - **negociacao-service** publica: `lance_realizado`, `negociacao_fechada`
 - **pedidos-service** publica: `pedido_criado`, `pedido_atualizado`
-- **logistica-service** publica: `solicitacao_frete_criada`, `frete_selecionado`
-- **transportadoras-service** publica: `cotacao_frete_enviada`
+- **logistica-service** publica: `solicitacao_frete_criada`, `frete_selecionado`, `cotacao_frete_enviada`
 
 ## Exemplos JSON
 
