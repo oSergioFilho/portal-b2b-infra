@@ -1,4 +1,4 @@
-﻿# Deploy de Front-ends na VM
+# Deploy de Front-ends na VM
 
 ## Objetivo
 
@@ -190,7 +190,7 @@ O Load Balancer atual atende a porta 80/Gateway. Por isso, o front de produtos d
 | Mercado | 5005 | 8085 |
 | Negociação | 5006 | 8086 |
 | Pedidos | 5007 | 8087 |
-| Logística | 5008 | 8088 |
+| Logística | 5008 | 3000 |
 | Transportadoras | 5009 | 8089 |
 
 **Observação:**

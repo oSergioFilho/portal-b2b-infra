@@ -29,6 +29,7 @@ Cloud SQL PostgreSQL - 136.114.235.212
 | VM standby | `34.59.229.37` | Aplicação redundante | ✅ Validada |
 | Cloud SQL | `136.114.235.212` | Banco oficial compartilhado | ✅ Validado |
 | Front produtos | `http://34.8.17.245/produtos/` | Front publicado via Gateway/Load Balancer | A validar |
+| Front logística | `http://34.8.17.245/logistica/` | Front publicado via Gateway/Load Balancer | A validar |
 | Uptime Kuma | `http://34.59.229.37:3001` | Painel de status | ✅ Implementado |
 | Status Page | `http://34.59.229.37:3001/status/portal-b2b-status` | Página pública de status | ✅ Implementado |
 
@@ -100,6 +101,7 @@ O acesso principal ao sistema é pelo Load Balancer:
 http://34.8.17.245/health
 http://34.8.17.245/api/produtos/health
 http://34.8.17.245/produtos/
+http://34.8.17.245/logistica/
 ```
 
 O Load Balancer distribui requisições entre a VM principal e a VM standby com base no health check (`GET /health`).

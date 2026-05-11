@@ -114,6 +114,7 @@ http://34.8.17.245
 | Health do Gateway | http://34.8.17.245/health | Acesso oficial |
 | produtos-service | http://34.8.17.245/api/produtos/health | Acesso oficial |
 | Front produtos | http://34.8.17.245/produtos/ | Acesso oficial, se o front estiver rodando na porta 8081 |
+| Front logística | http://34.8.17.245/logistica/ | Acesso oficial, se o front estiver rodando na porta 3000 |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
 | PgAdmin (Redundante) | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |

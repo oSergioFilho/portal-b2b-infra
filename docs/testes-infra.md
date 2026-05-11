@@ -215,26 +215,29 @@ Resposta esperada:
 
 ## 13. Testar Front-end pelo Load Balancer
 
-**Teste oficial do front produtos pelo Load Balancer:**
+**Teste oficial dos front-ends pelo Load Balancer:**
 ```bash
 curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
 ```
 
 **Teste direto na VM principal, somente diagnóstico:**
 ```bash
 curl -I http://34.29.84.207:8081
+curl -I http://34.29.84.207:3000
 ```
 
 **Teste direto na VM standby, somente diagnóstico:**
 ```bash
 curl -I http://34.59.229.37:8081
+curl -I http://34.59.229.37:3000
 ```
 
 **Resultado esperado:**
-- Pelo Load Balancer, o front deve responder.
-- Se a VM principal cair, o acesso direto a `34.29.84.207:8081` falha, mas o acesso pelo Load Balancer deve continuar funcionando se a standby estiver saudável.
+- Pelo Load Balancer, os fronts devem responder.
+- Se a VM principal cair, o acesso direto a `34.29.84.207` falha, mas o acesso pelo Load Balancer deve continuar funcionando se a standby estiver saudável.
 
-> **Observação:** Se esse teste falhar, verificar se o produtos-front está rodando nas duas VMs e se a aplicação front-end suporta o subpath `/produtos/`.
+> **Observação:** Se esse teste falhar, verificar se os fronts estão rodando nas duas VMs e se a aplicação front-end suporta o subpath correspondente.
 
 ---
 
@@ -282,6 +285,7 @@ A infraestrutura atual está validada quando:
 - [ ] PgAdmin abre via Load Balancer em `/pgadmin/`.
 - [ ] `produtos-service` responde pelo Load Balancer.
 - [ ] Front produtos responde pelo Load Balancer em `/produtos/`.
+- [ ] Front logística responde pelo Load Balancer em `/logistica/`.
 - [ ] Backends do Load Balancer estão HEALTHY.
 - [ ] `check-infra.sh` conclui sem erro crítico.
 - [ ] `check-services.sh` mostra OK para os serviços já deployados.
