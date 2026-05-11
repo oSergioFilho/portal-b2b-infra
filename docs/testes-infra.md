@@ -224,13 +224,13 @@ curl -I http://34.8.17.245/logistica/
 **Teste direto na VM principal, somente diagnóstico:**
 ```bash
 curl -I http://34.29.84.207:8081
-curl -I http://34.29.84.207:3000
+curl -I http://34.29.84.207:8088
 ```
 
 **Teste direto na VM standby, somente diagnóstico:**
 ```bash
 curl -I http://34.59.229.37:8081
-curl -I http://34.59.229.37:3000
+curl -I http://34.59.229.37:8088
 ```
 
 **Resultado esperado:**
