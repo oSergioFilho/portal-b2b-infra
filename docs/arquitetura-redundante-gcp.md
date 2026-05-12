@@ -2,45 +2,52 @@
 
 ## 1. Objetivo
 
-Este documento descreve a evolução da infraestrutura atual do Portal B2B para uma arquitetura redundante com duas VMs de aplicação e banco PostgreSQL compartilhado via Cloud SQL.
+Este documento descreve a arquitetura redundante atual do Portal B2B, com duas VMs de aplicação atrás de um Load Balancer HTTP externo e banco PostgreSQL compartilhado via Cloud SQL.
 
-O objetivo é reduzir o ponto único de falha da VM central, permitindo que o sistema continue disponível mesmo em caso de queda da VM principal.
+O objetivo é eliminar o ponto único de falha, permitindo que o sistema continue disponível mesmo em caso de queda de uma das VMs.
 
 ---
 
-## 2. Limitação da arquitetura atual
+## 2. Arquitetura implementada — situação atual
 
-Hoje a VM central (`34.29.84.207`) concentra os componentes de aplicação:
+A infraestrutura possui **duas VMs de aplicação atrás de um Load Balancer HTTP externo**. As duas VMs rodam a mesma infraestrutura, os mesmos microsserviços e os mesmos front-ends. O banco é externo, no Cloud SQL PostgreSQL.
 
+Cada VM roda:
 - API Gateway (Nginx)
-- Microsserviços de todas as equipes
-- Kafka/Redpanda
+- Microsserviços das equipes
+- Front-ends dockerizados
+- Kafka/Redpanda (local por VM)
 - PgAdmin
 - Kafka UI
 
-O banco de dados oficial já foi migrado para **Cloud SQL PostgreSQL** (`136.114.235.212`), reduzindo a dependência do banco local.
+O banco de dados oficial é o **Cloud SQL PostgreSQL** (`136.114.235.212`), compartilhado entre as duas VMs.
 
-Se a VM cair, os microsserviços ficam indisponíveis, mas o banco permanece acessível externamente.
+Se uma VM cair, o Load Balancer redireciona automaticamente o tráfego para a VM saudável.
 
 ---
 
-## 3. Arquitetura implementada
-
-A proposta original evoluiu e separou o banco de dados em uma instância Cloud SQL PostgreSQL, mantendo duas VMs de aplicação: uma principal e uma standby, atrás de um Load Balancer.
+## 3. Fluxo da arquitetura
 
 ```text
 Usuários / Frontend
         ↓
 Load Balancer - 34.8.17.245
         ↓
-VM principal ou VM standby
+VM principal (34.29.84.207) ou VM standby (34.59.229.37) saudável
         ↓
 Nginx Gateway
         ↓
-Microsserviços / Front publicado no Gateway
+Fronts e microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
++ Redpanda/Kafka local da VM
 ```
+
+Pontos importantes:
+- **O Load Balancer é o ponto oficial de entrada.** Acesso sempre pelo IP `34.8.17.245`.
+- **As duas VMs rodam a mesma infraestrutura.** A VM standby não é passiva; ela roda os mesmos containers e microsserviços que a VM principal.
+- **O failover HTTP é automático** pelo Load Balancer, baseado no health check `GET /health`.
+- **Acesso direto às VMs** (`34.29.84.207`, `34.59.229.37`) é apenas para diagnóstico.
 
 As duas VMs terão a mesma estrutura de diretórios:
 
@@ -121,33 +128,34 @@ No dia a dia, o tráfego oficial chega pelo Load Balancer, que pode encaminhar p
 
 ## 7. VM app-standby
 
-A VM standby é responsável por:
+A VM standby:
 
-- Ter Docker instalado e configurado
-- Ter o repositório `portal-b2b-infra` clonado e atualizado
-- Ter os mesmos microsserviços clonados
-- Usar o mesmo Cloud SQL PostgreSQL
-- **Assumir caso a VM principal fique indisponível**
+- Roda a mesma infraestrutura que a VM principal
+- Roda os mesmos microsserviços e front-ends
+- Usa o mesmo Cloud SQL PostgreSQL
+- **Recebe tráfego do Load Balancer quando saudável**
+- **Assume automaticamente quando a VM principal cai** — o Load Balancer detecta via health check e redireciona o tráfego
 
-A VM standby deve estar preparada para subir a infraestrutura a qualquer momento, sem depender de transferências de dados ou configurações manuais longas.
+A VM standby não é passiva. Ela está sempre ativa e disponível para atender requisições.
 
 > **Observação:** O IP público da VM standby deve permanecer reservado como IP estático no GCP para evitar novas mudanças após reinicialização.
 
 ---
 
-## 8. Contingência/diagnóstico manual
+## 8. Intervenção manual — fallback operacional
 
-- O failover HTTP principal já é feito pelo Load Balancer.
-- O acesso direto às VMs é somente diagnóstico/contingência.
-- O teste de falha controlada ainda pode ser feito depois.
+O failover HTTP principal já é feito automaticamente pelo Load Balancer. O acesso direto às VMs é somente diagnóstico/contingência.
 
-Com o Load Balancer implementado, o failover de tráfego HTTP é automático entre as VMs saudáveis. O procedimento manual abaixo fica como fallback operacional ou diagnóstico. Se for necessário intervir manualmente na VM standby:
+A intervenção manual é necessária apenas quando a VM standby está desatualizada, desligada ou com container parado. O procedimento abaixo é fallback operacional — **não é o fluxo normal**.
+
+Se for necessário intervir manualmente na VM standby:
 
 1. Acessar a VM standby via SSH.
 2. Rodar `git pull` nos repositórios de infraestrutura e microsserviços.
 3. Subir a infraestrutura e microsserviços com Docker Compose.
 4. Validar os serviços com `check-infra.sh` e `check-services.sh`.
-5. Usar o IP da VM standby temporariamente ou atualizar o DNS.
+
+> **Importante:** Não é necessário trocar IP/DNS. O ponto oficial de acesso é sempre o Load Balancer `34.8.17.245`.
 
 ```bash
 # Na VM standby
@@ -158,6 +166,7 @@ bash scripts/start.sh
 # Subir cada microsserviço
 cd /opt/portal-b2b/services/usuarios-service && git pull && docker compose up -d --build
 cd /opt/portal-b2b/services/produtos-service && git pull && docker compose up -d --build
+cd /opt/portal-b2b/services/logistica-service && git pull && docker compose up -d --build
 # ... repetir para cada serviço
 
 # Validar
@@ -177,9 +186,21 @@ http://34.8.17.245
 Health check:
 GET /health
 
-O Load Balancer distribui para a VM principal ou standby conforme o health check.
+O Load Balancer distribui para a VM principal ou standby conforme o health check. O failover é automático — se uma VM não responde ao health check, o tráfego vai para a outra.
 
-O Load Balancer cobre a porta 80/Gateway. Serviços expostos em portas diretas, como 8081, só ficam redundantes automaticamente se forem publicados por uma rota no Gateway, como `/produtos/`.
+O Load Balancer cobre a porta 80/Gateway. Serviços expostos em portas diretas (8081, 8082, 8088) só ficam redundantes automaticamente se forem publicados por uma rota no Nginx Gateway (ex: `/`, `/produtos/`, `/logistica/`).
+
+**Endpoints atualmente validados:**
+
+```bash
+curl http://34.8.17.245/health
+curl http://34.8.17.245/api/usuarios/health
+curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/logistica/health
+curl -I http://34.8.17.245/
+curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
+```
 
 ```text
 Usuário
@@ -214,13 +235,13 @@ Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso mantém a infra
 
 ## 11. O que essa arquitetura cobre
 
-- ✅ Queda da VM de aplicação principal
-- ✅ Retomada do sistema na VM standby
-- ✅ Banco compartilhado entre VMs
-- ✅ Menor risco de perda de dados
-- ✅ Deploy reproduzível por Git e Docker
-- ✅ Load Balancer HTTP com health check
-- ✅ Sincronização automatizada via script
+- ✅ Queda de uma VM de aplicação — Load Balancer faz failover HTTP automático
+- ✅ Banco compartilhado entre VMs via Cloud SQL
+- ✅ Dados consistentes independente de qual VM atende o tráfego
+- ✅ Deploy reproduzível nas duas VMs por Git e Docker
+- ✅ Load Balancer HTTP com health check automático
+- ✅ Sincronização automatizada via `sync-redundant.sh`
+- ✅ Restart automático de containers via `unless-stopped`
 
 ---
 
@@ -262,4 +283,4 @@ O acesso recomendado ao sistema é pelo **Load Balancer** (`http://34.8.17.245`)
 
 ## 14. Texto para apresentação
 
-> A infraestrutura inicialmente foi validada em uma VM central. O banco foi migrado para Cloud SQL PostgreSQL, eliminando o ponto único de falha do banco local. Para reduzir o ponto único de falha da aplicação, foram criadas duas VMs: uma principal e uma standby. As duas VMs utilizam o mesmo banco Cloud SQL. Um Load Balancer HTTP externo distribui as requisições entre as VMs, verificando a saúde de cada uma via `/health`. Se uma VM cair, o Load Balancer redireciona automaticamente para a VM saudável.
+> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo no GCP. As duas VMs rodam a mesma infraestrutura: Nginx API Gateway, microsserviços dockerizados, front-ends dockerizados e Redpanda/Kafka local. O banco de dados oficial é o Cloud SQL PostgreSQL, compartilhado entre as duas VMs. Um Load Balancer HTTP distribui as requisições entre as VMs com base em health check — se uma VM cair, o tráfego vai automaticamente para a outra. O acesso oficial ao sistema é sempre pelo Load Balancer (34.8.17.245). Acesso direto às VMs é apenas diagnóstico."

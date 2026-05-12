@@ -21,12 +21,15 @@ http://34.8.17.245
 |---|---|---|
 | Load Balancer / Gateway | http://34.8.17.245 | Acesso oficial |
 | Health Gateway | http://34.8.17.245/health | Acesso oficial |
-| produtos-service | http://34.8.17.245/api/produtos/health | Acesso oficial |
-| Front produtos | http://34.8.17.245/produtos/ | Acesso oficial se o front estiver rodando |
-| Front logística | http://34.8.17.245/logistica/ | Acesso oficial se o front estiver rodando |
+| Portal principal | http://34.8.17.245/ | Front principal (portal-front / usuários) |
+| Front produtos | http://34.8.17.245/produtos/ | Acesso oficial |
+| Front logística | http://34.8.17.245/logistica/ | Acesso oficial |
+| PgAdmin | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
+| usuarios-service | http://34.8.17.245/api/usuarios/health | Integrado |
+| produtos-service | http://34.8.17.245/api/produtos/health | Integrado |
+| logistica-service | http://34.8.17.245/api/logistica/health | Integrado |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
-| PgAdmin (Redundante) | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
 | Uptime Kuma | http://34.59.229.37:3001 | Painel de status |
 
@@ -71,13 +74,13 @@ Outros microsserviços consumidores
 
 ---
 
-## 3. O que roda na VM central
+## 3. O que roda nas VMs de aplicação
 
-A VM central roda os componentes de aplicação e suporte. O banco oficial é externo (Cloud SQL).
+As duas VMs de aplicação rodam os mesmos componentes de aplicação e suporte. O banco oficial é externo (Cloud SQL).
 
 **Infraestrutura (Docker Compose):**
 - Nginx API Gateway
-- Redpanda/Kafka
+- Redpanda/Kafka (local por VM)
 - Kafka UI
 - PgAdmin
 
@@ -91,14 +94,16 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 - cada equipe mantém o próprio Dockerfile e docker-compose.yml.
 - cada container publica sua porta oficial no host.
 - cada container entra na rede portal-b2b-network.
-- usuarios-service
-- produtos-service
+- usuarios-service (**integrado**)
+- produtos-service (**integrado**)
+- logistica-service (**integrado**)
 - fornecimentos-service
 - demanda-service
 - mercado-service
 - negociacao-service
 - pedidos-service
-- logistica-service
+
+> **Aviso sobre Transportadoras:** Não existe mais `transportadoras-service` separado. A parte de transporte/transportadoras está integrada ao módulo de Logística (`logistica-service`, porta 5008).
 
 ---
 
@@ -331,7 +336,7 @@ docker logs -f produtos-service
 
 ### Deploy controlado pela infraestrutura
 
-Nesta primeira etapa, para evitar alterações indevidas na VM, o deploy dos microsserviços será feito de forma controlada pelo responsável da infraestrutura.
+Nesta primeira etapa, para evitar alterações indevidas nas VMs, o deploy dos microsserviços será feito de forma controlada pelo responsável da infraestrutura.
 
 Cada equipe deverá enviar:
 
@@ -343,10 +348,10 @@ Cada equipe deverá enviar:
 - Confirmação de `.env.example`.
 - Confirmação de `GET /health`.
 
-A infraestrutura irá usar:
+A infraestrutura irá usar o script redundante (deploy nas duas VMs):
 
 ```bash
-bash scripts/deploy-service.sh nome-service URL_DO_REPOSITORIO
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
 ```
 
 Para o passo a passo completo, consulte:

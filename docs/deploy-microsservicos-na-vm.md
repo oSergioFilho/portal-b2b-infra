@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento descreve como o responsável pela infraestrutura vai subir os microsserviços das equipes na VM central de forma controlada, garantindo consistência, rastreabilidade e ausência de intervenções manuais no código de cada equipe.
+Este documento descreve como o responsável pela infraestrutura vai subir os microsserviços das equipes nas duas VMs de forma controlada, garantindo consistência, rastreabilidade e ausência de intervenções manuais no código de cada equipe.
 
 ---
 
@@ -13,8 +13,8 @@ Inicialmente, será usado o modelo **controlado pela infraestrutura**:
 - As equipes desenvolvem em seus próprios computadores.
 - As equipes sobem o código no GitHub.
 - As equipes enviam o link do repositório para a infraestrutura.
-- A infraestrutura clona o repositório na VM.
-- A infraestrutura executa `docker compose up -d --build`.
+- A infraestrutura clona o repositório nas duas VMs.
+- A infraestrutura executa `docker compose up -d --build` nas duas VMs.
 - A equipe continua responsável por corrigir erros no próprio código, `Dockerfile`, `docker-compose.yml` e `.env.example`.
 
 ---
@@ -65,20 +65,41 @@ Antes de solicitar o deploy, cada equipe deve enviar ao responsável pela infrae
 
 ---
 
-## Como subir um microsserviço usando o script
+## Como subir um microsserviço nas duas VMs (padrão oficial)
+
+O deploy oficial deve ser feito com o script redundante, que publica o serviço na VM principal **e** na VM standby:
 
 ```bash
 cd /opt/portal-b2b/infra/portal-b2b-infra
-bash scripts/deploy-service.sh produtos-service https://github.com/EXEMPLO/produtos-service.git
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
 ```
 
-Outros exemplos:
+Exemplos reais:
 
 ```bash
-bash scripts/deploy-service.sh usuarios-service https://github.com/EXEMPLO/usuarios-service.git
-bash scripts/deploy-service.sh demanda-service https://github.com/EXEMPLO/demanda-service.git
-bash scripts/deploy-service.sh pedidos-service https://github.com/EXEMPLO/pedidos-service.git
+bash scripts/deploy-service-redundant.sh usuarios-service https://github.com/guilherme-cognitiva/autenticacao-b2b.git
+bash scripts/deploy-service-redundant.sh logistica-service https://github.com/faculdade-sistemas-distribuidos/b2b_logistica.git
+bash scripts/deploy-service-redundant.sh produtos-service https://github.com/PedroVian9/SDI.Micro.Produto
 ```
+
+O script faz deploy na VM principal e depois na VM standby via SSH.
+
+---
+
+## Deploy apenas na VM atual (teste local — não é o padrão oficial)
+
+Se precisar testar o deploy apenas na VM em que você está (sem replicar para a outra):
+
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/deploy-service.sh nome-service URL_DO_REPOSITORIO
+```
+
+> **Atenção:** Este comando não replica o deploy para a outra VM. Use apenas para diagnóstico local ou testes isolados. O padrão oficial é `deploy-service-redundant.sh`.
+
+---
+
+## Como o script `deploy-service-redundant.sh` funciona
 
 O script vai:
 1. Validar o nome e o link.
@@ -86,9 +107,10 @@ O script vai:
 3. Clonar o repositório (ou fazer `git pull` se já existir).
 4. Verificar os arquivos obrigatórios (`Dockerfile`, `docker-compose.yml`, `.env.example`).
 5. Criar `.env` a partir do `.env.example` se não existir.
-6. Executar `docker compose up -d --build`.
-7. Mostrar logs recentes.
-8. Mostrar os comandos de teste pelo Gateway.
+6. Executar `docker compose up -d --build` na VM principal.
+7. SSH na VM standby e repetir os mesmos passos.
+8. Mostrar logs recentes.
+9. Mostrar os comandos de teste pelo Gateway.
 
 ---
 
@@ -172,12 +194,12 @@ curl http://localhost/api/produtos/health
 curl http://34.8.17.245/api/produtos/health
 ```
 
-**Teste direto na VM (diagnóstico):**
+**Teste direto na VM principal (diagnóstico):**
 ```bash
 curl http://34.29.84.207/api/produtos/health
 ```
 
-> **Observação:** A partir da arquitetura redundante, o endereço oficial externo é o Load Balancer `34.8.17.245`. Os IPs das VMs (`34.29.84.207` e `34.59.229.37`) devem ser usados apenas para diagnóstico direto.
+> **Observação:** O endereço oficial externo é o Load Balancer `34.8.17.245`. Os IPs das VMs (`34.29.84.207` e `34.59.229.37`) devem ser usados apenas para diagnóstico direto.
 
 ---
 
@@ -208,7 +230,7 @@ bash scripts/check-services.sh
 ## Responsabilidade da infraestrutura
 
 **A infraestrutura faz:**
-- Clonar o repositório.
+- Clonar o repositório nas duas VMs.
 - Verificar arquivos obrigatórios.
 - Criar `.env` a partir do `.env.example`.
 - Executar `docker compose up -d --build`.

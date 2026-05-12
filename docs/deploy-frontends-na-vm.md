@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este documento define como as equipes devem preparar front-ends que estejam dentro dos repositórios dos microsserviços para deploy na VM central do Portal B2B.
+Este documento define como as equipes devem preparar front-ends que estejam dentro dos repositórios dos microsserviços para deploy nas VMs do Portal B2B.
 
 ---
 
@@ -26,22 +26,17 @@ Esses comandos devem estar **dentro do Dockerfile** do front-end.
 
 ## Situação atual
 
-A infraestrutura principal está preparada para:
+A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo (`34.8.17.245`). Cada VM roda Nginx API Gateway, microsserviços e front-ends dockerizados.
 
-- API Gateway;
-- backends/microsserviços;
-- PostgreSQL;
-- Kafka/Redpanda;
-- PgAdmin;
-- Kafka UI.
+**Front-ends oficiais já validados:**
 
-A raiz:
+| Front | Porta | Rota oficial | Status |
+|---|---|---|---|
+| Portal principal (portal-front / usuários) | 8082 | http://34.8.17.245/ | ✅ Validado |
+| Front produtos | 8081 | http://34.8.17.245/produtos/ | ✅ Validado |
+| Front logística | 8088 | http://34.8.17.245/logistica/ | ✅ Validado |
 
-```text
-http://34.8.17.245
-```
-
-O Load Balancer em `34.8.17.245` é o ponto de entrada oficial. A raiz do Load Balancer é usada pelo Nginx API Gateway. Se a raiz retornar `404`, isso não significa erro; significa apenas que ainda não existe um front-end principal publicado na raiz.
+O Load Balancer em `34.8.17.245` é o ponto de entrada oficial. A raiz (`/`) aponta para o `portal-front` (portal principal de usuários).
 
 ---
 
@@ -56,7 +51,7 @@ O Load Balancer em `34.8.17.245` é o ponto de entrada oficial. A raiz do Load B
 - interface visual;
 - geralmente React, Vite, Angular ou Next;
 - precisa ser buildado e servido por um container próprio;
-- pode ser exposto em uma porta específica.
+- deve ser publicado no Nginx Gateway para ficar acessível pelo Load Balancer.
 
 ---
 
@@ -160,22 +155,73 @@ server {
 
 ---
 
+## Front-ends em subpath — configuração obrigatória de base
+
+Front-ends publicados em subpath (como `/produtos/` ou `/logistica/`) **precisam** configurar o `base` no `vite.config.js`. Sem isso, os assets com caminho absoluto (como `/assets/...`) quebram quando publicados atrás de um subpath.
+
+### Front de Produtos — base: `/produtos/`
+
+```js
+// vite.config.js
+export default {
+  base: '/produtos/',
+}
+```
+
+### Front de Logística — base: `/logistica/`
+
+```js
+// vite.config.js
+export default {
+  base: '/logistica/',
+}
+```
+
+### Portal principal — base: `/` (raiz)
+
+```js
+// vite.config.js
+export default {
+  base: '/',
+}
+```
+
+---
+
+## Chamadas de API — use rotas relativas
+
+As chamadas de API dentro dos front-ends devem usar rotas relativas, não fixar IPs das VMs:
+
+```text
+✅ /api/usuarios
+✅ /api/produtos
+✅ /api/logistica
+❌ http://34.29.84.207/api/produtos
+❌ http://34.59.229.37/api/logistica
+```
+
+---
+
 ## Modelos de Acesso ao Front-end
 
-Depois do deploy, o acesso oficial do front de produtos é:
+Depois do deploy, os acessos oficiais são pelos caminhos no Load Balancer:
 
-http://34.8.17.245/produtos/
+| Front | Acesso oficial |
+|---|---|
+| Portal principal (usuários) | http://34.8.17.245/ |
+| Produtos | http://34.8.17.245/produtos/ |
+| Logística | http://34.8.17.245/logistica/ |
 
-E manter os acessos diretos por VM apenas como diagnóstico.
+Os acessos diretos pelas portas das VMs devem ser usados apenas como diagnóstico:
 
-**Acesso oficial do front de produtos pelo Load Balancer:**
-http://34.8.17.245/produtos/
-
-**Acessos diretos para diagnóstico:**
-http://34.29.84.207:8081
-http://34.59.229.37:8081
-
-O Load Balancer atual atende a porta 80/Gateway. Por isso, o front de produtos deve ser publicado pelo Nginx Gateway na rota `/produtos/`. A porta 8081 continua existindo nas VMs, mas deve ser usada apenas para diagnóstico direto.
+```text
+http://34.29.84.207:8082  (portal-front — diagnóstico)
+http://34.29.84.207:8081  (produtos-front — diagnóstico)
+http://34.29.84.207:8088  (logistica-front — diagnóstico)
+http://34.59.229.37:8082  (portal-front — diagnóstico)
+http://34.59.229.37:8081  (produtos-front — diagnóstico)
+http://34.59.229.37:8088  (logistica-front — diagnóstico)
+```
 
 ---
 
@@ -183,15 +229,14 @@ O Load Balancer atual atende a porta 80/Gateway. Por isso, o front de produtos d
 
 | Equipe | Backend | Front-end sugerido |
 |---|---:|---:|
-| Produtos | 5002 | 8081 |
 | Usuários | 5001 | 8082 |
+| Produtos | 5002 | 8081 |
 | Fornecimentos | 5003 | 8083 |
 | Demanda | 5004 | 8084 |
 | Mercado | 5005 | 8085 |
 | Negociação | 5006 | 8086 |
 | Pedidos | 5007 | 8087 |
 | Logística | 5008 | 8088 |
-
 
 **Observação:**
 Se apenas uma equipe tiver front-end, a porta pode ser combinada manualmente. O importante é **não repetir porta**.
@@ -209,17 +254,18 @@ docker ps
 **Teste oficial pelo Load Balancer:**
 
 ```bash
+curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
 ```
 
 **Teste direto por porta, somente diagnóstico:**
 
 ```bash
+curl -I http://34.29.84.207:8082
 curl -I http://34.29.84.207:8081
-curl -I http://34.59.229.37:8081
+curl -I http://34.29.84.207:8088
 ```
-
-> **Observação:** Se o front-end for servido em subpath, como `/produtos/`, a aplicação deve estar preparada para esse base path. Em projetos Vite, por exemplo, pode ser necessário configurar `base: '/produtos/'` no `vite.config.js`. Caso contrário, assets com caminho absoluto, como `/assets/...`, podem quebrar quando publicados atrás de `/produtos/`. Preferencialmente, o front-end deve chamar APIs com rotas relativas, por exemplo `/api/produtos`, em vez de fixar `http://34.29.84.207`.
 
 ---
 
@@ -231,6 +277,7 @@ curl -I http://34.59.229.37:8081
 - Não alterar o Nginx da infraestrutura sem alinhamento.
 - Não usar `localhost` dentro do container para chamar backend.
 - Não criar outro PostgreSQL ou Kafka dentro do compose do front.
+- Não fixar o IP da VM (`34.29.84.207` ou `34.59.229.37`) como endpoint de API no código do front.
 
 ---
 
@@ -245,21 +292,17 @@ Rodar `npm run dev` na VM pode ser usado apenas para **teste temporário**. A en
 Front-ends devem chamar as APIs por rota relativa:
 
 ```text
+/api/usuarios
 /api/produtos
+/api/logistica
 ```
 
 ou pelo Load Balancer oficial:
 
 ```text
+http://34.8.17.245/api/usuarios
 http://34.8.17.245/api/produtos
-```
-
-**Não usar no código do front:**
-
-```text
-http://34.29.84.207/api/produtos
+http://34.8.17.245/api/logistica
 ```
 
 **Não devem chamar o Cloud SQL diretamente.** O Cloud SQL (`136.114.235.212`) é acessado apenas pelos microsserviços/backend.
-
-> **Observação:** Na arquitetura atual, o Load Balancer oficial é `34.8.17.245`. As APIs devem ser consumidas por rotas relativas ou `http://34.8.17.245/api/{dominio}`. Acesso direto a `34.29.84.207` ou `34.59.229.37` deve ser usado apenas para diagnóstico.

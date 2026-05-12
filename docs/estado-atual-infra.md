@@ -2,20 +2,21 @@
 
 ## 1. Visão geral
 
-A infraestrutura atual do Portal B2B utiliza Load Balancer, duas VMs de aplicação e Cloud SQL PostgreSQL como banco oficial.
+A infraestrutura atual do Portal B2B utiliza Load Balancer HTTP externo, duas VMs de aplicação e Cloud SQL PostgreSQL como banco oficial. As duas VMs rodam a mesma infraestrutura e os mesmos microsserviços/fronts. O failover HTTP entre VMs é automático pelo Load Balancer.
 
 ```text
 Usuário / Frontend
         ↓
 Load Balancer - 34.8.17.245
         ↓
-VM principal ou VM standby
+VM principal (34.29.84.207) ou VM standby (34.59.229.37) saudável
         ↓
-API Gateway Nginx
+Nginx Gateway
         ↓
-Microsserviços / Fronts publicados
+Fronts e microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
++ Redpanda/Kafka local da VM
 ```
 
 ---
@@ -28,8 +29,10 @@ Cloud SQL PostgreSQL - 136.114.235.212
 | VM principal | `34.29.84.207` | Aplicação principal | ✅ Validada |
 | VM standby | `34.59.229.37` | Aplicação redundante | ✅ Validada |
 | Cloud SQL | `136.114.235.212` | Banco oficial compartilhado | ✅ Validado |
-| Front produtos | `http://34.8.17.245/produtos/` | Front publicado via Gateway/Load Balancer | A validar |
-| Front logística | `http://34.8.17.245/logistica/` | Front publicado via Gateway/Load Balancer | A validar |
+| Portal principal | `http://34.8.17.245/` | Front principal (portal-front) via Load Balancer | ✅ Validado |
+| Front produtos | `http://34.8.17.245/produtos/` | Front publicado via Gateway/Load Balancer | ✅ Validado |
+| Front logística | `http://34.8.17.245/logistica/` | Front publicado via Gateway/Load Balancer | ✅ Validado |
+| PgAdmin | `http://34.8.17.245/pgadmin/` | Ferramenta de apoio via Load Balancer | ✅ Implementado |
 | Uptime Kuma | `http://34.59.229.37:3001` | Painel de status | ✅ Implementado |
 | Status Page | `http://34.59.229.37:3001/status/portal-b2b-status` | Página pública de status | ✅ Implementado |
 
@@ -46,11 +49,11 @@ O que roda na VM:
 - Nginx API Gateway (porta 80)
 - Redpanda/Kafka (porta 9092)
 - Kafka UI (porta 8080)
-- PgAdmin (acesso via /pgadmin/ no Load Balancer)
+- PgAdmin (acesso via `/pgadmin/` no Load Balancer)
 - Microsserviços dockerizados (portas 5001 a 5008)
+- Front-ends dockerizados (portas 8081, 8082, 8088 etc.)
 - Scripts de deploy e verificação
 - Rede Docker `portal-b2b-network`
-
 
 ---
 
@@ -60,7 +63,7 @@ O que roda na VM:
 IP: 34.59.229.37
 ```
 
-Mesma estrutura da VM principal. Roda os mesmos containers e microsserviços.
+Mesma estrutura da VM principal. Roda os mesmos containers, microsserviços e fronts. As duas VMs ficam atrás do Load Balancer, que distribui o tráfego entre elas com base no health check.
 
 > **Observação:** O IP público da VM standby deve permanecer reservado como IP estático no GCP para evitar novas mudanças após reinicialização.
 
@@ -95,18 +98,22 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 IP: 34.8.17.245
 ```
 
-O acesso principal ao sistema é pelo Load Balancer:
+O acesso principal ao sistema é pelo Load Balancer. O Load Balancer usa `GET /health` para verificar a saúde de cada VM e roteia o tráfego somente para VMs saudáveis.
+
+Endpoints principais:
 
 ```text
 http://34.8.17.245/health
+http://34.8.17.245/api/usuarios/health
 http://34.8.17.245/api/produtos/health
+http://34.8.17.245/api/logistica/health
+http://34.8.17.245/
 http://34.8.17.245/produtos/
 http://34.8.17.245/logistica/
+http://34.8.17.245/pgadmin/
 ```
 
-O Load Balancer distribui requisições entre a VM principal e a VM standby com base no health check (`GET /health`).
-
-> **Observação:** O acesso oficial do sistema (APIs e Front-end) é feito pelo Load Balancer. Os IPs diretos da VM principal (`34.29.84.207`) e da VM standby (`34.59.229.37`) devem ser usados apenas para diagnóstico.
+> **Observação:** O acesso oficial do sistema (APIs e front-ends) é feito pelo Load Balancer. Os IPs diretos da VM principal (`34.29.84.207`) e da VM standby (`34.59.229.37`) devem ser usados apenas para diagnóstico.
 
 ---
 
@@ -114,48 +121,63 @@ O Load Balancer distribui requisições entre a VM principal e a VM standby com 
 
 | Serviço | Status | Endpoint (via LB) |
 |---|---|---|
+| usuarios-service | ✅ Integrado | http://34.8.17.245/api/usuarios/health |
 | produtos-service | ✅ Integrado | http://34.8.17.245/api/produtos/health |
-| usuarios-service | ⏳ Aguardando deploy | http://34.8.17.245/api/usuarios/health |
+| logistica-service | ✅ Integrado | http://34.8.17.245/api/logistica/health |
 | fornecimentos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/fornecimentos/health |
 | demanda-service | ⏳ Aguardando deploy | http://34.8.17.245/api/demandas/health |
 | mercado-service | ⏳ Aguardando deploy | http://34.8.17.245/api/mercado/health |
 | negociacao-service | ⏳ Aguardando deploy | http://34.8.17.245/api/negociacoes/health |
 | pedidos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/pedidos/health |
-| logistica-service | ⏳ Aguardando deploy | http://34.8.17.245/api/logistica/health |
 
 > **Nota sobre Transportadoras:** Não existe mais o microsserviço `transportadoras-service` separado. A parte de transporte/transportadoras está integrada ao módulo de **Logística**.
 > - Front logística: http://34.8.17.245/logistica/ (Porta: 8088)
 > - API logística: http://34.8.17.245/api/logistica/ (Porta: 5008)
 
+---
+
+## 8. Front-ends integrados
+
+| Front | Porta | Rota oficial | Status |
+|---|---|---|---|
+| Portal principal (portal-front / usuários) | 8082 | http://34.8.17.245/ | ✅ Validado |
+| Front produtos | 8081 | http://34.8.17.245/produtos/ | ✅ Validado |
+| Front logística | 8088 | http://34.8.17.245/logistica/ | ✅ Validado |
 
 ---
 
-## 8. Serviços ainda locais nas VMs
+## 9. Serviços que rodam localmente em cada VM
 
 Os seguintes serviços continuam rodando localmente em cada VM via Docker Compose:
 
-- Redpanda/Kafka
+- Redpanda/Kafka (local por VM, sem cluster replicado)
 - Kafka UI
 - Nginx Gateway
 - PgAdmin
+
 O PostgreSQL local foi removido da VM e do `docker-compose.yml`.
 
 ---
 
-## 9. O que já foi implementado
+## 10. O que já foi implementado
 
 - [x] VM principal funcionando
 - [x] Cloud SQL PostgreSQL
 - [x] VM standby criada
 - [x] Load Balancer HTTP criado e validado
+- [x] usuarios-service validado nas duas VMs
 - [x] produtos-service validado nas duas VMs
+- [x] logistica-service validado nas duas VMs
+- [x] Front principal (portal-front) validado na rota /
+- [x] Front produtos validado na rota /produtos/
+- [x] Front logística validado na rota /logistica/
 - [x] Cloud SQL acessível pelas duas VMs
 - [x] sync-redundant.sh validado
 - [x] Deploy redundante documentado
 
-## 10. Próximas etapas
+## 11. Próximas etapas
 
-- [ ] Validar os próximos microsserviços nas duas VMs
+- [ ] Validar os microsserviços restantes nas duas VMs
 - [ ] Fazer teste de falha controlada quando for conveniente
 - [ ] Definir rotina oficial de backup/exportação do Cloud SQL
 - [ ] Avaliar cluster Redpanda/Kafka futuramente
@@ -163,7 +185,7 @@ O PostgreSQL local foi removido da VM e do `docker-compose.yml`.
 
 ---
 
-## 11. Observabilidade
+## 12. Observabilidade
 
 O painel visual de status da infraestrutura com Uptime Kuma está documentado em:
 

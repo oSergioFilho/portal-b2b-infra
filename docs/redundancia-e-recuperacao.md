@@ -1,20 +1,41 @@
-   # Redundância e Recuperação da Infraestrutura
+# Redundância e Recuperação da Infraestrutura
 
 ## 1. Objetivo
 
-Este documento descreve como a infraestrutura do Portal B2B lida com falhas de containers, falha de serviços e queda da VM principal. O objetivo é garantir que a equipe tenha um plano documentado de recuperação e que os mecanismos básicos de resiliência estejam configurados.
+Este documento descreve como a infraestrutura do Portal B2B lida com falhas de containers, falha de serviços e queda de uma das VMs de aplicação. O objetivo é garantir que a equipe tenha um plano documentado de recuperação e que os mecanismos básicos de resiliência estejam configurados.
 
 ---
 
-## 2. Ponto único de falha atual
+## 2. Arquitetura atual de resiliência
 
-Na arquitetura atual, a **VM central concentra a aplicação e os serviços**. O banco de dados oficial já foi migrado para **Cloud SQL PostgreSQL** (`136.114.235.212`), eliminando o ponto único de falha do banco. Se a VM cair, os microsserviços ficam indisponíveis, mas o banco permanece acessível externamente.
+A infraestrutura possui **duas VMs de aplicação atrás de um Load Balancer HTTP externo**. O Load Balancer encaminha tráfego para a VM saudável com base no endpoint `/health`. Se uma VM cair, o tráfego HTTP é direcionado automaticamente para a outra VM saudável.
 
-Esse modelo é aceitável como **primeira versão acadêmica**, pois simplifica o deploy e a operação. No entanto, é fundamental ter um **plano de recuperação** para minimizar o tempo de indisponibilidade caso ocorra uma falha na VM.
+```text
+Usuário / Frontend
+        ↓
+Load Balancer - 34.8.17.245
+        ↓
+VM principal (34.29.84.207) ou VM standby (34.59.229.37)
+        ↓
+Nginx Gateway
+        ↓
+Fronts e microsserviços dockerizados
+        ↓
+Cloud SQL PostgreSQL - 136.114.235.212
++ Redpanda/Kafka local da VM
+```
+
+Pontos principais:
+- **O Load Balancer é o ponto oficial de entrada.** O acesso dos usuários e front-ends deve sempre usar `34.8.17.245`.
+- **As duas VMs rodam a mesma infraestrutura e os mesmos microsserviços/fronts.**
+- **O banco Cloud SQL é compartilhado entre as duas VMs.**
+- **Redpanda/Kafka roda localmente em cada VM.** Não há cluster Kafka replicado entre VMs.
+- **O failover HTTP é automático pelo Load Balancer** quando uma VM deixa de responder ao health check.
+- **Acesso direto às VMs (`34.29.84.207`, `34.59.229.37`) é apenas para diagnóstico.**
 
 ---
 
-## 3. Camada 1: Recuperação local de containers
+## 3. Camada 1: Restart automático de containers
 
 Os containers da infraestrutura e dos microsserviços utilizam a política de restart automático:
 
@@ -30,170 +51,175 @@ Isso significa que:
 Além disso, os serviços críticos possuem **health checks** configurados:
 - **Redpanda:** verifica se o broker Kafka está respondendo via endpoint de saúde.
 
-Esses health checks permitem identificar quando um serviço está em estado degradado. A política de restart automático cobre falhas em que o processo do container encerra. Em caso de container unhealthy sem encerramento do processo, a equipe de infraestrutura deve investigar usando docker compose ps e docker logs.
-
 ---
 
-## 4. Camada 2: Backups do Cloud SQL
+## 4. Camada 2: Failover HTTP automático pelo Load Balancer
 
-O banco central `portal_b2b` está no Cloud SQL PostgreSQL, que possui backups automáticos e exportações gerenciadas pelo GCP. Em caso de necessidade de restauração, a equipe de infraestrutura deve usar o console do GCP para restaurar um backup ou exportação.
-
----
-
-## 5. Camada 3: VM Standby
-
-Para reduzir o risco de indisponibilidade prolongada, recomendamos manter uma **VM Standby** preparada para assumir em caso de falha da VM principal.
-
-### VM Principal
-
-- Roda a infraestrutura oficial (Redpanda, Nginx, PgAdmin, Kafka UI).
-- Roda os microsserviços das equipes.
-- Conecta ao Cloud SQL PostgreSQL (`136.114.235.212`).
-- Recebe as chamadas do grupo.
-- É o ambiente de produção acadêmica.
-
-### VM Standby
-
-- Tem **Docker** e **Docker Compose** instalados.
-- Tem o repositório `portal-b2b-infra` **clonado e atualizado**.
-- Tem a mesma estrutura de diretórios: `/opt/portal-b2b/`.
-- Conecta ao mesmo **Cloud SQL PostgreSQL** (`136.114.235.212`).
-- Pode ser **ativada rapidamente** se a VM principal cair.
-
-### Diagrama da estratégia
+O Load Balancer HTTP externo no GCP verifica periodicamente o endpoint:
 
 ```text
-┌──────────────────────────┐         ┌──────────────────────────┐
-│      VM PRINCIPAL        │         │       VM STANDBY         │
-│                          │         │                          │
-│  Docker Compose (infra)  │         │  Docker + Docker Compose │
-│  Redpanda/Kafka          │         │  portal-b2b-infra clonado│
-│  Nginx API Gateway       │         │  Mesma estrutura /opt/   │
-│  Microsserviços          │         │                          │
-│                          │         │  (Inativa até necessário)│
-└──────────────────────────┘         └──────────────────────────┘
-         │                                │
-         └────────────────┬───────────────┘
-                          │
-              Cloud SQL PostgreSQL
-              136.114.235.212:5432
+GET /health
+```
+
+em cada VM. Se uma VM deixar de responder com sucesso ao health check, o Load Balancer **automaticamente** redireciona todo o tráfego para a VM saudável. Não é necessária nenhuma intervenção manual para o failover HTTP.
+
+Endpoints de validação oficiais:
+
+```bash
+curl http://34.8.17.245/health
+curl http://34.8.17.245/api/usuarios/health
+curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/logistica/health
+curl -I http://34.8.17.245/
+curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
 ```
 
 ---
 
-## 6. Processo de recuperação em caso de queda da VM principal
+## 5. Camada 3: Backups do Cloud SQL
 
+O banco central `portal_b2b` está no Cloud SQL PostgreSQL, que possui backups automáticos e exportações gerenciadas pelo GCP. O banco Cloud SQL permanece acessível independentemente da situação de qualquer VM. Em caso de necessidade de restauração de dados, a equipe de infraestrutura deve usar o console do GCP.
 
-
-Se a VM principal ficar indisponível, siga este procedimento na **VM Standby**:
-
-### Passo a passo
-
-1. **Acessar a VM standby** via SSH ou console.
-
-2. **Atualizar o repositório da infraestrutura:**
-   ```bash
-   cd /opt/portal-b2b/infra/portal-b2b-infra
-   git pull origin main
-   ```
-
-3. **Subir a infraestrutura:**
-   ```bash
-   docker compose up -d
-   ```
-
-4. **Verificar Cloud SQL:**
-   - O banco de dados está fora da VM (Cloud SQL). Portanto, não é necessário rodar restore de banco de dados na VM. Apenas certifique-se de que a VM Standby tem conectividade com `136.114.235.212`.
-
-5. **Subir os microsserviços das equipes:**
-   ```bash
-   cd /opt/portal-b2b/services/usuarios-service && docker compose up -d
-   cd /opt/portal-b2b/services/produtos-service && docker compose up -d
-   # Repetir para cada microsserviço
-   ```
-
-6. **Validar infraestrutura:**
-   ```bash
-   cd /opt/portal-b2b/infra/portal-b2b-infra
-   bash scripts/check-infra.sh
-   ```
-
-7. **Validar microsserviços:**
-   ```bash
-   bash scripts/check-services.sh
-   ```
-
-8. **Atualizar o IP/DNS usado pelo grupo**, se necessário, apontando para o IP da VM standby.
-
-### Tempo estimado de recuperação
-
-| Etapa | Tempo estimado |
-|---|---|
-| Acesso à VM standby | 1-2 minutos |
-| Atualizar repositório | 1 minuto |
-| Subir infraestrutura | 2-3 minutos |
-| Restaurar backup | 1-5 minutos (depende do tamanho) |
-| Subir microsserviços | 3-5 minutos |
-| Validação | 2-3 minutos |
-| **Total estimado** | **10-20 minutos** |
+> **Importante:** Em um failover de aplicação (queda de uma VM), **não é necessário restaurar backup de banco**. O Cloud SQL continua disponível e a outra VM já está conectada a ele.
 
 ---
 
-## 7. O que essa solução cobre
+## 6. Camada 4: Recuperação manual (fallback operacional)
 
-✅ Queda de container individual — restart automático via Docker.
+A recuperação manual é usada apenas como **fallback operacional** nos casos em que:
+- A VM standby está desatualizada (sem os microsserviços ou configurações mais recentes).
+- A VM standby estava desligada.
+- Um container específico na VM standby está parado.
 
-✅ Reinício automático de container — política `unless-stopped`.
+> **Este não é o fluxo principal.** O failover HTTP normal é automático pelo Load Balancer.
 
-✅ Perda parcial da infraestrutura — health checks ajudam a detectar falhas, e containers que encerram são reiniciados pela política restart.
+### Atualizar a infraestrutura nas duas VMs (comando oficial)
 
-✅ Recuperação manual em outra VM — procedimento documentado com VM standby.
+Execute a partir da VM principal:
 
-✅ Restauração do banco via backup — gerenciado pelo GCP no Cloud SQL.
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/sync-redundant.sh
+```
+
+Esse script faz:
+- `git pull` na VM principal.
+- `docker compose up -d --build` na VM principal.
+- `check-infra.sh` na VM principal.
+- SSH na VM standby.
+- `git pull` na VM standby.
+- `docker compose up -d --build` na VM standby.
+- `check-infra.sh` na VM standby.
+
+### Deploy de um microsserviço nas duas VMs (comando oficial)
+
+```bash
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
+```
+
+Exemplos reais:
+
+```bash
+bash scripts/deploy-service-redundant.sh usuarios-service https://github.com/guilherme-cognitiva/autenticacao-b2b.git
+bash scripts/deploy-service-redundant.sh logistica-service https://github.com/faculdade-sistemas-distribuidos/b2b_logistica.git
+```
+
+### Intervenção manual direta na VM standby (diagnóstico/emergência)
+
+Se for necessário intervir manualmente na VM standby:
+
+```bash
+# Na VM standby
+cd /opt/portal-b2b/infra/portal-b2b-infra
+git pull
+bash scripts/start.sh
+
+# Subir cada microsserviço
+cd /opt/portal-b2b/services/usuarios-service && git pull && docker compose up -d --build
+cd /opt/portal-b2b/services/produtos-service && git pull && docker compose up -d --build
+cd /opt/portal-b2b/services/logistica-service && git pull && docker compose up -d --build
+
+# Validar
+bash /opt/portal-b2b/infra/portal-b2b-infra/scripts/check-infra.sh
+bash /opt/portal-b2b/infra/portal-b2b-infra/scripts/check-services.sh
+```
+
+> **Atenção:** Não é necessário trocar IP/DNS em caso de queda de uma VM. O Load Balancer cuida do roteamento automaticamente.
 
 ---
 
-## 8. O que essa solução ainda não cobre
+## 7. Testes oficiais de validação
 
-❌ **Failover automático** — a troca para a VM standby é manual.
-
-
-
-❌ **Cluster real de Kafka/Redpanda** — roda com broker único.
-
-❌ **Balanceamento automático entre múltiplas VMs** — não há load balancer entre VMs.
-
-❌ **Alta disponibilidade de produção** — a solução é acadêmica e operacional.
+```bash
+curl http://34.8.17.245/health
+curl http://34.8.17.245/api/usuarios/health
+curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/logistica/health
+curl -I http://34.8.17.245/
+curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
+```
 
 ---
 
-## 9. Evolução futura
+## 8. O que essa solução cobre
+
+✅ Queda de uma VM de aplicação — Load Balancer faz failover HTTP automático para a VM saudável.
+
+✅ Restart automático de containers — política `unless-stopped`.
+
+✅ Banco compartilhado via Cloud SQL — dados consistentes independente de qual VM atende o tráfego.
+
+✅ Deploy reproduzível nas duas VMs — via `deploy-service-redundant.sh`.
+
+✅ Failover HTTP pelo Load Balancer — automático, baseado em health check.
+
+---
+
+## 9. O que essa solução ainda não cobre
+
+❌ **Cluster Kafka/Redpanda replicado** — cada VM roda seu próprio Redpanda local.
+
+❌ **Replicação de eventos Kafka entre VMs** — eventos publicados em uma VM não são visíveis na outra.
+
+❌ **HTTPS/domínio** — o acesso é via IP.
+
+❌ **Métricas avançadas Prometheus/Grafana** — observabilidade básica com Uptime Kuma.
+
+❌ **Autoscaling** — não há escalabilidade horizontal automática.
+
+❌ **Alta disponibilidade real de banco** — o Cloud SQL configurado é básico, sem réplicas de leitura ou failover automático de banco.
+
+---
+
+## 10. Evolução futura
 
 Em uma arquitetura de produção, seria possível evoluir para:
 
 | Componente | Evolução |
 |---|---|
-| API Gateway | Load Balancer com duas ou mais instâncias do Nginx |
-| Microsserviços | Múltiplas réplicas com balanceamento de carga |
+| Redpanda/Kafka | Cluster com 3 brokers para tolerância a falhas e replicação |
 | PostgreSQL | Configuração primary/replica com failover automático |
-| Redpanda/Kafka | Cluster com 3 brokers para tolerância a falhas |
 | Monitoramento | Prometheus + Grafana para métricas em tempo real |
 | Logs | Loki + Grafana para logs centralizados |
-| DNS | DNS com failover automático entre VMs |
+| DNS | Domínio com HTTPS (TLS) |
 | Orquestração | Kubernetes para gerenciamento de containers em escala |
 
-Essas evoluções estão fora do escopo da versão acadêmica atual, mas representam o caminho natural para um ambiente de produção.
+Essas evoluções estão fora do escopo da versão acadêmica atual.
 
 ---
 
-## 10. Explicação curta para apresentação
+## 11. Explicação curta para apresentação
 
-> "A infraestrutura possui uma primeira camada de resiliência com restart automático dos containers e health checks. O banco de dados oficial foi migrado para Cloud SQL PostgreSQL, eliminando o ponto único de falha do banco local. Além disso, foi definido um plano de recuperação com uma VM standby. Caso a VM principal falhe, a VM standby pode ser ativada apontando para o mesmo banco Cloud SQL, e os microsserviços podem ser reiniciados. Para produção, a arquitetura poderia evoluir para load balancer e cluster Kafka."
+> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo. O Load Balancer verifica a saúde de cada VM via `/health` e redireciona o tráfego automaticamente para a VM saudável. O banco de dados é o Cloud SQL PostgreSQL, compartilhado entre as duas VMs. Cada VM roda localmente Redpanda/Kafka, Nginx Gateway, PgAdmin e os microsserviços dockerizados. O failover HTTP é automático; intervenção manual é reservada para situações em que a VM standby precisa ser atualizada ou um container precisa ser reiniciado manualmente."
 
 ---
 
 ## Referências internas
 
-- [Scripts de backup e restore](../scripts/)
+- [Scripts de deploy e sync](../scripts/)
 - [Checklist de microsserviços](./checklist-microsservicos.md)
 - [Guia de integração](../GUIA_DE_INTEGRACAO.md)
+- [Operação redundante](./operacao-redundante.md)
+- [Arquitetura redundante GCP](./arquitetura-redundante-gcp.md)

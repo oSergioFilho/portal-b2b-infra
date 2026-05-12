@@ -8,10 +8,10 @@ Documentar como operar a infraestrutura redundante do Portal B2B com VM principa
 
 | Componente | Endereço | Função |
 |---|---|---|
-| Load Balancer | `34.8.17.245` | Entrada principal do sistema |
-| VM principal | `34.29.84.207` | Aplicação principal |
-| VM standby | `34.59.229.37` | Aplicação redundante |
-| Cloud SQL | `136.114.235.212` | Banco oficial compartilhado |
+| Load Balancer | `34.8.17.245` | Entrada principal e oficial do sistema |
+| VM principal | `34.29.84.207` | Aplicação — diagnóstico direto |
+| VM standby | `34.59.229.37` | Aplicação redundante — diagnóstico direto |
+| Cloud SQL | `136.114.235.212` | Banco oficial compartilhado entre as duas VMs |
 
 ## 3. Fluxo atual
 
@@ -20,14 +20,21 @@ Usuário / Frontend
         ↓
 Load Balancer - 34.8.17.245
         ↓
-VM principal ou VM standby
+VM principal ou VM standby saudável
         ↓
-Microsserviços dockerizados
+Nginx Gateway
+        ↓
+Fronts e microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
-        ↓
-Kafka/Redpanda local da VM
++ Redpanda/Kafka local da VM
 ```
+
+Pontos importantes:
+- **Cloud SQL é compartilhado** pelas duas VMs. Os dados são consistentes independente de qual VM atende o tráfego.
+- **Redpanda/Kafka é local por VM.** Não há cluster Kafka replicado entre VMs.
+- **O Load Balancer só balanceia HTTP na porta 80.** Serviços/fronts em portas diretas (8081, 8082, 8088) só ficam redundantes automaticamente se forem publicados por uma rota no Nginx Gateway (ex: `/produtos/`, `/logistica/`, `/`).
+- **O acesso oficial é sempre pelo Load Balancer.**
 
 ## 4. Load Balancer
 
@@ -37,24 +44,12 @@ O Load Balancer HTTP externo utiliza o endpoint:
 GET /health
 ```
 
-para verificar se cada VM está saudável.
+para verificar se cada VM está saudável. Se uma VM deixar de responder, o tráfego HTTP é automaticamente redirecionado para a VM saudável — sem intervenção manual.
 
 Acesso principal:
 
 ```text
 http://34.8.17.245
-```
-
-Endpoint validado:
-
-```text
-http://34.8.17.245/health
-```
-
-Endpoint do produtos-service validado:
-
-```text
-http://34.8.17.245/api/produtos/health
 ```
 
 ## 5. Sincronização da infraestrutura
@@ -82,10 +77,17 @@ Para subir ou atualizar um microsserviço nas duas VMs, executar na VM principal
 
 ```bash
 cd /opt/portal-b2b/infra/portal-b2b-infra
-bash scripts/deploy-service-redundant.sh produtos-service https://github.com/PedroVian9/SDI.Micro.Produto
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
 ```
 
-Esse script faz deploy na principal e depois na standby.
+Exemplos reais:
+
+```bash
+bash scripts/deploy-service-redundant.sh usuarios-service https://github.com/guilherme-cognitiva/autenticacao-b2b.git
+bash scripts/deploy-service-redundant.sh logistica-service https://github.com/faculdade-sistemas-distribuidos/b2b_logistica.git
+```
+
+Esse script faz deploy na VM principal e depois na VM standby.
 
 ## 7. Configuração SSH necessária
 
@@ -109,14 +111,19 @@ na VM standby.
 
 ## 8. Testes após sincronização
 
-Após sincronizar, testar:
+Após sincronizar, testar todos os endpoints oficiais pelo Load Balancer:
 
 ```bash
 curl http://34.8.17.245/health
+curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/logistica/health
+curl -I http://34.8.17.245/
+curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
 ```
 
-Também é possível testar diretamente:
+Também é possível testar diretamente nas VMs (somente diagnóstico):
 
 ```bash
 curl http://34.29.84.207/health
@@ -131,9 +138,7 @@ O banco oficial é o Cloud SQL PostgreSQL:
 136.114.235.212
 ```
 
-As duas VMs usam o mesmo banco.
-
-O PostgreSQL local foi removido.
+As duas VMs usam o mesmo banco. O PostgreSQL local foi removido.
 
 ## 10. Observação sobre Kafka
 
@@ -178,18 +183,28 @@ Resultado:
 - `check-infra.sh` executado com sucesso na VM standby;
 - Load Balancer validado.
 
-Endpoints validados:
+Endpoints validados atualmente:
 
 ```bash
 curl http://34.8.17.245/health
+curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/logistica/health
+curl -I http://34.8.17.245/
+curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
 ```
 
-Retornos obtidos:
+Retornos esperados:
 
 ```text
 API Gateway do Portal B2B ativo
+{"status":"ok","service":"usuarios-service"}
 {"status":"ok","service":"produtos-service"}
+{"status":"ok","service":"logistica-service"}
+HTTP 200 (front principal)
+HTTP 200 (front produtos)
+HTTP 200 (front logística)
 ```
 
 ## 13. Configuração SSH entre as VMs

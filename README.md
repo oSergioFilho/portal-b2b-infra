@@ -112,12 +112,15 @@ http://34.8.17.245
 |---|---|---|
 | Load Balancer / Gateway | http://34.8.17.245 | Acesso oficial |
 | Health do Gateway | http://34.8.17.245/health | Acesso oficial |
-| produtos-service | http://34.8.17.245/api/produtos/health | Acesso oficial |
-| Front produtos | http://34.8.17.245/produtos/ | Acesso oficial, se o front estiver rodando na porta 8081 |
-| Front logística | http://34.8.17.245/logistica/ | Acesso oficial, se o front estiver rodando na porta 8088 |
+| Portal principal | http://34.8.17.245/ | Front principal (portal-front / usuários) |
+| Front produtos | http://34.8.17.245/produtos/ | Acesso oficial |
+| Front logística | http://34.8.17.245/logistica/ | Acesso oficial |
+| PgAdmin | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
+| usuarios-service | http://34.8.17.245/api/usuarios/health | Integrado |
+| produtos-service | http://34.8.17.245/api/produtos/health | Integrado |
+| logistica-service | http://34.8.17.245/api/logistica/health | Integrado |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
-| PgAdmin (Redundante) | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
 | Uptime Kuma | http://34.59.229.37:3001 | Painel de status |
 | Status Page | http://34.59.229.37:3001/status/portal-b2b-status | Status público |
@@ -175,16 +178,18 @@ Veja os arquivos na pasta `docs/` para mais detalhes de portas e integrações.
 
 ## Deploy controlado dos microsserviços
 
-Neste primeiro momento, o deploy dos microsserviços será feito de forma controlada pela infraestrutura. Cada equipe deve enviar o link do repositório do seu microsserviço. O responsável pela infraestrutura irá clonar o repositório na pasta correta da VM e subir o container com:
+O deploy oficial dos microsserviços deve ser feito nas **duas VMs** usando o script redundante. Cada equipe deve enviar o link do repositório. O responsável pela infraestrutura executa:
 
 ```bash
-bash scripts/deploy-service.sh nome-service URL_DO_REPOSITORIO
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/deploy-service-redundant.sh nome-service URL_DO_REPOSITORIO
 ```
 
-Exemplo:
+Exemplos:
 
 ```bash
-bash scripts/deploy-service.sh produtos-service https://github.com/EXEMPLO/produtos-service.git
+bash scripts/deploy-service-redundant.sh usuarios-service https://github.com/guilherme-cognitiva/autenticacao-b2b.git
+bash scripts/deploy-service-redundant.sh logistica-service https://github.com/faculdade-sistemas-distribuidos/b2b_logistica.git
 ```
 
 Esse processo não substitui a responsabilidade da equipe de entregar `Dockerfile`, `docker-compose.yml`, `.env.example` e `GET /health` funcionando.
@@ -322,7 +327,12 @@ Componentes atuais:
 | VM principal | `34.29.84.207` | Validada |
 | VM standby | `34.59.229.37` | Validada |
 | Cloud SQL PostgreSQL | `136.114.235.212` | Validado |
-| produtos-service | `/api/produtos/health` | Validado |
+| usuarios-service | `http://34.8.17.245/api/usuarios/health` | Integrado |
+| produtos-service | `http://34.8.17.245/api/produtos/health` | Integrado |
+| logistica-service | `http://34.8.17.245/api/logistica/health` | Integrado |
+| Portal principal | `http://34.8.17.245/` | Validado |
+| Front produtos | `http://34.8.17.245/produtos/` | Validado |
+| Front logística | `http://34.8.17.245/logistica/` | Validado |
 
 Fluxo atual:
 
@@ -340,16 +350,22 @@ Microsserviços dockerizados
 Cloud SQL PostgreSQL - 136.114.235.212
 ```
 
-Acesso oficial das APIs:
+Acessos oficiais:
 
 ```text
-http://34.8.17.245/api/{dominio}
+http://34.8.17.245/             (portal principal)
+http://34.8.17.245/produtos/    (front produtos)
+http://34.8.17.245/logistica/   (front logística)
+http://34.8.17.245/pgadmin/     (PgAdmin)
+http://34.8.17.245/health       (health do Gateway)
 ```
 
-Acesso oficial do front de produtos, se publicado no Gateway:
+APIs integradas:
 
 ```text
-http://34.8.17.245/produtos/
+http://34.8.17.245/api/usuarios/health
+http://34.8.17.245/api/produtos/health
+http://34.8.17.245/api/logistica/health
 ```
 
 Acessos diretos às VMs são apenas para diagnóstico:
@@ -357,18 +373,6 @@ Acessos diretos às VMs são apenas para diagnóstico:
 ```text
 http://34.29.84.207
 http://34.59.229.37
-```
-
-Health do Gateway:
-
-```text
-http://34.8.17.245/health
-```
-
-Health do produtos-service:
-
-```text
-http://34.8.17.245/api/produtos/health
 ```
 
 Comando oficial para sincronizar a infraestrutura nas duas VMs:

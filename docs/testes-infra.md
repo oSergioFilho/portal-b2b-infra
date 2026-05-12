@@ -6,13 +6,13 @@ Este documento centraliza os testes operacionais para validar a infraestrutura a
 
 A arquitetura atual usa:
 
-- Load Balancer: `34.8.17.245`
-- VM principal: `34.29.84.207`
-- VM standby: `34.59.229.37`
+- Load Balancer: `34.8.17.245` (ponto oficial de entrada)
+- VM principal: `34.29.84.207` (diagnóstico direto)
+- VM standby: `34.59.229.37` (diagnóstico direto)
 - Cloud SQL PostgreSQL oficial: `136.114.235.212`
-- Redpanda/Kafka na VM
-- API Gateway na VM
-- Microsserviços dockerizados na VM
+- Redpanda/Kafka local em cada VM
+- API Gateway Nginx nas duas VMs
+- Microsserviços dockerizados nas duas VMs
 
 ---
 
@@ -151,7 +151,34 @@ http://34.29.84.207:8080
 
 ---
 
-## 10. Testar produtos-service
+## 10. Testar microsserviços integrados
+
+### usuarios-service
+
+**Teste oficial pelo Load Balancer:**
+```bash
+curl http://34.8.17.245/api/usuarios/health
+```
+
+**Teste direto na VM principal, diagnóstico:**
+```bash
+curl http://34.29.84.207/api/usuarios/health
+```
+
+**Teste direto na VM standby, diagnóstico:**
+```bash
+curl http://34.59.229.37/api/usuarios/health
+```
+
+Resposta esperada:
+
+```json
+{"status":"ok","service":"usuarios-service"}
+```
+
+---
+
+### produtos-service
 
 **Teste oficial pelo Load Balancer:**
 ```bash
@@ -176,16 +203,44 @@ Resposta esperada:
 
 ---
 
+### logistica-service
+
+**Teste oficial pelo Load Balancer:**
+```bash
+curl http://34.8.17.245/api/logistica/health
+```
+
+**Teste direto na VM principal, diagnóstico:**
+```bash
+curl http://34.29.84.207/api/logistica/health
+```
+
+**Teste direto na VM standby, diagnóstico:**
+```bash
+curl http://34.59.229.37/api/logistica/health
+```
+
+Resposta esperada:
+
+```json
+{"status":"ok","service":"logistica-service"}
+```
+
+---
+
 ## 11. Testar todos os microsserviços
 
 ```bash
 bash scripts/check-services.sh
 ```
 
-Resultado esperado atual:
+**Serviços esperados como OK atualmente:**
 
-- `produtos-service` deve responder OK.
-- Os demais serviços podem retornar HTTP 502 enquanto ainda não forem deployados.
+- `usuarios-service` — integrado ✅
+- `produtos-service` — integrado ✅
+- `logistica-service` — integrado ✅
+
+> **Observação:** Os demais serviços ainda aguardam deploy e podem retornar HTTP 502.
 
 ---
 
@@ -202,42 +257,48 @@ API Gateway do Portal B2B ativo
 ```
 
 ```bash
+curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/logistica/health
 ```
 
-Resposta esperada:
+Resposta esperada para cada:
 
 ```json
-{"status":"ok","service":"produtos-service"}
+{"status":"ok","service":"nome-do-service"}
 ```
 
 ---
 
-## 13. Testar Front-end pelo Load Balancer
+## 13. Testar Front-ends pelo Load Balancer
 
 **Teste oficial dos front-ends pelo Load Balancer:**
 ```bash
+curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/logistica/
+curl -I http://34.8.17.245/pgadmin/
 ```
 
 **Teste direto na VM principal, somente diagnóstico:**
 ```bash
+curl -I http://34.29.84.207:8082
 curl -I http://34.29.84.207:8081
 curl -I http://34.29.84.207:8088
 ```
 
 **Teste direto na VM standby, somente diagnóstico:**
 ```bash
+curl -I http://34.59.229.37:8082
 curl -I http://34.59.229.37:8081
 curl -I http://34.59.229.37:8088
 ```
 
 **Resultado esperado:**
-- Pelo Load Balancer, os fronts devem responder.
-- Se a VM principal cair, o acesso direto a `34.29.84.207` falha, mas o acesso pelo Load Balancer deve continuar funcionando se a standby estiver saudável.
-
-> **Observação:** Se esse teste falhar, verificar se os fronts estão rodando nas duas VMs e se a aplicação front-end suporta o subpath correspondente.
+- Todos os fronts devem responder HTTP 200 pelo Load Balancer.
+- Portal principal (/) → portal-front (porta 8082).
+- Front produtos (/produtos/) → produtos-front (porta 8081).
+- Front logística (/logistica/) → logistica-front (porta 8088).
 
 ---
 
@@ -262,14 +323,14 @@ portal-b2b-vm-standby HEALTHY
 
 ```bash
 curl http://34.59.229.37/health
+curl http://34.59.229.37/api/usuarios/health
 curl http://34.59.229.37/api/produtos/health
+curl http://34.59.229.37/api/logistica/health
 ```
 
 Resultado esperado: mesmas respostas que a VM principal.
 
 ---
-
-
 
 ## 16. Resultado esperado geral
 
@@ -283,7 +344,10 @@ A infraestrutura atual está validada quando:
 - [ ] Kafka UI abre.
 - [ ] Kafka recebe mensagem de teste.
 - [ ] PgAdmin abre via Load Balancer em `/pgadmin/`.
+- [ ] `usuarios-service` responde pelo Load Balancer.
 - [ ] `produtos-service` responde pelo Load Balancer.
+- [ ] `logistica-service` responde pelo Load Balancer.
+- [ ] Portal principal responde pelo Load Balancer em `/`.
 - [ ] Front produtos responde pelo Load Balancer em `/produtos/`.
 - [ ] Front logística responde pelo Load Balancer em `/logistica/`.
 - [ ] Backends do Load Balancer estão HEALTHY.
@@ -314,12 +378,22 @@ Resultado esperado:
 
 ```bash
 curl http://34.8.17.245/health
+curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/logistica/health
+curl -I http://34.8.17.245/
+curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/logistica/
 ```
 
 Resultado esperado:
 
 ```text
 API Gateway do Portal B2B ativo
+{"status":"ok","service":"usuarios-service"}
 {"status":"ok","service":"produtos-service"}
+{"status":"ok","service":"logistica-service"}
+HTTP 200 (front principal)
+HTTP 200 (front produtos)
+HTTP 200 (front logística)
 ```
