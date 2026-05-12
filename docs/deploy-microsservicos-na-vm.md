@@ -33,7 +33,7 @@ Inicialmente, será usado o modelo **controlado pela infraestrutura**:
     ├── mercado-service/
     ├── negociacao-service/
     ├── pedidos-service/
-    ├── logistica-service/
+    └── logistica-service/
 
 ```
 
