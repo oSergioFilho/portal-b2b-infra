@@ -276,7 +276,7 @@ Os IPs 34.29.84.207 e 34.59.229.37 devem ser usados apenas para diagnóstico dir
 
 O que roda na VM:
 - API Gateway (Nginx)
-- Cluster Redpanda (3 brokers)
+- Broker do Cluster Redpanda/Kafka
 - Kafka UI
 - PgAdmin
 - Microsserviços dockerizados

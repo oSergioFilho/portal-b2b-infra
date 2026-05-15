@@ -47,7 +47,7 @@ IP: 34.29.84.207
 O que roda na VM:
 
 - Nginx API Gateway (porta 80)
-- Cluster Redpanda (3 brokers)
+- Broker do Cluster Redpanda/Kafka
 - Kafka UI (porta 8080)
 - PgAdmin (acesso via `/pgadmin/` no Load Balancer)
 - Microsserviços dockerizados (portas 5001 a 5008)
@@ -127,7 +127,7 @@ http://34.8.17.245/pgadmin/
 | produtos-service | ✅ Integrado | http://34.8.17.245/api/produtos/health |
 | logistica-service | ✅ Integrado | http://34.8.17.245/api/logistica/health |
 | fornecimentos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/fornecimentos/health |
-| demanda-service | ⏳ Aguardando deploy | http://34.8.17.245/api/demandas/health |
+| demanda-service | ✅ Integrado | http://34.8.17.245/api/demandas/health |
 | mercado-service | ⏳ Aguardando deploy | http://34.8.17.245/api/mercado/health |
 | negociacao-service | ⏳ Aguardando deploy | http://34.8.17.245/api/negociacoes/health |
 | pedidos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/pedidos/health |
@@ -169,6 +169,7 @@ http://34.8.17.245/pgadmin/
 - [x] usuarios-service validado nas duas VMs
 - [x] produtos-service validado nas duas VMs
 - [x] logistica-service validado nas duas VMs
+- [x] demanda-service validado nas duas VMs
 - [x] Front principal (portal-front) validado na rota /
 - [x] Front produtos validado na rota /produtos/
 - [x] Front logística validado na rota /logistica/

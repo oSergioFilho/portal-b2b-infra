@@ -27,12 +27,12 @@ Nginx Gateway
 Fronts e microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
-+ Redpanda/Kafka local da VM
++ Cluster Redpanda/Kafka (3 brokers)
 ```
 
 Pontos importantes:
 - **Cloud SQL é compartilhado** pelas duas VMs. Os dados são consistentes independente de qual VM atende o tráfego.
-- **Redpanda/Kafka é local por VM.** Não há cluster Kafka replicado entre VMs.
+- **Cluster Redpanda (3 brokers) é replicado.** O barramento de eventos agora opera em cluster com 3 brokers distribuídos, garantindo alta disponibilidade e persistência de dados.
 - **O Load Balancer só balanceia HTTP na porta 80.** Serviços/fronts em portas diretas (8081, 8082, 8088) só ficam redundantes automaticamente se forem publicados por uma rota no Nginx Gateway (ex: `/produtos/`, `/logistica/`, `/`).
 - **O acesso oficial é sempre pelo Load Balancer.**
 
@@ -140,13 +140,23 @@ O banco oficial é o Cloud SQL PostgreSQL:
 
 As duas VMs usam o mesmo banco. O PostgreSQL local foi removido.
 
-## 10. Observação sobre Kafka
+## 10. Observação sobre Kafka/Redpanda
 
-Nesta fase, cada VM roda seu próprio Redpanda/Kafka local.
+O barramento de eventos agora opera como um **cluster Redpanda com 3 brokers**:
 
-Isso atende à demonstração acadêmica de redundância da aplicação e Gateway.
+- **Broker 0:** VM principal (10.128.0.2)
+- **Broker 1:** VM standby (10.128.0.3)
+- **Broker 2:** VM kafka-3 (10.128.0.4)
 
-Como evolução futura, pode ser criado um cluster Kafka/Redpanda real com múltiplos brokers.
+**Configuração para Microsserviços:**
+```env
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
+```
+
+**Resiliência:**
+- O cluster utiliza **replication factor 3** para todos os tópicos oficiais.
+- O cluster possui tolerância a falhas, permitindo que a operação continue normalmente mesmo com a **queda de 1 broker**.
+- O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local ou rollback temporário.
 
 ## 11. Fluxo operacional recomendado
 
