@@ -520,6 +520,14 @@ KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
 > **Importante:** Usar os IPs internos reais das VMs na VPC conforme listado acima. No desenvolvimento local com Docker, use `redpanda:9092`.
+>
+> **Estrutura Técnica do Cluster:**
+> - **Redpanda Kafka API:** 9092
+> - **Redpanda RPC:** 33145 (comunicação interna entre brokers)
+> - **Admin API:** 9644
+> - **Schema Registry:** 18081
+> - **Pandaproxy:** 18082
+> - **Aviso:** As portas **8081** e **8082** são reservadas exclusivamente para front-ends (produtos e portal principal) e não devem ser usadas pelo Redpanda ou microsserviços.
 
 **Para desenvolvimento local com Docker (Redpanda local via profile):**
 ```env

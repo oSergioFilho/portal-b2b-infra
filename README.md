@@ -33,7 +33,7 @@ A arquitetura atual utiliza um Load Balancer HTTP externo no GCP como ponto ofic
 
 A infraestrutura fornece:
 - **API Gateway (Nginx):** Entrada única para as APIs REST. Encaminha requisições para os microsserviços rodando nas portas da VM via `host.docker.internal`.
-- **Kafka-compatible Broker (Redpanda):** Barramento central de eventos Kafka para comunicação assíncrona, operando como um cluster de 3 brokers para alta disponibilidade e replicação.
+- **Kafka-compatible Broker (Redpanda):** Barramento central de eventos Kafka operando como um cluster de 3 brokers (portas 9092, 33145, 9644, 18081, 18082). As portas 8081 e 8082 são reservadas para front-ends.
 - **Banco de Dados Oficial (Cloud SQL PostgreSQL):** Instância gerenciada pelo GCP usando banco `portal_b2b` e schema `portal_b2b`. O PostgreSQL local foi removido da infraestrutura. O banco oficial é exclusivamente o Cloud SQL PostgreSQL em 136.114.235.212.
 - **Ferramentas de Suporte:** PgAdmin (Banco) e Kafka UI (Eventos) para testes e visualização.
 

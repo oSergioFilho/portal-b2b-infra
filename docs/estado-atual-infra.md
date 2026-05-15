@@ -152,7 +152,7 @@ http://34.8.17.245/pgadmin/
  
  Os seguintes serviços compõem a infraestrutura central:
  
-- Cluster Redpanda (3 brokers distribuídos e replicados)
+- Cluster Redpanda (3 brokers distribuídos, portas 9092, 33145, 9644, 18081, 18082)
 - Kafka UI
 - Nginx Gateway
 - PgAdmin

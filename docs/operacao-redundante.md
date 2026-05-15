@@ -157,6 +157,8 @@ KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 - O cluster utiliza **replication factor 3** para todos os tópicos oficiais.
 - O cluster possui tolerância a falhas, permitindo que a operação continue normalmente mesmo com a **queda de 1 broker**.
 - O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local ou rollback temporário.
+- **Portas Técnicas:** RPC (33145), Admin (9644), Schema Registry (18081), Pandaproxy (18082).
+- **Aviso:** Portas 8081 e 8082 são front-ends, não Kafka.
 
 ## 11. Fluxo operacional recomendado
 

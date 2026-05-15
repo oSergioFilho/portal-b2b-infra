@@ -345,31 +345,37 @@ docker inspect logistica-service --format '{{.HostConfig.RestartPolicy.Name}}'
 
 ---
 
-## 21. Redpanda / Kafka
+## 21. Redpanda / Kafka (Cluster)
 
-**Ver status:**
+**Ver status do broker nesta VM:**
 
 ```bash
-docker compose ps redpanda
+cd /opt/portal-b2b/infra/portal-b2b-infra/redpanda
+docker compose --env-file .env -f docker-compose.cluster.yml ps
 docker logs --tail=100 portal-b2b-redpanda
 ```
 
-**Health do Redpanda:**
+**Health do Cluster:**
 
 ```bash
-docker compose exec -T redpanda rpk cluster health
+export KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/check-kafka-cluster.sh
 ```
 
-**Listar tópicos:**
+**Listar tópicos no cluster:**
 
 ```bash
-docker compose exec -T redpanda rpk topic list --brokers redpanda:9092
+# Usando rpk (se disponível na VM)
+rpk cluster info --brokers 10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
+rpk topic list --brokers 10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
-**Recriar Redpanda sem apagar volume:**
+**Recriar Broker nesta VM:**
 
 ```bash
-docker compose up -d --force-recreate redpanda kafka-ui
+cd /opt/portal-b2b/infra/portal-b2b-infra/redpanda
+docker compose --env-file .env -f docker-compose.cluster.yml up -d --force-recreate
 ```
 
 ---
@@ -561,7 +567,7 @@ curl -I http://34.8.17.245/produtos/
 - **Cada equipe deve corrigir seu próprio repositório.** A infraestrutura só executa o deploy a partir do Git.
 - **Não usar o IP da VM principal como endpoint oficial.** O endpoint oficial é o Load Balancer (`34.8.17.245`).
 - **O banco oficial é o Cloud SQL** (`136.114.235.212:5432`). O PostgreSQL local foi removido.
-- **Redpanda ainda é local em cada VM**, não é um cluster replicado entre as VMs.
+- **O Kafka/Redpanda opera em cluster** de 3 brokers replicados. O bootstrap oficial é `10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`.
 - **A standby deve ser sincronizada após qualquer alteração de infra** (`bash scripts/sync-redundant.sh`).
 - **Alterações em `nginx/nginx.conf` exigem recriar o `nginx-gateway` nas duas VMs** (seções 15 e 19).
 - A chave SSH `~/.ssh/portal_b2b_standby` existe apenas na VM principal e **nunca deve ser versionada no Git**.
