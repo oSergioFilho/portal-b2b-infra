@@ -169,7 +169,7 @@ cd /opt/portal-b2b/infra/portal-b2b-infra
 docker compose --profile local-kafka down --remove-orphans || true
 
 # Verificar se as portas estão livres:
-sudo ss -lntp | grep -E ':9092|:33145|:9644' || echo "Portas livres."
+sudo ss -lntp | grep -E ':9092|:33145|:9644|:18081|:18082' || echo "Portas livres."
 ```
 
 Se alguma dessas portas estiver ocupada por outro processo/container, identifique e pare o processo antes de continuar:
@@ -206,6 +206,10 @@ docker ps | grep redpanda
 docker logs portal-b2b-redpanda
 ```
 
+> **Aviso:** Se o cluster travar em estado parcial durante o setup inicial, pode ser necessário limpar o volume com:
+> `docker compose --env-file .env -f docker-compose.cluster.yml down -v`
+> Isso deve ser feito **apenas** antes de existir dado útil em produção.
+
 ---
 
 ## 8. Configurar firewall interno no GCP
@@ -217,8 +221,10 @@ docker logs portal-b2b-redpanda
 | 9092 | TCP | Kafka API (produção/consumo de mensagens) |
 | 33145 | TCP | Redpanda RPC (comunicação entre brokers) |
 | 9644 | TCP | Redpanda Admin API (monitoramento) |
+| 18081 | TCP | Schema Registry |
+| 18082 | TCP | Pandaproxy |
 
-> **Nota:** O Schema Registry e o Pandaproxy usam as portas alternativas 18081 e 18082 para evitar conflito com os front-ends que usam as portas 8081 e 8082. Ver `docs/portas.md`.
+> **Nota:** As portas 8081 e 8082 continuam sendo front-ends e não podem ser usadas pelo Redpanda. Por isso, o Schema Registry e o Pandaproxy usam as portas alternativas 18081 e 18082.
 
 ### Regra de firewall criada
 
@@ -322,7 +328,7 @@ Depois recriar o Kafka UI:
 docker compose up -d
 ```
 
-> **Nota:** O Kafka UI no `docker-compose.yml` principal usa `${KAFKA_BOOTSTRAP_SERVERS}` com `network_mode: host` para acessar os IPs internos.
+> **Nota:** O Kafka UI no `docker-compose.yml` principal usa `network_mode: host` e um fallback para `redpanda:9092`. Em ambientes de integração/produção, a variável `KAFKA_BOOTSTRAP_SERVERS` é obrigatória e deve apontar para o cluster (`10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`).
 
 ---
 

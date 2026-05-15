@@ -13,7 +13,7 @@ rpk_cmd() {
   if command -v rpk &> /dev/null; then
     rpk "$@"
   else
-    docker run --rm -i --network host docker.redpanda.com/redpandadata/redpanda:latest rpk "$@"
+    docker run --rm -i --network host docker.redpanda.com/redpandadata/redpanda:latest "$@"
   fi
 }
 

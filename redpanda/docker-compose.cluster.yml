@@ -23,7 +23,7 @@ services:
     volumes:
       - redpanda_data:/var/lib/redpanda/data
     healthcheck:
-      test: ["CMD-SHELL", "rpk cluster health --brokers ${REDPANDA_ADVERTISE_IP}:${REDPANDA_KAFKA_PORT:-9092} | grep -E 'Healthy:.+true' || exit 1"]
+      test: ["CMD-SHELL", "rpk -X brokers=\"${REDPANDA_ADVERTISE_IP}:${REDPANDA_KAFKA_PORT:-9092}\" cluster health | grep -E 'Healthy:.+true' || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 10
