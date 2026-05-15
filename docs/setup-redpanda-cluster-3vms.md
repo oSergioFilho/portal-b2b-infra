@@ -190,7 +190,7 @@ docker rm portal-b2b-redpanda || true
 
 ## 7. Subir os brokers (nas 3 VMs)
 
-**Importante:** Subir os 3 brokers em sequência rápida. O cluster só fica saudável quando todos os seed servers estão acessíveis.
+**Importante:** Subir os 3 brokers em sequência rápida. O cluster só fica saudável quando todos os brokers (informados via parâmetro `--seeds`, e não o antigo `--seed-server`) estão acessíveis.
 
 Em cada VM:
 

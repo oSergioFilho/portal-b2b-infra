@@ -16,9 +16,7 @@ services:
       - --advertise-kafka-addr=${REDPANDA_ADVERTISE_IP}:${REDPANDA_KAFKA_PORT:-9092}
       - --rpc-addr=0.0.0.0:${REDPANDA_RPC_PORT:-33145}
       - --advertise-rpc-addr=${REDPANDA_ADVERTISE_IP}:${REDPANDA_RPC_PORT:-33145}
-      - --seed-server=${REDPANDA_BROKER_1}:${REDPANDA_RPC_PORT:-33145}
-      - --seed-server=${REDPANDA_BROKER_2}:${REDPANDA_RPC_PORT:-33145}
-      - --seed-server=${REDPANDA_BROKER_3}:${REDPANDA_RPC_PORT:-33145}
+      - --seeds=${REDPANDA_BROKER_1}:${REDPANDA_RPC_PORT:-33145},${REDPANDA_BROKER_2}:${REDPANDA_RPC_PORT:-33145},${REDPANDA_BROKER_3}:${REDPANDA_RPC_PORT:-33145}
     network_mode: host
     volumes:
       - redpanda_data:/var/lib/redpanda/data
