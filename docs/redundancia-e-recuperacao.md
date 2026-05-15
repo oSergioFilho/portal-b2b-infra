@@ -55,7 +55,7 @@ Além disso, os serviços críticos possuem **health checks** configurados:
 
 ## 4. Camada 2: Failover HTTP automático pelo Load Balancer
 
-The Load Balancer HTTP externo no GCP verifica periodicamente o endpoint:
+O Load Balancer HTTP externo no GCP verifica periodicamente o endpoint:
 
 ```text
 GET /health

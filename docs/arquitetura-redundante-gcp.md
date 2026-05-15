@@ -109,7 +109,7 @@ DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/p
 
 - O host `postgres:5432` não existe mais na infraestrutura. O PostgreSQL local foi removido.
 - Na arquitetura redundante, o Cloud SQL é o único banco, compartilhado pelas duas VMs.
-- O arquivo `.env.example` **não deve conter senha real** nem IP fixo obrigatório — use placeholders.
+- O arquivo `.env.example` não deve conter senha real. Pode conter endpoints oficiais não sensíveis, como Cloud SQL e KAFKA_BOOTSTRAP_SERVERS, desde que não contenha credenciais reais.
 
 ---
 

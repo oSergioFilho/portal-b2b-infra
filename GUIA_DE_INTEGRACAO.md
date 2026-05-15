@@ -15,7 +15,8 @@ http://34.8.17.245
 
 - O Load Balancer `34.8.17.245` é o ponto oficial de entrada para APIs e rotas publicadas no Gateway.
 - A VM principal `34.29.84.207` e a VM standby `34.59.229.37` são acessos diretos para diagnóstico.
-- PgAdmin, Kafka UI e Uptime Kuma ainda podem ser acessados diretamente pelas portas das VMs, pois não estão publicados no Load Balancer.
+- O **PgAdmin** é acessado oficialmente via Load Balancer em: http://34.8.17.245/pgadmin/
+- **Kafka UI** e **Uptime Kuma** continuam sendo acessos diretos pelas portas das VMs (`8080` e `3001`), usados apenas para diagnóstico e apoio técnico.
 
 | Recurso | URL/Host | Uso |
 |---|---|---|
@@ -35,7 +36,7 @@ http://34.8.17.245
 
 > **Atenção:** O acesso oficial das APIs é pelo Load Balancer: `http://34.8.17.245/api/{dominio}`. O IP da VM principal (`34.29.84.207`) e da VM standby (`34.59.229.37`) devem ser usados apenas para diagnóstico direto. As equipes de microsserviços e front-end não devem usar o IP da VM principal como endpoint oficial. Front-ends devem chamar APIs usando o Load Balancer ou rotas relativas (ex: `/api/produtos`).
 >
-> Esse IP da VM principal pode ser usado pelas equipes para acessar o PgAdmin e Kafka UI durante a integração ou para testes diretos de diagnóstico. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. O Kafka/Redpanda agora opera como cluster com 3 brokers. Os microsserviços devem usar `KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`.
+> Esse IP da VM principal pode ser usado pelas equipes para acessar o Kafka UI durante a integração ou para testes diretos de diagnóstico. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. O Kafka/Redpanda agora opera como cluster com 3 brokers. Os microsserviços devem usar `KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`.
 
 ---
 
