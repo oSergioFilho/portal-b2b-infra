@@ -33,7 +33,7 @@ A arquitetura atual utiliza um Load Balancer HTTP externo no GCP como ponto ofic
 
 A infraestrutura fornece:
 - **API Gateway (Nginx):** Entrada única para as APIs REST. Encaminha requisições para os microsserviços rodando nas portas da VM via `host.docker.internal`.
-- **Kafka-compatible Broker (Redpanda):** Barramento central de eventos Kafka para comunicação assíncrona.
+- **Kafka-compatible Broker (Redpanda):** Barramento central de eventos Kafka para comunicação assíncrona, operando como um cluster de 3 brokers para alta disponibilidade e replicação.
 - **Banco de Dados Oficial (Cloud SQL PostgreSQL):** Instância gerenciada pelo GCP usando banco `portal_b2b` e schema `portal_b2b`. O PostgreSQL local foi removido da infraestrutura. O banco oficial é exclusivamente o Cloud SQL PostgreSQL em 136.114.235.212.
 - **Ferramentas de Suporte:** PgAdmin (Banco) e Kafka UI (Eventos) para testes e visualização.
 
@@ -61,7 +61,7 @@ A infraestrutura fornece:
 - Garantir que o container use a rede portal-b2b-network.
 - Garantir que o serviço publique a porta oficial no host.
 - Usar `136.114.235.212:5432` (Cloud SQL) para PostgreSQL. O host `postgres:5432` do Docker Compose local foi removido.
-- Usar redpanda:9092 para Kafka quando rodar em container.
+- Usar o bootstrap oficial do cluster Kafka (`10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`) para integração/produção. O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local.
 - Publicar e consumir eventos Kafka.
 - Fornecer endpoint `/health`.
 
@@ -136,7 +136,7 @@ http://34.8.17.245
 | Kafka UI | http://34.29.84.207:8080 | Permite monitorar os tópicos e mensagens em tempo real. |
 | PostgreSQL (Cloud SQL) | `136.114.235.212:5432` | `db_portal_b2b` (Equipe Banco), `svc_portal_b2b` (Aplicação). Banco oficial. |
 
-| Redpanda/Kafka| `34.29.84.207:9092` | Broker Kafka principal |
+| Redpanda/Kafka (Cluster) | `10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092` | Cluster de 3 brokers replicados |
 
 **Acesso da Equipe de Banco:**
 
@@ -163,8 +163,10 @@ Se usar **Ferramenta Externa (DBeaver, DataGrip, psql no seu PC)**:
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
+
+> **Nota:** O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local.
 
 > **Importante:** O host `postgres:5432` do Docker Compose local foi removido. O banco oficial é `136.114.235.212:5432` (Cloud SQL).
 
@@ -260,11 +262,11 @@ API Gateway Nginx
 Microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
+        ↓
+Cluster Redpanda (3 brokers)
 ```
 
 Os IPs 34.29.84.207 e 34.59.229.37 devem ser usados apenas para diagnóstico direto. As equipes devem usar o Load Balancer 34.8.17.245 como entrada oficial.
-
-> **Observação:** Redpanda/Kafka ainda roda localmente em cada VM. Ainda não há cluster Kafka/Redpanda replicado.
 
 **VM principal:**
 
@@ -274,7 +276,7 @@ Os IPs 34.29.84.207 e 34.59.229.37 devem ser usados apenas para diagnóstico dir
 
 O que roda na VM:
 - API Gateway (Nginx)
-- Redpanda/Kafka
+- Cluster Redpanda (3 brokers)
 - Kafka UI
 - PgAdmin
 - Microsserviços dockerizados
@@ -300,8 +302,10 @@ Os microsserviços não devem mais usar `postgres:5432` como banco oficial em am
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
+
+> **Nota:** O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local.
 
 ### PostgreSQL local
 
@@ -348,6 +352,8 @@ API Gateway Nginx
 Microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
+        ↓
+Cluster Redpanda (3 brokers)
 ```
 
 Acessos oficiais:

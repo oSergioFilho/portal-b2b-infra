@@ -9,7 +9,7 @@ Para garantir a integração suave com a infraestrutura centralizada do Portal B
 - [ ] O compose usa a rede externa `portal-b2b-network`.
 - [ ] O compose não sobe outro banco.
 - [ ] O compose não sobe outro Kafka.
-- [ ] `.env.example` usa `136.114.235.212` (Cloud SQL) para banco e `redpanda` para Kafka quando rodar em container.
+- [ ] `.env.example` usa `136.114.235.212` (Cloud SQL) para banco e o bootstrap oficial do cluster (`10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`) para Kafka.
 - [ ] Serviço roda na porta oficial (ex: `5002`).
 - [ ] Porta está mapeada corretamente (ex: `"5002:5002"`).
 - [ ] `GET /health` responde corretamente.
@@ -21,7 +21,7 @@ Para garantir a integração suave com a infraestrutura centralizada do Portal B
 - [ ] O serviço não usa localhost para acessar PostgreSQL quando roda em container.
 - [ ] O serviço não usa localhost para acessar Kafka quando roda em container.
 - [ ] O serviço usa Cloud SQL em 136.114.235.212:5432 como banco oficial.
-- [ ] O serviço usa redpanda:9092 para acessar Kafka em container.
+- [ ] O serviço usa o bootstrap do cluster (`10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`) para acessar o Kafka. O endereço `redpanda:9092` é usado apenas para desenvolvimento local.
 - [ ] O comando docker compose up -d --build funciona sem intervenção manual.
 - [ ] O comando docker logs -f nome-do-container mostra os logs do serviço.
 - [ ] O endpoint GET /health retorna HTTP 200.

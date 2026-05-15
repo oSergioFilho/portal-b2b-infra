@@ -35,7 +35,7 @@ http://34.8.17.245
 
 > **Atenção:** O acesso oficial das APIs é pelo Load Balancer: `http://34.8.17.245/api/{dominio}`. O IP da VM principal (`34.29.84.207`) e da VM standby (`34.59.229.37`) devem ser usados apenas para diagnóstico direto. As equipes de microsserviços e front-end não devem usar o IP da VM principal como endpoint oficial. Front-ends devem chamar APIs usando o Load Balancer ou rotas relativas (ex: `/api/produtos`).
 >
-> Esse IP da VM principal pode ser usado pelas equipes para acessar o PgAdmin e Kafka UI durante a integração ou para testes diretos de diagnóstico. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. O Kafka/Redpanda agora opera como cluster com 3 brokers. Os microsserviços devem usar `KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM_PRINCIPAL:9092,IP_INTERNO_VM_STANDBY:9092,IP_INTERNO_VM_KAFKA_3:9092`.
+> Esse IP da VM principal pode ser usado pelas equipes para acessar o PgAdmin e Kafka UI durante a integração ou para testes diretos de diagnóstico. O banco oficial agora é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. O Kafka/Redpanda agora opera como cluster com 3 brokers. Os microsserviços devem usar `KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`.
 
 ---
 
@@ -67,7 +67,7 @@ Microsserviço dockerizado - portas 5001 a 5008
     ↓
 Cloud SQL PostgreSQL - 136.114.235.212:5432
     ↓
-Cluster Kafka/Redpanda (3 brokers) - KAFKA_BOOTSTRAP_SERVERS
+Cluster Kafka/Redpanda (3 brokers) - 10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
     ↓
 Outros microsserviços consumidores
 ```
@@ -83,9 +83,9 @@ As duas VMs de aplicação rodam os mesmos componentes de aplicação e suporte.
 - Kafka UI (aponta para o cluster Redpanda externo)
 
 **Mensageria (cluster Redpanda com 3 brokers):**
-- Broker 0: VM principal
-- Broker 1: VM standby
-- Broker 2: VM kafka-3
+- Broker 0: 10.128.0.2 (VM principal)
+- Broker 1: 10.128.0.3 (VM standby)
+- Broker 2: 10.128.0.4 (VM kafka-3)
 - PgAdmin
 
 **Banco oficial (externo à VM):**
@@ -120,13 +120,13 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 | VM standby | `http://34.59.229.37` | 80 | Diagnóstico direto |
 | PostgreSQL (Cloud SQL) | `136.114.235.212` | 5432 | Banco oficial (Cloud SQL) |
 | PgAdmin | `http://34.8.17.245/pgadmin/` | Redundante | Administração visual do banco |
-| Kafka/Redpanda | Cluster 3 brokers (IPs internos VPC) | 9092 | Broker de eventos |
+| Kafka/Redpanda | Cluster 3 brokers (IPs internos VPC) | 9092 | `10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092` |
 | Kafka UI | `http://34.29.84.207:8080` | 8080 | Visualizar tópicos e mensagens |
 
 **Atenção:**
 - O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`. Os microsserviços devem apontar para este IP.
 - O host `postgres` (Docker Compose local) foi removido e não deve ser usado.
-- O Kafka/Redpanda agora é um **cluster com 3 brokers**. Os microsserviços devem usar `KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM_PRINCIPAL:9092,IP_INTERNO_VM_STANDBY:9092,IP_INTERNO_VM_KAFKA_3:9092`.
+- O Kafka/Redpanda agora é um **cluster com 3 brokers**. Os microsserviços devem usar `KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`.
 - O endereço `redpanda:9092` **não deve ser usado em integração/produção**. Ele existe apenas para desenvolvimento local.
 - Se estiver acessando visualmente **de fora** (ex: DBeaver no seu PC), use `136.114.235.212` para o banco.
 
@@ -189,11 +189,10 @@ PORT=5002
 
 DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-
-KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM_PRINCIPAL:9092,IP_INTERNO_VM_STANDBY:9092,IP_INTERNO_VM_KAFKA_3:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
-> **Nota:** O banco oficial é `136.114.235.212` (Cloud SQL). O Kafka/Redpanda agora é um cluster com 3 brokers acessado via IPs internos da VPC. O container precisa estar na rede `portal-b2b-network`. Em ambiente Docker local de desenvolvimento, `redpanda:9092` pode ser usado se o serviço estiver na mesma rede Docker do Redpanda local (`docker compose --profile local-kafka up -d`). Em integração/produção no GCP, usar o cluster de 3 brokers.
+> **Nota:** O banco oficial é `136.114.235.212` (Cloud SQL). O Kafka/Redpanda agora é um cluster com 3 brokers acessado via IPs internos da VPC (`10.128.0.2, 10.128.0.3, 10.128.0.4`). O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local.
 
 ### Alternativa emergencial: rodar direto no host da VM (sem Docker)
 
@@ -516,10 +515,10 @@ A mensageria utiliza Redpanda (100% compatível com a API do Apache Kafka), oper
 
 **Para microsserviços em integração/produção no GCP (padrão obrigatório):**
 ```env
-KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM_PRINCIPAL:9092,IP_INTERNO_VM_STANDBY:9092,IP_INTERNO_VM_KAFKA_3:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
-> **Importante:** Substituir os placeholders pelos IPs internos reais das VMs na VPC. Os IPs internos são fornecidos pela equipe de infraestrutura.
+> **Importante:** Usar os IPs internos reais das VMs na VPC conforme listado acima. No desenvolvimento local com Docker, use `redpanda:9092`.
 
 **Para desenvolvimento local com Docker (Redpanda local via profile):**
 ```env
@@ -638,7 +637,7 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 | Erro | Causa provável | Solução |
 |---|---|---|
 | `connection refused` no PostgreSQL | host incorreto, Cloud SQL inacessível ou IP de origem não autorizado no Cloud SQL | usar `136.114.235.212:5432` no `DATABASE_URL` e confirmar se o IP de origem está autorizado no Cloud SQL |
-| `connection refused` no Kafka | usou `localhost` dentro do container ou endereço errado | usar `KAFKA_BOOTSTRAP_SERVERS` com IPs internos do cluster (integração/produção) ou `redpanda:9092` (dev local) |
+| `connection refused` no Kafka | usou `localhost` ou `redpanda:9092` em produção | usar `KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092` |
 | `network portal-b2b-network not found` | infra não foi subida | subir infra primeiro |
 | Gateway `502` | container não está rodando ou porta errada | verificar `docker ps`, logs e ports |
 | `permission denied` no banco | aplicação tentou criar tabela | desativar auto-migrate/sync |

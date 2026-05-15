@@ -16,7 +16,7 @@ Nginx Gateway
 Fronts e microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
-+ Redpanda/Kafka local da VM
++ Cluster Redpanda (3 brokers)
 ```
 
 ---
@@ -47,7 +47,7 @@ IP: 34.29.84.207
 O que roda na VM:
 
 - Nginx API Gateway (porta 80)
-- Redpanda/Kafka (porta 9092)
+- Cluster Redpanda (3 brokers)
 - Kafka UI (porta 8080)
 - PgAdmin (acesso via `/pgadmin/` no Load Balancer)
 - Microsserviços dockerizados (portas 5001 a 5008)
@@ -87,8 +87,10 @@ O Cloud SQL é o banco oficial. As duas VMs usam o mesmo banco. Os microsserviç
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:senha_portal_b2b@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
+
+> **Nota:** O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local.
 
 ---
 
@@ -146,16 +148,15 @@ http://34.8.17.245/pgadmin/
 
 ---
 
-## 9. Serviços que rodam localmente em cada VM
-
-Os seguintes serviços continuam rodando localmente em cada VM via Docker Compose:
-
-- Redpanda/Kafka (local por VM, sem cluster replicado)
+## 9. Serviços centrais
+ 
+ Os seguintes serviços compõem a infraestrutura central:
+ 
+- Cluster Redpanda (3 brokers distribuídos e replicados)
 - Kafka UI
 - Nginx Gateway
 - PgAdmin
-
-O PostgreSQL local foi removido da VM e do `docker-compose.yml`.
+- Cloud SQL PostgreSQL (Banco oficial externo)
 
 ---
 
@@ -177,10 +178,9 @@ O PostgreSQL local foi removido da VM e do `docker-compose.yml`.
 
 ## 11. Próximas etapas
 
-- [ ] Validar os microsserviços restantes nas duas VMs
+- [x] Cluster Redpanda/Kafka (3 brokers replicados)
 - [ ] Fazer teste de falha controlada quando for conveniente
 - [ ] Definir rotina oficial de backup/exportação do Cloud SQL
-- [ ] Avaliar cluster Redpanda/Kafka futuramente
 - [ ] Avaliar HTTPS/domínio futuramente
 
 ---

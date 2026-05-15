@@ -22,14 +22,14 @@ Nginx Gateway
 Fronts e microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
-+ Redpanda/Kafka local da VM
++ Cluster Redpanda (3 brokers)
 ```
 
 Pontos principais:
 - **O Load Balancer é o ponto oficial de entrada.** O acesso dos usuários e front-ends deve sempre usar `34.8.17.245`.
 - **As duas VMs rodam a mesma infraestrutura e os mesmos microsserviços/fronts.**
 - **O banco Cloud SQL é compartilhado entre as duas VMs.**
-- **Redpanda/Kafka roda localmente em cada VM.** Não há cluster Kafka replicado entre VMs.
+- **Cluster Redpanda (3 brokers):** O Kafka/Redpanda agora opera em cluster com 3 brokers replicados entre as VMs, garantindo que eventos publicados estejam disponíveis no cluster independentemente da VM de origem.
 - **O failover HTTP é automático pelo Load Balancer** quando uma VM deixa de responder ao health check.
 - **Acesso direto às VMs (`34.29.84.207`, `34.59.229.37`) é apenas para diagnóstico.**
 
@@ -49,13 +49,13 @@ Isso significa que:
 - O container **só não reinicia** se for parado manualmente com `docker compose stop` ou `docker compose down`.
 
 Além disso, os serviços críticos possuem **health checks** configurados:
-- **Redpanda:** verifica se o broker Kafka está respondendo via endpoint de saúde.
+- **Redpanda:** verifica se os brokers do cluster estão respondendo e saudáveis.
 
 ---
 
 ## 4. Camada 2: Failover HTTP automático pelo Load Balancer
 
-O Load Balancer HTTP externo no GCP verifica periodicamente o endpoint:
+The Load Balancer HTTP externo no GCP verifica periodicamente o endpoint:
 
 ```text
 GET /health
@@ -175,13 +175,11 @@ curl -I http://34.8.17.245/logistica/
 
 ✅ Failover HTTP pelo Load Balancer — automático, baseado em health check.
 
+✅ Cluster Kafka/Redpanda replicado — o Redpanda opera como um cluster de 3 brokers para tolerância a falhas e replicação de eventos.
+
 ---
 
 ## 9. O que essa solução ainda não cobre
-
-❌ **Cluster Kafka/Redpanda replicado** — cada VM roda seu próprio Redpanda local.
-
-❌ **Replicação de eventos Kafka entre VMs** — eventos publicados em uma VM não são visíveis na outra.
 
 ❌ **HTTPS/domínio** — o acesso é via IP.
 
@@ -199,7 +197,7 @@ Em uma arquitetura de produção, seria possível evoluir para:
 
 | Componente | Evolução |
 |---|---|
-| Redpanda/Kafka | Cluster com 3 brokers para tolerância a falhas e replicação |
+| Kafka UI | Visualização centralizada de tópicos e mensagens |
 | PostgreSQL | Configuração primary/replica com failover automático |
 | Monitoramento | Prometheus + Grafana para métricas em tempo real |
 | Logs | Loki + Grafana para logs centralizados |
@@ -212,7 +210,7 @@ Essas evoluções estão fora do escopo da versão acadêmica atual.
 
 ## 11. Explicação curta para apresentação
 
-> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo. O Load Balancer verifica a saúde de cada VM via `/health` e redireciona o tráfego automaticamente para a VM saudável. O banco de dados é o Cloud SQL PostgreSQL, compartilhado entre as duas VMs. Cada VM roda localmente Redpanda/Kafka, Nginx Gateway, PgAdmin e os microsserviços dockerizados. O failover HTTP é automático; intervenção manual é reservada para situações em que a VM standby precisa ser atualizada ou um container precisa ser reiniciado manualmente."
+> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo. O Load Balancer verifica a saúde de cada VM via `/health` e redireciona o tráfego automaticamente para a VM saudável. O banco de dados é o Cloud SQL PostgreSQL, compartilhado entre as duas VMs. O barramento de eventos é um cluster Redpanda/Kafka com 3 brokers replicados, garantindo alta disponibilidade das mensagens. Cada VM roda o Nginx Gateway e os microsserviços dockerizados. O failover HTTP é automático; a resiliência do Kafka é garantida pelo quórum do cluster."
 
 ---
 

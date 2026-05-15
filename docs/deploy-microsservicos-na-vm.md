@@ -135,14 +135,14 @@ PORT=5002
 DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
-KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
 > **Atenção:**
 > - O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`.
-> - O host `postgres` foi removido e não deve ser usado. O banco oficial é o Cloud SQL em 136.114.235.212.
-> - Dentro do container, **não usar `localhost`** para Kafka. O host correto é `redpanda`.
-> - O `localhost` dentro de um container aponta para o próprio container, não para os serviços da infraestrutura.
+> - O host `postgres` foi removido e não deve ser usado.
+> - O barramento de eventos é um **Cluster Redpanda** de 3 brokers. Em integração/produção, use o bootstrap acima.
+> - O host `redpanda:9092` deve ser usado **apenas** para desenvolvimento local ou rollback temporário.
 
 > **Nota:** Se a equipe estiver rodando tudo localmente em ambiente próprio, pode usar outro banco local. Mas na VM oficial de integração, o banco deve ser o Cloud SQL.
 
@@ -221,7 +221,7 @@ bash scripts/check-services.sh
 | `Arquivo .env.example não encontrado` | Equipe não padronizou variáveis | Pedir correção à equipe |
 | Gateway retorna `502` | Container não está rodando ou porta errada | Verificar `docker ps` e `docker logs` |
 | Banco não conecta | Usou host errado para o banco | Usar `136.114.235.212:5432` (Cloud SQL). O host `postgres` não existe mais na infraestrutura. |
-| Kafka não conecta | Usou `localhost` dentro do container | Trocar para `redpanda:9092` |
+| Kafka não conecta | Usou `localhost` ou `redpanda:9092` em produção | Usar o bootstrap oficial do cluster: `10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092` |
 | Porta já em uso | Outro serviço usa a mesma porta | Conferir porta oficial |
 | `/health` não responde | Serviço não implementou endpoint ou iniciou com erro | Verificar logs e pedir correção à equipe |
 

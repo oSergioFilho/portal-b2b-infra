@@ -20,8 +20,10 @@ PORT=5000
 DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
 
-KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
+
+> **Nota:** O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local.
 
 Cada equipe deve trocar:
 - `SERVICE_NAME`
@@ -29,7 +31,7 @@ Cada equipe deve trocar:
 
 E não deve trocar:
 - `136.114.235.212` (Cloud SQL oficial)
-- `redpanda`
+- `10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092` (Bootstrap do cluster)
 - `portal_b2b`
 - `svc_portal_b2b`
 

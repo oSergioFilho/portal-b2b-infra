@@ -10,7 +10,7 @@ O padrão atual definido para a arquitetura é:
 - Todos os microsserviços também devem rodar em containers próprios na VM central.
 - Cada microsserviço publica sua porta oficial no host da VM (ex: `5002:5002`).
 - O Gateway acessa os microsserviços pela máquina host usando `host.docker.internal:PORTA`.
-- Cada container de microsserviço deve estar na rede portal-b2b-network para acessar o Kafka/Redpanda pelo host redpanda:9092. Os microsserviços devem acessar o Cloud SQL PostgreSQL em 136.114.235.212:5432. O host postgres:5432 não existe mais na infraestrutura.
+- Os microsserviços devem acessar o barramento de eventos pelo cluster Redpanda oficial (`10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`). O endereço `redpanda:9092` deve ser usado apenas para desenvolvimento local. Os microsserviços devem acessar o Cloud SQL PostgreSQL em 136.114.235.212:5432. O host postgres:5432 não existe mais na infraestrutura.
 
 ### Caminho da requisição
 

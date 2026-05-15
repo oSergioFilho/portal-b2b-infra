@@ -50,14 +50,15 @@ Todo microsserviço deve rodar em container na rede `portal-b2b-network`. As var
 ```env
 DATABASE_URL=postgresql://svc_portal_b2b:***@136.114.235.212:5432/portal_b2b
 DB_SCHEMA=portal_b2b
-KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
 **Regras importantes:**
 - O banco oficial é o **Cloud SQL PostgreSQL** em `136.114.235.212:5432`.
-- Dentro do container, **não usar `localhost`** para Kafka. O host correto é `redpanda`.
+- O barramento de eventos é um **Cluster Redpanda** de 3 brokers. Em integração/produção, use o bootstrap acima.
+- O host `redpanda:9092` deve ser usado **apenas** para desenvolvimento local ou rollback temporário.
 - O host `postgres` não existe mais na infraestrutura. O banco oficial é exclusivamente o Cloud SQL em 136.114.235.212.
-- O container do microsserviço **precisa estar na rede `portal-b2b-network`** para que o nome `redpanda` funcione.
+- O container do microsserviço **precisa estar na rede `portal-b2b-network`** apenas para o caso de usar o Redpanda local (dev local). No GCP, o acesso ao cluster é via rede interna.
 
 ---
 
