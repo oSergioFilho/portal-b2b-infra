@@ -10,9 +10,9 @@ A arquitetura atual usa:
 - VM principal: `34.29.84.207` (diagnóstico direto)
 - VM standby: `34.59.229.37` (diagnóstico direto)
 - Cloud SQL PostgreSQL oficial: `136.114.235.212`
-- Redpanda/Kafka local em cada VM
-- API Gateway Nginx nas duas VMs
-- Microsserviços dockerizados nas duas VMs
+- Cluster Redpanda/Kafka com 3 brokers (VM principal, VM standby, VM kafka-3)
+- API Gateway Nginx nas duas VMs de aplicação
+- Microsserviços dockerizados nas duas VMs de aplicação
 
 ---
 
@@ -26,11 +26,10 @@ docker compose ps
 Serviços esperados:
 
 - `portal-b2b-nginx-gateway`
-- `portal-b2b-redpanda`
 - `portal-b2b-kafka-ui`
 - `portal-b2b-pgadmin`
 
-> **Observação:** O PostgreSQL local foi removido. O banco oficial é Cloud SQL.
+> **Observação:** O PostgreSQL local foi removido. O banco oficial é Cloud SQL. O Redpanda local foi movido para o profile `local-kafka` e não sobe por padrão. O Kafka/Redpanda agora opera como cluster externo com 3 brokers.
 
 ---
 
@@ -40,7 +39,7 @@ Serviços esperados:
 bash scripts/check-infra.sh
 ```
 
-> **Observação:** Esse script valida Gateway, Kafka/Redpanda, Kafka UI, PgAdmin e o Cloud SQL PostgreSQL oficial.
+> **Observação:** Esse script valida Gateway, Kafka UI, PgAdmin e o Cloud SQL PostgreSQL oficial. Para o cluster Kafka/Redpanda, use `KAFKA_BOOTSTRAP_SERVERS=... bash scripts/check-infra.sh` ou execute `scripts/check-kafka-cluster.sh` diretamente.
 
 ---
 
@@ -139,8 +138,18 @@ Conferir se os tópicos aparecem.
 
 ## 9. Testar publicação Kafka
 
+> **Nota:** O teste abaixo usa o cluster Redpanda. Defina `KAFKA_BOOTSTRAP_SERVERS` com os IPs internos das VMs.
+
 ```bash
-echo '{"eventId":"teste-002","eventType":"produto_cadastrado","eventVersion":"1.0","timestamp":"2026-05-05T00:00:00Z","source":"infra-test","correlationId":"teste-002","payload":{"produtoId":1,"nome":"Produto de Teste"}}' | docker compose exec -T redpanda rpk topic produce produto_cadastrado --brokers redpanda:9092
+export KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM1:9092,IP_INTERNO_VM2:9092,IP_INTERNO_VM3:9092
+
+echo '{"eventId":"teste-002","eventType":"produto_cadastrado","eventVersion":"1.0","timestamp":"2026-05-05T00:00:00Z","source":"infra-test","correlationId":"teste-002","payload":{"produtoId":1,"nome":"Produto de Teste"}}' | rpk topic produce produto_cadastrado --brokers "$KAFKA_BOOTSTRAP_SERVERS"
+```
+
+Se `rpk` não estiver instalado na VM, use via Docker:
+
+```bash
+echo '{"eventId":"teste-002","eventType":"produto_cadastrado","eventVersion":"1.0","timestamp":"2026-05-05T00:00:00Z","source":"infra-test","correlationId":"teste-002","payload":{"produtoId":1,"nome":"Produto de Teste"}}' | docker run --rm -i --network host docker.redpanda.com/redpandadata/redpanda:latest rpk topic produce produto_cadastrado --brokers "$KAFKA_BOOTSTRAP_SERVERS"
 ```
 
 Depois conferir a mensagem no Kafka UI:
@@ -342,6 +351,7 @@ A infraestrutura atual está validada quando:
 - [ ] Cloud SQL responde com `svc_portal_b2b`.
 - [ ] Cloud SQL responde com `db_portal_b2b`.
 - [ ] Kafka UI abre.
+- [ ] Cluster Redpanda saudável (`check-kafka-cluster.sh`).
 - [ ] Kafka recebe mensagem de teste.
 - [ ] PgAdmin abre via Load Balancer em `/pgadmin/`.
 - [ ] `usuarios-service` responde pelo Load Balancer.

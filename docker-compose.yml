@@ -14,11 +14,15 @@ services:
     networks:
       - portal-b2b-network
 
-
+  # Redpanda local — apenas para desenvolvimento local.
+  # Em integração/produção, usar o cluster Redpanda com 3 brokers.
+  # Veja: redpanda/docker-compose.cluster.yml e docs/setup-redpanda-cluster-3vms.md
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
     container_name: portal-b2b-redpanda
     restart: unless-stopped
+    profiles:
+      - local-kafka
     command:
       - redpanda
       - start
@@ -49,9 +53,13 @@ services:
       timeout: 3s
       retries: 5
 
+  # Inicialização de tópicos para Redpanda local (dev).
+  # Para cluster: usar redpanda/create-topics-cluster.sh
   redpanda-init:
     image: docker.redpanda.com/redpandadata/redpanda:latest
     container_name: portal-b2b-redpanda-init
+    profiles:
+      - local-kafka
     depends_on:
       redpanda:
         condition: service_healthy
@@ -65,15 +73,11 @@ services:
     image: provectuslabs/kafka-ui:latest
     container_name: portal-b2b-kafka-ui
     restart: unless-stopped
-    ports:
-      - "${KAFKA_UI_PORT:-8080}:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: portal-b2b-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: redpanda:9092
-    networks:
-      - portal-b2b-network
-    depends_on:
-      - redpanda
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-redpanda:9092}
+      SERVER_PORT: ${KAFKA_UI_PORT:-8080}
+    network_mode: host
 
   nginx-gateway:
     image: nginx:alpine

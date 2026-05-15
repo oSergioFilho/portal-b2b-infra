@@ -36,8 +36,27 @@ echo "=== Testando PgAdmin ==="
 curl -I -s http://localhost:5050 | head -n 1 || echo "Falha ao acessar PgAdmin"
 echo ""
 
-echo "=== Listando tópicos no Redpanda ==="
-docker compose exec -T redpanda rpk topic list --brokers redpanda:9092 || echo "Falha ao listar tópicos"
+echo "=== Testando Kafka/Redpanda ==="
+if [ -n "$KAFKA_BOOTSTRAP_SERVERS" ]; then
+  echo "KAFKA_BOOTSTRAP_SERVERS=$KAFKA_BOOTSTRAP_SERVERS"
+  echo "Executando health check do cluster externo..."
+  echo ""
+  bash scripts/check-kafka-cluster.sh
+else
+  echo "⚠️  KAFKA_BOOTSTRAP_SERVERS não está definido."
+  echo "O cluster Kafka/Redpanda externo não foi configurado nesta sessão."
+  echo ""
+  echo "Para testar o cluster, defina:"
+  echo "  export KAFKA_BOOTSTRAP_SERVERS=IP_VM1:9092,IP_VM2:9092,IP_VM3:9092"
+  echo "  bash scripts/check-infra.sh"
+  echo ""
+  echo "Ou execute diretamente:"
+  echo "  bash scripts/check-kafka-cluster.sh"
+  echo ""
+  echo "Nota: O Redpanda local (redpanda:9092) não é mais o broker oficial de produção."
+  echo "Para usar o Redpanda local em desenvolvimento:"
+  echo "  docker compose --profile local-kafka up -d"
+fi
 echo ""
 
 echo "Verificação concluída."

@@ -1,4 +1,4 @@
-﻿# Observabilidade e Painel de Status
+# Observabilidade e Painel de Status
 
 ## Objetivo
 
@@ -29,7 +29,9 @@ O Uptime Kuma roda na VM standby:
 - Cloud SQL: `136.114.235.212:5432`
 - Kafka UI
 - PgAdmin
-- Redpanda/Kafka
+- Redpanda/Kafka — Cluster com 3 brokers (VM principal, VM standby, VM kafka-3)
+
+> **Nota:** O Redpanda/Kafka agora opera como cluster com 3 brokers. Para validar o cluster, use `scripts/check-kafka-cluster.sh`.
 
 ## Observações
 

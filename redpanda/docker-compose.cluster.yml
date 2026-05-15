@@ -1,0 +1,36 @@
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: portal-b2b-redpanda
+    restart: unless-stopped
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=1G
+      - --reserve-memory=0M
+      - --overprovisioned
+      - --mode=dev-container
+      - --node-id=${REDPANDA_NODE_ID}
+      - --kafka-addr=0.0.0.0:${REDPANDA_KAFKA_PORT:-9092}
+      - --advertise-kafka-addr=${REDPANDA_ADVERTISE_IP}:${REDPANDA_KAFKA_PORT:-9092}
+      - --rpc-addr=0.0.0.0:${REDPANDA_RPC_PORT:-33145}
+      - --advertise-rpc-addr=${REDPANDA_ADVERTISE_IP}:${REDPANDA_RPC_PORT:-33145}
+      - --pandaproxy-addr=0.0.0.0:8082
+      - --advertise-pandaproxy-addr=${REDPANDA_ADVERTISE_IP}:8082
+      - --schema-registry-addr=0.0.0.0:8081
+      - --advertise-schema-registry-addr=${REDPANDA_ADVERTISE_IP}:8081
+      - --seed-server=${REDPANDA_BROKER_1}:${REDPANDA_RPC_PORT:-33145}
+      - --seed-server=${REDPANDA_BROKER_2}:${REDPANDA_RPC_PORT:-33145}
+      - --seed-server=${REDPANDA_BROKER_3}:${REDPANDA_RPC_PORT:-33145}
+    network_mode: host
+    volumes:
+      - redpanda_data:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health --api-urls ${REDPANDA_ADVERTISE_IP}:${REDPANDA_ADMIN_PORT:-9644} | grep -E 'Healthy:.+true' || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redpanda_data:

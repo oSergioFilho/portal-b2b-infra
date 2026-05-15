@@ -12,13 +12,14 @@ O objetivo é eliminar o ponto único de falha, permitindo que o sistema continu
 
 A infraestrutura possui **duas VMs de aplicação atrás de um Load Balancer HTTP externo**. As duas VMs rodam a mesma infraestrutura, os mesmos microsserviços e os mesmos front-ends. O banco é externo, no Cloud SQL PostgreSQL.
 
-Cada VM roda:
+Cada VM de aplicação roda:
 - API Gateway (Nginx)
 - Microsserviços das equipes
 - Front-ends dockerizados
-- Kafka/Redpanda (local por VM)
 - PgAdmin
 - Kafka UI
+
+O Kafka/Redpanda agora opera como **cluster com 3 brokers** distribuídos em 3 VMs (principal, standby e kafka-3). Os microsserviços conectam ao cluster via `KAFKA_BOOTSTRAP_SERVERS=IP_VM1:9092,IP_VM2:9092,IP_VM3:9092`.
 
 O banco de dados oficial é o **Cloud SQL PostgreSQL** (`136.114.235.212`), compartilhado entre as duas VMs.
 
@@ -40,7 +41,7 @@ Nginx Gateway
 Fronts e microsserviços dockerizados
         ↓
 Cloud SQL PostgreSQL - 136.114.235.212
-+ Redpanda/Kafka local da VM
++ Cluster Redpanda/Kafka (3 brokers: VM principal, VM standby, VM kafka-3)
 ```
 
 Pontos importantes:
@@ -220,16 +221,44 @@ O Load Balancer envia tráfego apenas para a VM que responder com sucesso ao hea
 
 ---
 
-## 10. Kafka/Redpanda
+## 10. Kafka/Redpanda — Cluster com 3 Brokers
 
-Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso mantém a infraestrutura de apoio disponível em cada VM, mas ainda não representa um cluster Kafka/Redpanda real com replicação entre brokers. Como evolução futura, pode ser criado um cluster Redpanda/Kafka com múltiplos brokers e replication factor maior que 1.
+### Estado anterior (já superado)
 
-### Opção futura
+Anteriormente, cada VM rodava seu próprio Redpanda/Kafka local de forma independente. Isso não replicava eventos entre VMs e representava um ponto de falha.
 
-- Criar cluster Redpanda/Kafka com 3 brokers.
-- Distribuir brokers entre as VMs.
-- Configurar `replication.factor` maior que 1.
-- Garantir tolerância a falha de pelo menos 1 broker.
+### Estado atual — Cluster Redpanda com 3 brokers
+
+O Kafka/Redpanda agora opera como um **cluster real com 3 brokers**:
+
+| Broker | VM | Função |
+|--------|-----|--------|
+| Broker 0 | VM principal | Broker + aplicação |
+| Broker 1 | VM standby | Broker + aplicação |
+| Broker 2 | VM kafka-3 | Broker dedicado |
+
+**Configuração dos microsserviços:**
+
+```env
+KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM_PRINCIPAL:9092,IP_INTERNO_VM_STANDBY:9092,IP_INTERNO_VM_KAFKA_3:9092
+```
+
+**Características do cluster:**
+
+- Tópicos oficiais com **replication factor 3** e **3 partições**.
+- Tolerância a falha de **1 broker** (o cluster continua operacional com 2 de 3 brokers).
+- Comunicação entre brokers via IPs internos da VPC (porta RPC 33145).
+- Cada broker roda via `redpanda/docker-compose.cluster.yml` com `network_mode: host`.
+- O Redpanda local do `docker-compose.yml` principal foi movido para o profile `local-kafka` (apenas desenvolvimento).
+
+**Referências:**
+
+- Implantação: [docs/setup-redpanda-cluster-3vms.md](./setup-redpanda-cluster-3vms.md)
+- Compose do cluster: `redpanda/docker-compose.cluster.yml`
+- Criação de tópicos: `redpanda/create-topics-cluster.sh`
+- Health check do cluster: `scripts/check-kafka-cluster.sh`
+
+> **Nota:** O endereço `redpanda:9092` (container local) não deve ser usado em integração/produção. Ele existe apenas para desenvolvimento local via `docker compose --profile local-kafka up -d`.
 
 ---
 
@@ -247,8 +276,6 @@ Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso mantém a infra
 
 ## 12. O que ainda não cobre
 
-- ❌ cluster Kafka/Redpanda real
-- ❌ replicação de eventos entre brokers
 - ❌ HTTPS/domínio
 - ❌ métricas detalhadas com Prometheus/Grafana
 - ❌ escalabilidade horizontal automática
@@ -265,7 +292,7 @@ Nesta fase, cada VM roda seu próprio Redpanda/Kafka local. Isso mantém a infra
 | 4 | Load Balancer HTTP | ✅ Implementado |
 | 5 | Sincronização principal → standby | ✅ Implementado |
 | 6 | Teste de falha controlada | 🔜 Próxima etapa |
-| 7 | Redpanda cluster | 📋 Evolução futura |
+| 7 | Redpanda cluster com 3 brokers | ✅ Implementado |
 | 8 | Kubernetes | 📋 Evolução futura |
 
 **Endereços atuais:**
@@ -283,4 +310,4 @@ O acesso recomendado ao sistema é pelo **Load Balancer** (`http://34.8.17.245`)
 
 ## 14. Texto para apresentação
 
-> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo no GCP. As duas VMs rodam a mesma infraestrutura: Nginx API Gateway, microsserviços dockerizados, front-ends dockerizados e Redpanda/Kafka local. O banco de dados oficial é o Cloud SQL PostgreSQL, compartilhado entre as duas VMs. Um Load Balancer HTTP distribui as requisições entre as VMs com base em health check — se uma VM cair, o tráfego vai automaticamente para a outra. O acesso oficial ao sistema é sempre pelo Load Balancer (34.8.17.245). Acesso direto às VMs é apenas diagnóstico."
+> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo no GCP, além de uma terceira VM dedicada ao Kafka. As VMs de aplicação rodam a mesma infraestrutura: Nginx API Gateway, microsserviços dockerizados e front-ends dockerizados. O banco de dados oficial é o Cloud SQL PostgreSQL, compartilhado entre as VMs. A mensageria é feita por um cluster Redpanda com 3 brokers distribuídos entre as 3 VMs, com replication factor 3, garantindo tolerância a falha de broker. Um Load Balancer HTTP distribui as requisições entre as VMs de aplicação com base em health check — se uma VM cair, o tráfego vai automaticamente para a outra. O acesso oficial ao sistema é sempre pelo Load Balancer (34.8.17.245). Acesso direto às VMs é apenas diagnóstico."
