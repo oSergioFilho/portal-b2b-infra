@@ -119,6 +119,7 @@ http://34.8.17.245
 | usuarios-service | http://34.8.17.245/api/usuarios/health | Integrado |
 | produtos-service | http://34.8.17.245/api/produtos/health | Integrado |
 | logistica-service | http://34.8.17.245/api/logistica/health | Integrado |
+| demanda-service | http://34.8.17.245/api/demandas/health | Integrado |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
@@ -334,6 +335,7 @@ Componentes atuais:
 | usuarios-service | `http://34.8.17.245/api/usuarios/health` | Integrado |
 | produtos-service | `http://34.8.17.245/api/produtos/health` | Integrado |
 | logistica-service | `http://34.8.17.245/api/logistica/health` | Integrado |
+| demanda-service | `http://34.8.17.245/api/demandas/health` | Integrado |
 | Portal principal | `http://34.8.17.245/` | Validado |
 | Front produtos | `http://34.8.17.245/produtos/` | Validado |
 | Front logística | `http://34.8.17.245/logistica/` | Validado |

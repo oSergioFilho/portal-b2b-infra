@@ -101,8 +101,8 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 - usuarios-service (**integrado**)
 - produtos-service (**integrado**)
 - logistica-service (**integrado**)
+- demanda-service (**integrado**)
 - fornecimentos-service
-- demanda-service
 - mercado-service
 - negociacao-service
 - pedidos-service
