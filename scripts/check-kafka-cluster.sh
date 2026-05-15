@@ -38,7 +38,7 @@ rpk_cmd cluster info --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
 echo ""
 
 echo "=== Cluster Health ==="
-rpk_cmd cluster health --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
+rpk_cmd -X brokers="$KAFKA_BOOTSTRAP_SERVERS" cluster health || {
   echo "ERRO: Falha ao verificar saúde do cluster."
   exit 1
 }
