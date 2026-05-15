@@ -158,7 +158,7 @@ cp redpanda/env.kafka3.example redpanda/.env
 
 ## 6. Parar o Redpanda local antigo (VMs principal e standby)
 
-> **Obrigatório antes de subir o broker do cluster.** O `docker-compose.cluster.yml` usa `network_mode: host` e ocupa as portas reais da VM (9092, 33145, 9644, 8081, 8082). Se o Redpanda local antigo estiver rodando, o broker do cluster não conseguirá subir.
+> **Obrigatório antes de subir o broker do cluster.** O `docker-compose.cluster.yml` usa `network_mode: host` e ocupa as portas reais da VM (9092, 33145, 9644). Se o Redpanda local antigo estiver rodando, o broker do cluster não conseguirá subir.
 
 Nas VMs principal e standby:
 
@@ -169,7 +169,7 @@ cd /opt/portal-b2b/infra/portal-b2b-infra
 docker compose --profile local-kafka down --remove-orphans || true
 
 # Verificar se as portas estão livres:
-sudo ss -lntp | grep -E ':9092|:33145|:9644|:8081|:8082' || echo "Portas livres."
+sudo ss -lntp | grep -E ':9092|:33145|:9644' || echo "Portas livres."
 ```
 
 Se alguma dessas portas estiver ocupada por outro processo/container, identifique e pare o processo antes de continuar:
@@ -217,8 +217,8 @@ docker logs portal-b2b-redpanda
 | 9092 | TCP | Kafka API (produção/consumo de mensagens) |
 | 33145 | TCP | Redpanda RPC (comunicação entre brokers) |
 | 9644 | TCP | Redpanda Admin API (monitoramento) |
-| 8081 | TCP | Schema Registry (se usado) |
-| 8082 | TCP | Pandaproxy/REST Proxy (se usado) |
+
+> **Nota:** Schema Registry (8081) e Pandaproxy (8082) estão desativados no cluster para evitar conflito com os front-ends que usam essas portas. Ver `docs/portas.md`.
 
 ### Regra de firewall criada
 
@@ -229,7 +229,7 @@ gcloud compute firewall-rules create allow-redpanda-internal \
   --network=default \
   --direction=INGRESS \
   --action=ALLOW \
-  --rules=tcp:9092,tcp:33145,tcp:9644,tcp:8081,tcp:8082 \
+  --rules=tcp:9092,tcp:33145,tcp:9644 \
   --source-ranges=10.128.0.0/20 \
   --target-tags=redpanda
 ```
