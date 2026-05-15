@@ -175,7 +175,9 @@ curl -I http://34.8.17.245/logistica/
 
 ✅ Failover HTTP pelo Load Balancer — automático, baseado em health check.
 
-✅ Cluster Kafka/Redpanda replicado — o Redpanda opera como um cluster de 3 brokers para tolerância a falhas e replicação de eventos.
+✅ Cluster Kafka/Redpanda com 3 brokers — tópicos com replication factor 3. O cluster tolera a queda de 1 broker sem perda de dados ou disponibilidade, desde que 2 de 3 brokers mantenham quórum.
+
+✅ Resiliência de eventos — a queda de uma VM não implica perda automática dos eventos Kafka. Os eventos permanecem replicados nos brokers restantes.
 
 ---
 
@@ -191,13 +193,30 @@ curl -I http://34.8.17.245/logistica/
 
 ---
 
-## 10. Evolução futura
+## 10. Rollback para Redpanda local (contingência temporária)
+
+Em caso de emergência com o cluster, é possível reverter temporariamente para o Redpanda local single-node via:
+
+```bash
+# Parar o broker do cluster
+cd /opt/portal-b2b/infra/portal-b2b-infra/redpanda
+docker compose --env-file .env -f docker-compose.cluster.yml down
+
+# Subir o Redpanda local
+cd /opt/portal-b2b/infra/portal-b2b-infra
+docker compose --profile local-kafka up -d
+```
+
+> **Aviso:** O Redpanda local é single-node sem replicação. Deve ser usado **apenas como contingência temporária**, nunca como operação normal. A volta para o local significa perda de tolerância a falha de broker e de replicação de eventos.
+
+---
+
+## 11. Evolução futura
 
 Em uma arquitetura de produção, seria possível evoluir para:
 
 | Componente | Evolução |
 |---|---|
-| Kafka UI | Visualização centralizada de tópicos e mensagens |
 | PostgreSQL | Configuração primary/replica com failover automático |
 | Monitoramento | Prometheus + Grafana para métricas em tempo real |
 | Logs | Loki + Grafana para logs centralizados |
@@ -208,9 +227,9 @@ Essas evoluções estão fora do escopo da versão acadêmica atual.
 
 ---
 
-## 11. Explicação curta para apresentação
+## 12. Explicação curta para apresentação
 
-> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo. O Load Balancer verifica a saúde de cada VM via `/health` e redireciona o tráfego automaticamente para a VM saudável. O banco de dados é o Cloud SQL PostgreSQL, compartilhado entre as duas VMs. O barramento de eventos é um cluster Redpanda/Kafka com 3 brokers replicados, garantindo alta disponibilidade das mensagens. Cada VM roda o Nginx Gateway e os microsserviços dockerizados. O failover HTTP é automático; a resiliência do Kafka é garantida pelo quórum do cluster."
+> "A infraestrutura possui duas VMs de aplicação atrás de um Load Balancer HTTP externo, além de uma terceira VM dedicada como broker Kafka. O Load Balancer verifica a saúde de cada VM via `/health` e redireciona o tráfego automaticamente para a VM saudável. O banco de dados é o Cloud SQL PostgreSQL, compartilhado entre as duas VMs. O barramento de eventos é um cluster Redpanda/Kafka com 3 brokers replicados (replication factor 3), garantindo alta disponibilidade das mensagens e tolerância à queda de 1 broker. O failover HTTP é automático; a resiliência do Kafka é garantida pelo quórum do cluster."
 
 ---
 

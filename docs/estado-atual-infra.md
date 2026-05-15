@@ -26,8 +26,9 @@ Cloud SQL PostgreSQL - 136.114.235.212
 | Componente | Endereço | Função | Status |
 |---|---|---|---|
 | Load Balancer | `34.8.17.245` | Entrada principal do sistema | ✅ Validado |
-| VM principal | `34.29.84.207` | Aplicação principal | ✅ Validada |
-| VM standby | `34.59.229.37` | Aplicação redundante | ✅ Validada |
+| VM principal (portal-b2b-vm) | `34.29.84.207` / `10.128.0.2` | Aplicação + Broker 0 | ✅ Validada |
+| VM standby (portal-b2b-vm-standby) | `34.59.229.37` / `10.128.0.3` | Aplicação + Broker 1 | ✅ Validada |
+| VM kafka-3 (portal-b2b-kafka-3) | `35.222.59.59` / `10.128.0.4` | Broker 2 (dedicado) | ✅ Validada |
 | Cloud SQL | `136.114.235.212` | Banco oficial compartilhado | ✅ Validado |
 | Portal principal | `http://34.8.17.245/` | Front principal (portal-front) via Load Balancer | ✅ Validado |
 | Front produtos | `http://34.8.17.245/produtos/` | Front publicado via Gateway/Load Balancer | ✅ Validado |
@@ -35,6 +36,8 @@ Cloud SQL PostgreSQL - 136.114.235.212
 | PgAdmin | `http://34.8.17.245/pgadmin/` | Ferramenta de apoio via Load Balancer | ✅ Implementado |
 | Uptime Kuma | `http://34.59.229.37:3001` | Painel de status | ✅ Implementado |
 | Status Page | `http://34.59.229.37:3001/status/portal-b2b-status` | Página pública de status | ✅ Implementado |
+
+> **Nota:** O IP público `35.222.59.59` da VM kafka-3 é apenas para acesso administrativo/SSH. Não deve ser usado no `KAFKA_BOOTSTRAP_SERVERS`. Os microsserviços devem usar exclusivamente os IPs internos da VPC.
 
 ---
 
@@ -148,11 +151,38 @@ http://34.8.17.245/pgadmin/
 
 ---
 
-## 9. Serviços centrais
- 
- Os seguintes serviços compõem a infraestrutura central:
- 
-- Cluster Redpanda (3 brokers distribuídos, portas 9092, 33145, 9644, 18081, 18082)
+## 9. Cluster Redpanda/Kafka
+
+O barramento de eventos opera como **cluster Redpanda com 3 brokers replicados**:
+
+| Broker | VM | IP interno | Porta Kafka |
+|---|---|---|---|
+| Broker 0 | portal-b2b-vm | 10.128.0.2 | 9092 |
+| Broker 1 | portal-b2b-vm-standby | 10.128.0.3 | 9092 |
+| Broker 2 | portal-b2b-kafka-3 | 10.128.0.4 | 9092 |
+
+**Portas do cluster:**
+- Kafka API: 9092
+- RPC (inter-broker): 33145
+- Admin API: 9644
+- Schema Registry: 18081
+- Pandaproxy: 18082
+- **8081 e 8082 são front-ends, não Redpanda.**
+
+**Bootstrap oficial:**
+```env
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
+```
+
+O cluster usa **replication factor 3** e tolera a queda de **1 broker** mantendo a operação.
+
+---
+
+## 10. Serviços centrais
+
+Os seguintes serviços compõem a infraestrutura central:
+
+- Cluster Redpanda (3 brokers: 10.128.0.2, 10.128.0.3, 10.128.0.4)
 - Kafka UI
 - Nginx Gateway
 - PgAdmin
@@ -160,12 +190,13 @@ http://34.8.17.245/pgadmin/
 
 ---
 
-## 10. O que já foi implementado
+## 11. O que já foi implementado
 
 - [x] VM principal funcionando
 - [x] Cloud SQL PostgreSQL
 - [x] VM standby criada
 - [x] Load Balancer HTTP criado e validado
+- [x] Cluster Redpanda/Kafka com 3 brokers replicados
 - [x] usuarios-service validado nas duas VMs
 - [x] produtos-service validado nas duas VMs
 - [x] logistica-service validado nas duas VMs
@@ -177,16 +208,15 @@ http://34.8.17.245/pgadmin/
 - [x] sync-redundant.sh validado
 - [x] Deploy redundante documentado
 
-## 11. Próximas etapas
+## 12. Próximas etapas
 
-- [x] Cluster Redpanda/Kafka (3 brokers replicados)
 - [ ] Fazer teste de falha controlada quando for conveniente
 - [ ] Definir rotina oficial de backup/exportação do Cloud SQL
 - [ ] Avaliar HTTPS/domínio futuramente
 
 ---
 
-## 12. Observabilidade
+## 13. Observabilidade
 
 O painel visual de status da infraestrutura com Uptime Kuma está documentado em:
 

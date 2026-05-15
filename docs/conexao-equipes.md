@@ -58,7 +58,7 @@ KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 - O barramento de eventos é um **Cluster Redpanda** de 3 brokers. Em integração/produção, use o bootstrap acima.
 - O host `redpanda:9092` deve ser usado **apenas** para desenvolvimento local ou rollback temporário.
 - O host `postgres` não existe mais na infraestrutura. O banco oficial é exclusivamente o Cloud SQL em 136.114.235.212.
-- O container do microsserviço **precisa estar na rede `portal-b2b-network`** apenas para o caso de usar o Redpanda local (dev local). No GCP, o acesso ao cluster é via rede interna.
+- O container do microsserviço **precisa estar na rede `portal-b2b-network`** para integração com o API Gateway (Nginx) e demais serviços da infraestrutura. O acesso ao cluster Kafka é via rede interna da VPC (IPs `10.128.0.x`), não via resolução de nome Docker.
 
 ---
 
