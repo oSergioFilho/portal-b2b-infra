@@ -218,7 +218,7 @@ docker logs portal-b2b-redpanda
 | 33145 | TCP | Redpanda RPC (comunicação entre brokers) |
 | 9644 | TCP | Redpanda Admin API (monitoramento) |
 
-> **Nota:** Schema Registry (8081) e Pandaproxy (8082) estão desativados no cluster para evitar conflito com os front-ends que usam essas portas. Ver `docs/portas.md`.
+> **Nota:** O Schema Registry e o Pandaproxy usam as portas alternativas 18081 e 18082 para evitar conflito com os front-ends que usam as portas 8081 e 8082. Ver `docs/portas.md`.
 
 ### Regra de firewall criada
 
@@ -229,7 +229,7 @@ gcloud compute firewall-rules create allow-redpanda-internal \
   --network=default \
   --direction=INGRESS \
   --action=ALLOW \
-  --rules=tcp:9092,tcp:33145,tcp:9644 \
+  --rules=tcp:9092,tcp:33145,tcp:9644,tcp:18081,tcp:18082 \
   --source-ranges=10.128.0.0/20 \
   --target-tags=redpanda
 ```

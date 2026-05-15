@@ -11,8 +11,10 @@
 - **Kafka API:** `9092` (produção/consumo de mensagens)
 - **Redpanda RPC:** `33145` (comunicação entre brokers)
 - **Redpanda Admin API:** `9644` (monitoramento)
+- **Schema Registry:** `18081` (API para schemas Avro/Protobuf)
+- **Pandaproxy:** `18082` (REST API do Kafka)
 
-> **Nota:** Schema Registry (8081) e Pandaproxy (8082) estão **desativados** no cluster para evitar conflito com os front-ends. Se necessário no futuro, podem ser ativados em portas alternativas (ex: 18081 e 18082).
+> **Nota:** As portas 8081 e 8082 são usadas pelos front-ends. Portanto, o Redpanda usa as portas 9092, 33145, 9644, 18081 e 18082. O `KAFKA_BOOTSTRAP_SERVERS` oficial é: `10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092`.
 
 ## Front-ends
 
@@ -47,25 +49,4 @@
 - PostgreSQL, Kafka, PgAdmin e Kafka UI devem ser protegidos por firewall, VPN ou regra de acesso da VM (Security Groups), garantindo que apenas membros da equipe acessem.
 - **Atenção:** Não usar as credenciais de `admin` ou do `db_portal_b2b` nos microsserviços. Os microsserviços devem usar apenas `svc_portal_b2b`.
 
-## Schema Registry / Pandaproxy (opcional — futuro)
 
-Se Schema Registry ou Pandaproxy forem necessários, ativar em portas alternativas para evitar conflito com os front-ends:
-
-- **Schema Registry:** `18081` (em vez de 8081)
-- **Pandaproxy:** `18082` (em vez de 8082)
-
-Para ativar no `redpanda/docker-compose.cluster.yml`, adicionar ao command:
-
-```yaml
-- --schema-registry-addr=0.0.0.0:18081
-- --advertise-schema-registry-addr=${REDPANDA_ADVERTISE_IP}:18081
-- --pandaproxy-addr=0.0.0.0:18082
-- --advertise-pandaproxy-addr=${REDPANDA_ADVERTISE_IP}:18082
-```
-
-E liberar as portas no firewall:
-
-```bash
-gcloud compute firewall-rules update allow-redpanda-internal \
-  --rules=tcp:9092,tcp:33145,tcp:9644,tcp:18081,tcp:18082
-```

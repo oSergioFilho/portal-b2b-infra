@@ -12,10 +12,12 @@ services:
       - --overprovisioned
       - --mode=dev-container
       - --node-id=${REDPANDA_NODE_ID}
-      - --kafka-addr=0.0.0.0:${REDPANDA_KAFKA_PORT:-9092}
-      - --advertise-kafka-addr=${REDPANDA_ADVERTISE_IP}:${REDPANDA_KAFKA_PORT:-9092}
+      - --kafka-addr=internal://0.0.0.0:${REDPANDA_KAFKA_PORT:-9092}
+      - --advertise-kafka-addr=internal://${REDPANDA_ADVERTISE_IP}:${REDPANDA_KAFKA_PORT:-9092}
       - --rpc-addr=0.0.0.0:${REDPANDA_RPC_PORT:-33145}
       - --advertise-rpc-addr=${REDPANDA_ADVERTISE_IP}:${REDPANDA_RPC_PORT:-33145}
+      - --pandaproxy-addr=0.0.0.0:${REDPANDA_PANDAPROXY_PORT:-18082}
+      - --schema-registry-addr=0.0.0.0:${REDPANDA_SCHEMA_REGISTRY_PORT:-18081}
       - --seeds=${REDPANDA_BROKER_1}:${REDPANDA_RPC_PORT:-33145},${REDPANDA_BROKER_2}:${REDPANDA_RPC_PORT:-33145},${REDPANDA_BROKER_3}:${REDPANDA_RPC_PORT:-33145}
     network_mode: host
     volumes:
