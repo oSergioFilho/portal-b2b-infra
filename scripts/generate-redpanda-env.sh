@@ -25,7 +25,7 @@ if [ -z "$ROLE" ] || [ -z "$IP_VM1" ] || [ -z "$IP_VM2" ] || [ -z "$IP_VM3" ]; t
   echo "  kafka3   - VM kafka-3  (node-id 2)"
   echo ""
   echo "Exemplo:"
-  echo "  bash scripts/generate-redpanda-env.sh primary 10.128.0.10 10.128.0.11 10.128.0.12"
+  echo "  bash scripts/generate-redpanda-env.sh primary 10.128.0.2 10.128.0.3 10.128.0.4"
   exit 1
 fi
 

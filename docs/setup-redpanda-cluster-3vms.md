@@ -7,18 +7,18 @@ Este documento descreve o passo a passo para implantar um cluster Redpanda com 3
 ### Arquitetura do cluster
 
 ```text
-VM principal  (IP interno: IP_INTERNO_VM_PRINCIPAL)  → Broker 0
-VM standby    (IP interno: IP_INTERNO_VM_STANDBY)    → Broker 1
-VM kafka-3    (IP interno: IP_INTERNO_VM_KAFKA_3)    → Broker 2
+portal-b2b-vm          (IP interno: 10.128.0.2)  → Broker 0  (VM principal)
+portal-b2b-vm-standby  (IP interno: 10.128.0.3)  → Broker 1  (VM standby)
+portal-b2b-kafka-3     (IP interno: 10.128.0.4)  → Broker 2  (VM dedicada Kafka)
 ```
 
-Os microsserviços conectam ao cluster via:
+Bootstrap oficial dos microsserviços:
 
 ```env
-KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM_PRINCIPAL:9092,IP_INTERNO_VM_STANDBY:9092,IP_INTERNO_VM_KAFKA_3:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
-> **Importante:** Usar **IPs internos** da VPC, não IPs públicos. Os IPs internos não mudam com reinicialização da VM (a menos que sejam efêmeros).
+> **Importante:** Usar **IPs internos** da VPC, não IPs públicos.
 
 ---
 
@@ -31,48 +31,37 @@ KAFKA_BOOTSTRAP_SERVERS=IP_INTERNO_VM_PRINCIPAL:9092,IP_INTERNO_VM_STANDBY:9092,
 
 ---
 
-## 3. Criar a terceira VM (kafka-3)
+## 3. Terceira VM (portal-b2b-kafka-3)
 
-### 3.1. Criar a VM no GCP
+### 3.1. Dados da VM criada
+
+A terceira VM já foi criada com as seguintes configurações:
+
+| Campo | Valor |
+|-------|-------|
+| Nome | `portal-b2b-kafka-3` |
+| Zona | `us-central1-a` |
+| Tipo de máquina | `e2-standard-2` |
+| Imagem | Ubuntu 22.04 LTS |
+| Disco | 50 GB |
+| Tag de rede | `redpanda` |
+| IP interno | `10.128.0.4` |
+
+### 3.2. Comando para recriar (referência)
+
+Caso precise recriar a VM do zero:
 
 ```bash
-gcloud compute instances create portal-b2b-vm-kafka-3 \
+gcloud compute instances create portal-b2b-kafka-3 \
   --zone=us-central1-a \
-  --machine-type=e2-small \
-  --image-family=debian-12 \
-  --image-project=debian-cloud \
-  --boot-disk-size=20GB \
-  --tags=portal-b2b-kafka \
-  --metadata=startup-script='#!/bin/bash
-apt-get update
-apt-get install -y docker.io docker-compose-plugin git
-systemctl enable docker
-systemctl start docker
-usermod -aG docker $(whoami)'
-```
-
-### 3.2. Reservar IP interno fixo (recomendado)
-
-Para evitar que o IP interno mude após reinicialização, use um endereço interno estático:
-
-```bash
-gcloud compute addresses create portal-b2b-kafka-3-internal \
-  --region=us-central1 \
-  --subnet=default \
-  --addresses=IP_INTERNO_DESEJADO
-```
-
-Ou, para manter o IP interno atual estável, simplesmente anote o IP interno da VM:
-
-```bash
-gcloud compute instances describe portal-b2b-vm-kafka-3 \
-  --zone=us-central1-a \
-  --format='get(networkInterfaces[0].networkIP)'
+  --machine-type=e2-standard-2 \
+  --image-family=ubuntu-2204-lts \
+  --image-project=ubuntu-os-cloud \
+  --boot-disk-size=50GB \
+  --tags=redpanda
 ```
 
 ### 3.3. Instalar Docker e Docker Compose plugin
-
-Se o startup-script não instalou automaticamente:
 
 ```bash
 sudo apt-get update
@@ -94,7 +83,24 @@ cd portal-b2b-infra
 
 ---
 
-## 4. Coletar os IPs internos das 3 VMs
+## 4. IPs internos das 3 VMs
+
+Os IPs internos reais são:
+
+```text
+portal-b2b-vm          → 10.128.0.2
+portal-b2b-vm-standby  → 10.128.0.3
+portal-b2b-kafka-3     → 10.128.0.4
+```
+
+Para conferir:
+
+```bash
+gcloud compute instances list \
+  --format="table(name,zone,networkInterfaces[0].networkIP,networkInterfaces[0].accessConfigs[0].natIP,tags.items)"
+```
+
+Ou individualmente:
 
 ```bash
 # VM principal
@@ -108,17 +114,9 @@ gcloud compute instances describe portal-b2b-vm-standby \
   --format='get(networkInterfaces[0].networkIP)'
 
 # VM kafka-3
-gcloud compute instances describe portal-b2b-vm-kafka-3 \
+gcloud compute instances describe portal-b2b-kafka-3 \
   --zone=us-central1-a \
   --format='get(networkInterfaces[0].networkIP)'
-```
-
-Anote os 3 IPs internos. Exemplo:
-
-```text
-VM principal: 10.128.0.10
-VM standby:   10.128.0.11
-VM kafka-3:   10.128.0.12
 ```
 
 ---
@@ -133,13 +131,13 @@ Em cada VM, execute:
 cd /opt/portal-b2b/infra/portal-b2b-infra
 
 # Na VM principal:
-bash scripts/generate-redpanda-env.sh primary 10.128.0.10 10.128.0.11 10.128.0.12
+bash scripts/generate-redpanda-env.sh primary 10.128.0.2 10.128.0.3 10.128.0.4
 
 # Na VM standby:
-bash scripts/generate-redpanda-env.sh standby 10.128.0.10 10.128.0.11 10.128.0.12
+bash scripts/generate-redpanda-env.sh standby 10.128.0.2 10.128.0.3 10.128.0.4
 
 # Na VM kafka-3:
-bash scripts/generate-redpanda-env.sh kafka3 10.128.0.10 10.128.0.11 10.128.0.12
+bash scripts/generate-redpanda-env.sh kafka3 10.128.0.2 10.128.0.3 10.128.0.4
 ```
 
 ### Opção 2: Copiar manualmente do exemplo
@@ -158,7 +156,39 @@ cp redpanda/env.kafka3.example redpanda/.env
 
 ---
 
-## 6. Subir os brokers (nas 3 VMs)
+## 6. Parar o Redpanda local antigo (VMs principal e standby)
+
+> **Obrigatório antes de subir o broker do cluster.** O `docker-compose.cluster.yml` usa `network_mode: host` e ocupa as portas reais da VM (9092, 33145, 9644, 8081, 8082). Se o Redpanda local antigo estiver rodando, o broker do cluster não conseguirá subir.
+
+Nas VMs principal e standby:
+
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+
+# Parar e remover o Redpanda local antigo (profile local-kafka):
+docker compose --profile local-kafka down --remove-orphans || true
+
+# Verificar se as portas estão livres:
+sudo ss -lntp | grep -E ':9092|:33145|:9644|:8081|:8082' || echo "Portas livres."
+```
+
+Se alguma dessas portas estiver ocupada por outro processo/container, identifique e pare o processo antes de continuar:
+
+```bash
+# Identificar processo na porta 9092:
+sudo ss -lntp | grep :9092
+
+# Se for um container antigo:
+docker ps | grep redpanda
+docker stop portal-b2b-redpanda || true
+docker rm portal-b2b-redpanda || true
+```
+
+> **Nota:** Na VM kafka-3, essa etapa não é necessária porque é uma VM nova sem Redpanda local anterior.
+
+---
+
+## 7. Subir os brokers (nas 3 VMs)
 
 **Importante:** Subir os 3 brokers em sequência rápida. O cluster só fica saudável quando todos os seed servers estão acessíveis.
 
@@ -178,23 +208,65 @@ docker logs portal-b2b-redpanda
 
 ---
 
-## 7. Validar o cluster
+## 8. Configurar firewall interno no GCP
+
+### Portas necessárias
+
+| Porta | Protocolo | Serviço |
+|-------|-----------|---------|
+| 9092 | TCP | Kafka API (produção/consumo de mensagens) |
+| 33145 | TCP | Redpanda RPC (comunicação entre brokers) |
+| 9644 | TCP | Redpanda Admin API (monitoramento) |
+| 8081 | TCP | Schema Registry (se usado) |
+| 8082 | TCP | Pandaproxy/REST Proxy (se usado) |
+
+### Regra de firewall criada
+
+A regra de firewall já foi criada com o seguinte comando:
+
+```bash
+gcloud compute firewall-rules create allow-redpanda-internal \
+  --network=default \
+  --direction=INGRESS \
+  --action=ALLOW \
+  --rules=tcp:9092,tcp:33145,tcp:9644,tcp:8081,tcp:8082 \
+  --source-ranges=10.128.0.0/20 \
+  --target-tags=redpanda
+```
+
+As três VMs possuem a tag `redpanda`.
+
+### Verificar a regra e as tags
+
+```bash
+gcloud compute firewall-rules list --filter="name=allow-redpanda-internal"
+
+gcloud compute instances list \
+  --format="table(name,zone,networkInterfaces[0].networkIP,networkInterfaces[0].accessConfigs[0].natIP,tags.items)"
+```
+
+---
+
+## 9. Validar o cluster
 
 Após os 3 brokers estarem rodando:
 
 ```bash
 cd /opt/portal-b2b/infra/portal-b2b-infra
 
-export KAFKA_BOOTSTRAP_SERVERS=10.128.0.10:9092,10.128.0.11:9092,10.128.0.12:9092
+export KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 
 # Health check do cluster
 bash scripts/check-kafka-cluster.sh
 
 # Criar tópicos oficiais
 bash redpanda/create-topics-cluster.sh
+
+# Verificar novamente (agora com tópicos)
+bash scripts/check-kafka-cluster.sh
 ```
 
-Resultado esperado do health check:
+Resultado esperado:
 
 ```text
 === Cluster Info ===
@@ -209,63 +281,58 @@ Healthy: true
 ✅ Todos os tópicos oficiais estão presentes no cluster.
 ```
 
----
+### Teste de publicação e consumo
 
-## 8. Configurar firewall interno no GCP
-
-Os brokers precisam se comunicar entre si e os microsserviços precisam acessar o Kafka. Todas as portas devem ser liberadas **apenas na rede interna**.
-
-### Portas necessárias
-
-| Porta | Protocolo | Serviço |
-|-------|-----------|---------|
-| 9092 | TCP | Kafka API (produção/consumo de mensagens) |
-| 33145 | TCP | Redpanda RPC (comunicação entre brokers) |
-| 9644 | TCP | Redpanda Admin API (monitoramento) |
-| 8081 | TCP | Schema Registry (se usado) |
-| 8082 | TCP | Pandaproxy/REST Proxy (se usado) |
-
-### Criar regra de firewall
+**Publicar mensagem de teste:**
 
 ```bash
-gcloud compute firewall-rules create allow-redpanda-internal \
-  --network=default \
-  --direction=INGRESS \
-  --action=ALLOW \
-  --rules=tcp:9092,tcp:33145,tcp:9644,tcp:8081,tcp:8082 \
-  --source-ranges=FAIXA_INTERNA_DA_VPC \
-  --target-tags=portal-b2b-kafka \
-  --description="Permite comunicação interna entre brokers Redpanda e microsserviços"
+docker run --rm -i --network host docker.redpanda.com/redpandadata/redpanda:latest \
+  rpk topic produce produto_cadastrado --brokers "$KAFKA_BOOTSTRAP_SERVERS"
 ```
 
-> **Recomendação de segurança:** Prefira usar `--target-tags` e `--source-tags` para restringir o acesso apenas às VMs relevantes, em vez de liberar toda a faixa da VPC.
+Digite a mensagem JSON e finalize com `Ctrl+D`:
 
-Exemplo com tags:
+```json
+{"eventId":"teste","eventType":"produto_cadastrado","payload":{"id":"teste","nome":"Produto Teste"}}
+```
+
+**Consumir a mensagem:**
 
 ```bash
-gcloud compute firewall-rules create allow-redpanda-internal \
-  --network=default \
-  --direction=INGRESS \
-  --action=ALLOW \
-  --rules=tcp:9092,tcp:33145,tcp:9644 \
-  --source-tags=portal-b2b,portal-b2b-kafka \
-  --target-tags=portal-b2b-kafka \
-  --description="Permite comunicação interna entre VMs do portal-b2b para Redpanda"
+docker run --rm --network host docker.redpanda.com/redpandadata/redpanda:latest \
+  rpk topic consume produto_cadastrado --brokers "$KAFKA_BOOTSTRAP_SERVERS" -n 1
 ```
 
-Para verificar as regras existentes:
-
-```bash
-gcloud compute firewall-rules list --filter="name~redpanda"
-```
+A mensagem publicada deve aparecer no output.
 
 ---
 
-## 9. Atualizar os microsserviços
+## 10. Atualizar `.env` da infraestrutura
 
-### 9.1. Atualizar o .env de cada microsserviço
+Atualizar o `KAFKA_BOOTSTRAP_SERVERS` no `.env` da infraestrutura para que o Kafka UI aponte para o cluster:
 
-Em cada VM, atualizar o `.env` de cada microsserviço em `/opt/portal-b2b/services/*/`:
+```bash
+cd /opt/portal-b2b/infra/portal-b2b-infra
+bash scripts/set-kafka-bootstrap-env.sh 10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
+```
+
+Depois recriar o Kafka UI:
+
+```bash
+docker compose up -d
+```
+
+> **Nota:** O Kafka UI no `docker-compose.yml` principal usa `${KAFKA_BOOTSTRAP_SERVERS}` com `network_mode: host` para acessar os IPs internos.
+
+---
+
+## 11. Atualizar os microsserviços
+
+### 11.1. Atualizar o .env de todos os microsserviços
+
+```bash
+bash scripts/update-services-kafka-bootstrap.sh 10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
+```
 
 **Antes:**
 
@@ -276,16 +343,17 @@ KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
 **Agora:**
 
 ```env
-KAFKA_BOOTSTRAP_SERVERS=10.128.0.10:9092,10.128.0.11:9092,10.128.0.12:9092
+KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 ```
 
-### 9.2. Recriar os containers dos microsserviços
+### 11.2. Recriar os containers dos microsserviços
 
 ```bash
 for SERVICE_DIR in /opt/portal-b2b/services/*/; do
-  echo "Recriando $(basename $SERVICE_DIR)..."
-  cd "$SERVICE_DIR"
-  docker compose up -d --build
+  if [ -f "$SERVICE_DIR/docker-compose.yml" ]; then
+    echo "Recriando $(basename "$SERVICE_DIR")..."
+    (cd "$SERVICE_DIR" && docker compose up -d --build --force-recreate)
+  fi
 done
 ```
 
@@ -299,34 +367,6 @@ cd /opt/portal-b2b/services/produtos-service && docker compose up -d --build
 
 ---
 
-## 10. Parar o Redpanda local (docker-compose.yml principal)
-
-Após o cluster estar funcionando, o Redpanda local do `docker-compose.yml` principal não é mais necessário em produção/integração.
-
-O Redpanda local foi movido para o profile `local-kafka`. Para garantir que ele não está rodando:
-
-```bash
-cd /opt/portal-b2b/infra/portal-b2b-infra
-docker compose down
-docker compose up -d  # Sobe apenas pgadmin, kafka-ui, nginx-gateway
-```
-
-> **Nota:** O Kafka UI no `docker-compose.yml` principal agora aponta para `${KAFKA_BOOTSTRAP_SERVERS}`, que deve apontar para o cluster.
-
----
-
-## 11. Atualizar o Kafka UI
-
-O `.env` da infraestrutura principal deve ter:
-
-```env
-KAFKA_BOOTSTRAP_SERVERS=10.128.0.10:9092,10.128.0.11:9092,10.128.0.12:9092
-```
-
-O Kafka UI no `docker-compose.yml` principal já referencia `${KAFKA_BOOTSTRAP_SERVERS}` e usa `network_mode: host` para acessar os IPs internos.
-
----
-
 ## 12. Rollback — Reverter para Redpanda local
 
 Se precisar reverter temporariamente para o Redpanda local:
@@ -334,35 +374,53 @@ Se precisar reverter temporariamente para o Redpanda local:
 ```bash
 cd /opt/portal-b2b/infra/portal-b2b-infra
 
-# Subir o Redpanda local via profile
+# 1. Parar o broker do cluster:
+cd redpanda
+docker compose --env-file .env -f docker-compose.cluster.yml down
+cd ..
+
+# 2. Subir o Redpanda local via profile:
 docker compose --profile local-kafka up -d
 
-# Atualizar .env dos microsserviços:
-# KAFKA_BOOTSTRAP_SERVERS=redpanda:9092
+# 3. Atualizar .env dos microsserviços:
+bash scripts/update-services-kafka-bootstrap.sh redpanda:9092
 
-# Recriar containers dos microsserviços
+# 4. Recriar containers dos microsserviços:
+for SERVICE_DIR in /opt/portal-b2b/services/*/; do
+  if [ -f "$SERVICE_DIR/docker-compose.yml" ]; then
+    echo "Recriando $(basename "$SERVICE_DIR")..."
+    (cd "$SERVICE_DIR" && docker compose up -d --build --force-recreate)
+  fi
+done
+
+# 5. Atualizar .env da infra:
+bash scripts/set-kafka-bootstrap-env.sh redpanda:9092
+docker compose up -d
 ```
 
-> **Aviso:** O Redpanda local é single-node sem replicação. Usar apenas como contingência temporária.
+> **Aviso:** O Redpanda local é **single-node sem replicação**. Usar apenas como **contingência temporária**. A volta para o local significa perda de tolerância a falha de broker e perda de replicação de eventos.
 
 ---
 
 ## 13. Checklist de implantação
 
-- [ ] Terceira VM criada no GCP
+- [ ] Terceira VM (`portal-b2b-kafka-3`) criada no GCP
 - [ ] Docker e Docker Compose instalados nas 3 VMs
 - [ ] Repositório clonado nas 3 VMs
-- [ ] IPs internos coletados
+- [ ] IPs internos confirmados (10.128.0.2, 10.128.0.3, 10.128.0.4)
+- [ ] Firewall `allow-redpanda-internal` configurado com tag `redpanda`
+- [ ] Redpanda local antigo parado nas VMs principal e standby
+- [ ] Portas 9092/33145/9644 livres nas 3 VMs
 - [ ] Arquivos .env gerados para cada VM
-- [ ] Firewall interno configurado
-- [ ] Broker subido na VM principal
-- [ ] Broker subido na VM standby
-- [ ] Broker subido na VM kafka-3
+- [ ] Broker subido na VM principal (10.128.0.2)
+- [ ] Broker subido na VM standby (10.128.0.3)
+- [ ] Broker subido na VM kafka-3 (10.128.0.4)
 - [ ] Cluster saudável (3 brokers visíveis)
 - [ ] Tópicos oficiais criados com replication factor 3
-- [ ] .env dos microsserviços atualizado com KAFKA_BOOTSTRAP_SERVERS do cluster
-- [ ] Containers dos microsserviços recriados
+- [ ] Teste de publicação/consumo validado
+- [ ] `.env` da infra atualizado com `KAFKA_BOOTSTRAP_SERVERS` do cluster
 - [ ] Kafka UI apontando para o cluster
-- [ ] Redpanda local desativado do docker-compose.yml principal
-- [ ] check-kafka-cluster.sh passa sem erros
-- [ ] check-infra.sh passa sem erros
+- [ ] `.env` dos microsserviços atualizado com `KAFKA_BOOTSTRAP_SERVERS` do cluster
+- [ ] Containers dos microsserviços recriados
+- [ ] `check-kafka-cluster.sh` passa sem erros
+- [ ] `check-infra.sh` passa sem erros
