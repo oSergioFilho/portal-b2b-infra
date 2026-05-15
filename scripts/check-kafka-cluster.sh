@@ -9,6 +9,14 @@
 
 set -e
 
+rpk_cmd() {
+  if command -v rpk &> /dev/null; then
+    rpk "$@"
+  else
+    docker run --rm -i --network host docker.redpanda.com/redpandadata/redpanda:latest rpk "$@"
+  fi
+}
+
 if [ -z "$KAFKA_BOOTSTRAP_SERVERS" ]; then
   echo "ERRO: KAFKA_BOOTSTRAP_SERVERS não está definido."
   echo ""
@@ -23,21 +31,21 @@ echo "Brokers: $KAFKA_BOOTSTRAP_SERVERS"
 echo ""
 
 echo "=== Cluster Info ==="
-rpk cluster info --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
+rpk_cmd cluster info --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
   echo "ERRO: Falha ao obter informações do cluster."
   exit 1
 }
 echo ""
 
 echo "=== Cluster Health ==="
-rpk cluster health --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
+rpk_cmd cluster health --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
   echo "ERRO: Falha ao verificar saúde do cluster."
   exit 1
 }
 echo ""
 
 echo "=== Tópicos do Cluster ==="
-rpk topic list --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
+rpk_cmd topic list --brokers "$KAFKA_BOOTSTRAP_SERVERS" || {
   echo "ERRO: Falha ao listar tópicos."
   exit 1
 }
@@ -63,7 +71,7 @@ OFFICIAL_TOPICS=(
 )
 
 echo "=== Validação de Tópicos Oficiais ==="
-EXISTING_TOPICS=$(rpk topic list --brokers "$KAFKA_BOOTSTRAP_SERVERS" 2>/dev/null | awk 'NR>1{print $1}')
+EXISTING_TOPICS=$(rpk_cmd topic list --brokers "$KAFKA_BOOTSTRAP_SERVERS" 2>/dev/null | awk 'NR>1{print $1}')
 MISSING=0
 
 for TOPIC in "${OFFICIAL_TOPICS[@]}"; do

@@ -9,6 +9,14 @@
 
 set -e
 
+rpk_cmd() {
+  if command -v rpk &> /dev/null; then
+    rpk "$@"
+  else
+    docker run --rm -i --network host docker.redpanda.com/redpandadata/redpanda:latest rpk "$@"
+  fi
+}
+
 if [ -z "$KAFKA_BOOTSTRAP_SERVERS" ]; then
   echo "ERRO: KAFKA_BOOTSTRAP_SERVERS não está definido."
   echo ""
@@ -21,7 +29,7 @@ fi
 echo "Aguardando cluster Redpanda ficar disponível em $KAFKA_BOOTSTRAP_SERVERS..."
 RETRIES=30
 COUNT=0
-while ! rpk cluster info --brokers "$KAFKA_BOOTSTRAP_SERVERS" > /dev/null 2>&1; do
+while ! rpk_cmd cluster info --brokers "$KAFKA_BOOTSTRAP_SERVERS" > /dev/null 2>&1; do
   COUNT=$((COUNT + 1))
   if [ "$COUNT" -ge "$RETRIES" ]; then
     echo "ERRO: Cluster Redpanda não ficou disponível após $RETRIES tentativas."
@@ -58,12 +66,12 @@ echo ""
 
 for TOPIC in "${TOPICS[@]}"; do
   echo "  Criando tópico: $TOPIC"
-  rpk topic create "$TOPIC" --brokers "$KAFKA_BOOTSTRAP_SERVERS" -p "$PARTITIONS" -r "$REPLICATION_FACTOR" || true
+  rpk_cmd topic create "$TOPIC" --brokers "$KAFKA_BOOTSTRAP_SERVERS" -p "$PARTITIONS" -r "$REPLICATION_FACTOR" || true
 done
 
 echo ""
 echo "Tópicos criados. Listando tópicos do cluster:"
-rpk topic list --brokers "$KAFKA_BOOTSTRAP_SERVERS"
+rpk_cmd topic list --brokers "$KAFKA_BOOTSTRAP_SERVERS"
 
 # Nota: Se o cluster tiver menos de 3 brokers ativos no momento da criação,
 # o comando rpk topic create com -r 3 pode falhar com erro de replicação.
