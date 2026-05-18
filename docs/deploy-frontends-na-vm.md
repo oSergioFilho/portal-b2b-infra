@@ -238,7 +238,6 @@ http://34.59.229.37:8088  (logistica-front — diagnóstico)
 | Demanda / Pedidos | 5004 / 5007 | 8084 (unificados no demandas-front) |
 | Mercado | 5005 | 8085 |
 | Negociação | 5006 | 8086 |
-| Pedidos | 5007 | - (integrado ao front de demandas) |
 | Logística | 5008 | 8088 |
 
 **Observação:**
