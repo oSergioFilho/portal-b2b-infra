@@ -133,11 +133,16 @@ http://34.8.17.245/pgadmin/
 | demanda-service | ✅ Integrado | http://34.8.17.245/api/demandas/health |
 | mercado-service | ⏳ Aguardando deploy | http://34.8.17.245/api/mercado/health |
 | negociacao-service | ⏳ Aguardando deploy | http://34.8.17.245/api/negociacoes/health |
-| pedidos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/pedidos/health |
+| pedidos-service | ✅ Integrado | http://34.8.17.245/api/pedidos/health |
 
 > **Nota sobre Transportadoras:** Não existe mais o microsserviço `transportadoras-service` separado. A parte de transporte/transportadoras está integrada ao módulo de **Logística**.
 > - Front logística: http://34.8.17.245/logistica/ (Porta: 8088)
 > - API logística: http://34.8.17.245/api/logistica/ (Porta: 5008)
+
+> **Nota sobre Demandas e Pedidos:** O front-end de **Demandas** e **Pedidos** foi unificado em uma única interface (servida pelo `demandas-front`). O microsserviço `pedidos-service` foi implementado e integrado no back-end. Não há um front-end standalone para Pedidos.
+> - Front unificado (Demandas/Pedidos): http://34.8.17.245/demandas/ (Porta: 8084)
+> - API demandas: http://34.8.17.245/api/demandas/ (Porta: 5004)
+> - API pedidos: http://34.8.17.245/api/pedidos/ (Porta: 5007)
 
 ---
 
@@ -147,6 +152,7 @@ http://34.8.17.245/pgadmin/
 |---|---|---|---|
 | Portal principal (portal-front / usuários) | 8082 | http://34.8.17.245/ | ✅ Validado |
 | Front produtos | 8081 | http://34.8.17.245/produtos/ | ✅ Validado |
+| Front demandas/pedidos (unificados) | 8084 | http://34.8.17.245/demandas/ | ✅ Validado |
 | Front logística | 8088 | http://34.8.17.245/logistica/ | ✅ Validado |
 
 ---
@@ -201,8 +207,10 @@ Os seguintes serviços compõem a infraestrutura central:
 - [x] produtos-service validado nas duas VMs
 - [x] logistica-service validado nas duas VMs
 - [x] demanda-service validado nas duas VMs
+- [x] pedidos-service validado nas duas VMs
 - [x] Front principal (portal-front) validado na rota /
 - [x] Front produtos validado na rota /produtos/
+- [x] Front demandas/pedidos (unificados) validado na rota /demandas/
 - [x] Front logística validado na rota /logistica/
 - [x] Cloud SQL acessível pelas duas VMs
 - [x] sync-redundant.sh validado

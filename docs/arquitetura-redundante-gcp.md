@@ -197,9 +197,12 @@ O Load Balancer cobre a porta 80/Gateway. Serviços expostos em portas diretas (
 curl http://34.8.17.245/health
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
+curl http://34.8.17.245/api/demandas/health
+curl http://34.8.17.245/api/pedidos/health
 curl http://34.8.17.245/api/logistica/health
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/demandas/
 curl -I http://34.8.17.245/logistica/
 ```
 

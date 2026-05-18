@@ -24,11 +24,14 @@ http://34.8.17.245
 | Health Gateway | http://34.8.17.245/health | Acesso oficial |
 | Portal principal | http://34.8.17.245/ | Front principal (portal-front / usuários) |
 | Front produtos | http://34.8.17.245/produtos/ | Acesso oficial |
+| Front demandas/pedidos | http://34.8.17.245/demandas/ | Front unificado (demandas-front) |
 | Front logística | http://34.8.17.245/logistica/ | Acesso oficial |
 | PgAdmin | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
 | usuarios-service | http://34.8.17.245/api/usuarios/health | Integrado |
 | produtos-service | http://34.8.17.245/api/produtos/health | Integrado |
 | logistica-service | http://34.8.17.245/api/logistica/health | Integrado |
+| demanda-service | http://34.8.17.245/api/demandas/health | Integrado |
+| pedidos-service | http://34.8.17.245/api/pedidos/health | Integrado |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
@@ -103,12 +106,17 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 - produtos-service (**integrado**)
 - logistica-service (**integrado**)
 - demanda-service (**integrado**)
+- pedidos-service (**integrado**)
 - fornecimentos-service
 - mercado-service
 - negociacao-service
-- pedidos-service
 
 > **Aviso sobre Transportadoras:** Não existe mais `transportadoras-service` separado. A parte de transporte/transportadoras está integrada ao módulo de Logística (`logistica-service`, porta 5008).
+
+> **Aviso sobre Demandas e Pedidos:** O front-end de **Demandas** e **Pedidos** foi unificado em uma única interface (servida pelo `demandas-front`). O microsserviço `pedidos-service` foi implementado e integrado no back-end. Não há um front-end standalone para Pedidos.
+> - Front unificado (Demandas/Pedidos): http://34.8.17.245/demandas/ (Porta front unificado: 8084)
+> - API demandas: http://34.8.17.245/api/demandas/ (Porta API demandas: 5004)
+> - API pedidos: http://34.8.17.245/api/pedidos/ (Porta API pedidos: 5007)
 
 ---
 
@@ -708,6 +716,11 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 - Porta `5007`
 - Gateway `/api/pedidos/`
 - Eventos `pedido_criado`, `pedido_atualizado`
+> **Aviso Importante sobre Pedidos e Demandas:**
+> - Não existe mais um front-end standalone de Pedidos (`pedidos-front`).
+> - A interface visual foi unificada e integrada sob o front-end de **Demandas** (`demandas-front`).
+> - Front unificado (Demandas/Pedidos): http://34.8.17.245/demandas/ (Porta front unificado: 8084)
+> - API pedidos: http://34.8.17.245/api/pedidos/ (Porta API pedidos: 5007)
 
 ### Logística
 - Porta `5008`

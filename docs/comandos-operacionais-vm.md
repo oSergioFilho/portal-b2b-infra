@@ -149,6 +149,7 @@ curl http://localhost:5008/health   # logistica-service
 ```bash
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
+curl -I http://34.8.17.245/demandas/
 curl -I http://34.8.17.245/logistica/
 curl -I http://34.8.17.245/pgadmin/
 ```
@@ -159,6 +160,7 @@ curl -I http://34.8.17.245/pgadmin/
 |---|---|
 | Portal principal | http://34.8.17.245/ |
 | Produtos | http://34.8.17.245/produtos/ |
+| Demandas / Pedidos (unificados) | http://34.8.17.245/demandas/ |
 | Logística | http://34.8.17.245/logistica/ |
 | PgAdmin | http://34.8.17.245/pgadmin/ |
 
@@ -171,6 +173,7 @@ curl -I http://34.8.17.245/pgadmin/
 ```bash
 curl -I http://34.29.84.207:8082   # portal-front
 curl -I http://34.29.84.207:8081   # produtos-front
+curl -I http://34.29.84.207:8084   # demandas-front
 curl -I http://34.29.84.207:8088   # logistica-front
 ```
 
@@ -179,6 +182,7 @@ curl -I http://34.29.84.207:8088   # logistica-front
 ```bash
 curl -I http://34.59.229.37:8082   # portal-front
 curl -I http://34.59.229.37:8081   # produtos-front
+curl -I http://34.59.229.37:8084   # demandas-front
 curl -I http://34.59.229.37:8088   # logistica-front
 ```
 
@@ -188,6 +192,7 @@ curl -I http://34.59.229.37:8088   # logistica-front
 |---|---|
 | portal-front | 8082 |
 | produtos-front | 8081 |
+| demandas-front (unificado) | 8084 |
 | logistica-front | 8088 |
 
 ---

@@ -210,6 +210,7 @@ Depois do deploy, os acessos oficiais são pelos caminhos no Load Balancer:
 |---|---|
 | Portal principal (usuários) | http://34.8.17.245/ |
 | Produtos | http://34.8.17.245/produtos/ |
+| Demandas / Pedidos (unificados) | http://34.8.17.245/demandas/ |
 | Logística | http://34.8.17.245/logistica/ |
 
 Os acessos diretos pelas portas das VMs devem ser usados apenas como diagnóstico:
@@ -217,9 +218,11 @@ Os acessos diretos pelas portas das VMs devem ser usados apenas como diagnóstic
 ```text
 http://34.29.84.207:8082  (portal-front — diagnóstico)
 http://34.29.84.207:8081  (produtos-front — diagnóstico)
+http://34.29.84.207:8084  (demandas-front — diagnóstico)
 http://34.29.84.207:8088  (logistica-front — diagnóstico)
 http://34.59.229.37:8082  (portal-front — diagnóstico)
 http://34.59.229.37:8081  (produtos-front — diagnóstico)
+http://34.59.229.37:8084  (demandas-front — diagnóstico)
 http://34.59.229.37:8088  (logistica-front — diagnóstico)
 ```
 
@@ -232,10 +235,10 @@ http://34.59.229.37:8088  (logistica-front — diagnóstico)
 | Usuários | 5001 | 8082 |
 | Produtos | 5002 | 8081 |
 | Fornecimentos | 5003 | 8083 |
-| Demanda | 5004 | 8084 |
+| Demanda / Pedidos | 5004 / 5007 | 8084 (unificados no demandas-front) |
 | Mercado | 5005 | 8085 |
 | Negociação | 5006 | 8086 |
-| Pedidos | 5007 | 8087 |
+| Pedidos | 5007 | - (integrado ao front de demandas) |
 | Logística | 5008 | 8088 |
 
 **Observação:**

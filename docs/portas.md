@@ -21,10 +21,10 @@
 - **produtos-front:** `8081`
 - **portal-front / usuarios-front:** `8082`
 - **fornecimentos-front:** `8083`
-- **demandas-front:** `8084`
+- **demandas-front (Demandas/Pedidos unificados):** `8084`
 - **mercado-front:** `8085`
 - **negociacao-front:** `8086`
-- **pedidos-front:** `8087`
+- **pedidos-front (desativado / integrado ao demandas-front):** `8087`
 - **logistica-front:** `8088`
 
 ## Microsserviços (APIs)

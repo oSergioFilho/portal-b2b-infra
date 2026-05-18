@@ -31,6 +31,9 @@ Container do microsserviço
 Rotas principais documentadas:
 - `/api/produtos/` -> `host.docker.internal:5002`
 - `/produtos/` -> `host.docker.internal:8081`
+- `/api/demandas/` -> `host.docker.internal:5004`
+- `/api/pedidos/` -> `host.docker.internal:5007`
+- `/demandas/` -> `host.docker.internal:8084` (Front unificado Demandas/Pedidos)
 
 Para o Gateway conseguir acessar o container do microsserviço, o docker-compose.yml do microsserviço precisa publicar a porta oficial no host da VM.
 
