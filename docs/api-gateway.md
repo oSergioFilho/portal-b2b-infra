@@ -31,6 +31,8 @@ Container do microsserviço
 Rotas principais documentadas:
 - `/api/produtos/` -> `host.docker.internal:5002`
 - `/produtos/` -> `host.docker.internal:8081`
+- `/api/fornecimentos/` -> `host.docker.internal:5003`
+- `/fornecimentos/` -> `host.docker.internal:8083` (com redirect ativo de `/fornecimentos`)
 - `/api/demandas/` -> `host.docker.internal:5004`
 - `/api/pedidos/` -> `host.docker.internal:5007`
 - `/demandas/` -> `host.docker.internal:8084` (Front unificado Demandas/Pedidos)
@@ -62,6 +64,8 @@ Este é o **padrão oficial**:
 **Exemplos de Roteamento:**
 - `GET http://34.8.17.245/api/produtos/health` -> `produtos-service` recebe `GET /health` na porta `5002`.
 - `GET http://34.8.17.245/api/pedidos/health` -> `pedidos-service` recebe `GET /health` na porta `5007`.
+- `GET http://34.8.17.245/api/fornecimentos/health` -> `fornecimentos-service` recebe `GET /health` na porta `5003`.
+- `GET http://34.8.17.245/fornecimentos` -> Redireciona via HTTP 301 para `http://34.8.17.245/fornecimentos/` que por sua vez faz proxy para `host.docker.internal:8083`.
 
 As portas e URLs diretas das VMs, como `http://34.29.84.207` e `http://34.59.229.37`, servem apenas como diagnóstico direto.
 

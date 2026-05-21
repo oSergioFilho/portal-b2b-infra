@@ -118,9 +118,12 @@ curl http://34.8.17.245/health
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
 curl http://34.8.17.245/api/logistica/health
+curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/logistica/
+curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 ```
 
 Também é possível testar diretamente nas VMs (somente diagnóstico):
@@ -202,9 +205,12 @@ curl http://34.8.17.245/health
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
 curl http://34.8.17.245/api/logistica/health
+curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/logistica/
+curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 ```
 
 Retornos esperados:
@@ -214,9 +220,11 @@ API Gateway do Portal B2B ativo
 {"status":"ok","service":"usuarios-service"}
 {"status":"ok","service":"produtos-service"}
 {"status":"ok","service":"logistica-service"}
+{"status":"ok","service":"fornecimentos-service"}
 HTTP 200 (front principal)
 HTTP 200 (front produtos)
 HTTP 200 (front logística)
+HTTP 200 (front fornecimentos)
 ```
 
 ## 13. Configuração SSH entre as VMs

@@ -116,12 +116,14 @@ http://34.8.17.245
 | Front produtos | http://34.8.17.245/produtos/ | Acesso oficial |
 | Front demandas/pedidos | http://34.8.17.245/demandas/ | Front unificado (demandas-front) |
 | Front logística | http://34.8.17.245/logistica/ | Acesso oficial |
+| Front fornecimentos | http://34.8.17.245/fornecimentos/ | Acesso oficial (redirect de /fornecimentos) |
 | PgAdmin | http://34.8.17.245/pgadmin/ | Ferramenta de apoio via Load Balancer |
 | usuarios-service | http://34.8.17.245/api/usuarios/health | Integrado |
 | produtos-service | http://34.8.17.245/api/produtos/health | Integrado |
 | logistica-service | http://34.8.17.245/api/logistica/health | Integrado |
 | demanda-service | http://34.8.17.245/api/demandas/health | Integrado |
 | pedidos-service | http://34.8.17.245/api/pedidos/health | Integrado |
+| fornecimentos-service | http://34.8.17.245/api/fornecimentos/health | Integrado |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
@@ -339,10 +341,12 @@ Componentes atuais:
 | logistica-service | `http://34.8.17.245/api/logistica/health` | Integrado |
 | demanda-service | `http://34.8.17.245/api/demandas/health` | Integrado |
 | pedidos-service | `http://34.8.17.245/api/pedidos/health` | Integrado |
+| fornecimentos-service | `http://34.8.17.245/api/fornecimentos/health` | Integrado |
 | Portal principal | `http://34.8.17.245/` | Validado |
 | Front produtos | `http://34.8.17.245/produtos/` | Validado |
 | Front demandas/pedidos (unificados) | `http://34.8.17.245/demandas/` | Validado |
 | Front logística | `http://34.8.17.245/logistica/` | Validado |
+| Front fornecimentos | `http://34.8.17.245/fornecimentos/` | Validado |
 
 Fluxo atual:
 
@@ -369,6 +373,8 @@ http://34.8.17.245/             (portal principal)
 http://34.8.17.245/produtos/    (front produtos)
 http://34.8.17.245/demandas/    (front demandas/pedidos)
 http://34.8.17.245/logistica/   (front logística)
+http://34.8.17.245/fornecimentos/ (front fornecimentos)
+http://34.8.17.245/fornecimentos (redirect para /fornecimentos/)
 http://34.8.17.245/pgadmin/     (PgAdmin)
 http://34.8.17.245/health       (health do Gateway)
 ```
@@ -380,6 +386,7 @@ http://34.8.17.245/api/usuarios/health
 http://34.8.17.245/api/produtos/health
 http://34.8.17.245/api/logistica/health
 http://34.8.17.245/api/pedidos/health
+http://34.8.17.245/api/fornecimentos/health
 ```
 
 Acessos diretos às VMs são apenas para diagnóstico:

@@ -237,6 +237,34 @@ Resposta esperada:
 
 ---
 
+### fornecimentos-service
+
+**Teste oficial pelo Load Balancer:**
+```bash
+curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
+```
+
+**Teste direto na VM principal, diagnóstico:**
+```bash
+curl http://34.29.84.207/api/fornecimentos/health
+curl http://34.29.84.207/api/fornecimentos/health/db
+```
+
+**Teste direto na VM standby, diagnóstico:**
+```bash
+curl http://34.59.229.37/api/fornecimentos/health
+curl http://34.59.229.37/api/fornecimentos/health/db
+```
+
+Resposta esperada:
+
+```json
+{"status":"ok","service":"fornecimentos-service"}
+```
+
+---
+
 ## 11. Testar todos os microsserviços
 
 ```bash
@@ -248,6 +276,7 @@ bash scripts/check-services.sh
 - `usuarios-service` — integrado ✅
 - `produtos-service` — integrado ✅
 - `logistica-service` — integrado ✅
+- `fornecimentos-service` — integrado ✅
 
 > **Observação:** Os demais serviços ainda aguardam deploy e podem retornar HTTP 502.
 
@@ -269,6 +298,8 @@ API Gateway do Portal B2B ativo
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
 curl http://34.8.17.245/api/logistica/health
+curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
 ```
 
 Resposta esperada para cada:
@@ -286,21 +317,24 @@ Resposta esperada para cada:
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/logistica/
+curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 curl -I http://34.8.17.245/pgadmin/
 ```
 
 **Teste direto na VM principal, somente diagnóstico:**
 ```bash
-curl -I http://34.29.84.207:8082
-curl -I http://34.29.84.207:8081
-curl -I http://34.29.84.207:8088
+curl -I http://34.29.84.207:8082   # portal-front
+curl -I http://34.29.84.207:8081   # produtos-front
+curl -I http://34.29.84.207:8088   # logistica-front
+curl -I http://34.29.84.207:8083   # fornecimentos-front
 ```
 
 **Teste direto na VM standby, somente diagnóstico:**
 ```bash
-curl -I http://34.59.229.37:8082
-curl -I http://34.59.229.37:8081
-curl -I http://34.59.229.37:8088
+curl -I http://34.59.229.37:8082   # portal-front
+curl -I http://34.59.229.37:8081   # produtos-front
+curl -I http://34.59.229.37:8088   # logistica-front
+curl -I http://34.59.229.37:8083   # fornecimentos-front
 ```
 
 **Resultado esperado:**
@@ -308,6 +342,7 @@ curl -I http://34.59.229.37:8088
 - Portal principal (/) → portal-front (porta 8082).
 - Front produtos (/produtos/) → produtos-front (porta 8081).
 - Front logística (/logistica/) → logistica-front (porta 8088).
+- Front fornecimentos (/fornecimentos/) → fornecimentos-front (porta 8083).
 
 ---
 
@@ -335,6 +370,8 @@ curl http://34.59.229.37/health
 curl http://34.59.229.37/api/usuarios/health
 curl http://34.59.229.37/api/produtos/health
 curl http://34.59.229.37/api/logistica/health
+curl http://34.59.229.37/api/fornecimentos/health
+curl http://34.59.229.37/api/fornecimentos/health/db
 ```
 
 Resultado esperado: mesmas respostas que a VM principal.
@@ -357,9 +394,11 @@ A infraestrutura atual está validada quando:
 - [ ] `usuarios-service` responde pelo Load Balancer.
 - [ ] `produtos-service` responde pelo Load Balancer.
 - [ ] `logistica-service` responde pelo Load Balancer.
+- [ ] `fornecimentos-service` responde pelo Load Balancer.
 - [ ] Portal principal responde pelo Load Balancer em `/`.
 - [ ] Front produtos responde pelo Load Balancer em `/produtos/`.
 - [ ] Front logística responde pelo Load Balancer em `/logistica/`.
+- [ ] Front fornecimentos responde pelo Load Balancer em `/fornecimentos/`.
 - [ ] Backends do Load Balancer estão HEALTHY.
 - [ ] `check-infra.sh` conclui sem erro crítico.
 - [ ] `check-services.sh` mostra OK para os serviços já deployados.
@@ -391,9 +430,12 @@ curl http://34.8.17.245/health
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
 curl http://34.8.17.245/api/logistica/health
+curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/logistica/
+curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 ```
 
 Resultado esperado:
@@ -403,7 +445,9 @@ API Gateway do Portal B2B ativo
 {"status":"ok","service":"usuarios-service"}
 {"status":"ok","service":"produtos-service"}
 {"status":"ok","service":"logistica-service"}
+{"status":"ok","service":"fornecimentos-service"}
 HTTP 200 (front principal)
 HTTP 200 (front produtos)
 HTTP 200 (front logística)
+HTTP 200 (front fornecimentos)
 ```

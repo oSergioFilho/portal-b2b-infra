@@ -32,6 +32,8 @@ http://34.8.17.245
 | logistica-service | http://34.8.17.245/api/logistica/health | Integrado |
 | demanda-service | http://34.8.17.245/api/demandas/health | Integrado |
 | pedidos-service | http://34.8.17.245/api/pedidos/health | Integrado |
+| fornecimentos-service | http://34.8.17.245/api/fornecimentos/health | Integrado |
+| Front fornecimentos | http://34.8.17.245/fornecimentos/ | Acesso oficial (redirect de /fornecimentos) |
 | VM principal | http://34.29.84.207 | Diagnóstico direto |
 | VM standby | http://34.59.229.37 | Diagnóstico direto |
 | Kafka UI principal | http://34.29.84.207:8080 | Ferramenta de apoio |
@@ -107,7 +109,7 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 - logistica-service (**integrado**)
 - demanda-service (**integrado**)
 - pedidos-service (**integrado**)
-- fornecimentos-service
+- fornecimentos-service (**integrado**)
 - mercado-service
 - negociacao-service
 

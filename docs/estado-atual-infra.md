@@ -33,6 +33,7 @@ Cloud SQL PostgreSQL - 136.114.235.212
 | Portal principal | `http://34.8.17.245/` | Front principal (portal-front) via Load Balancer | ✅ Validado |
 | Front produtos | `http://34.8.17.245/produtos/` | Front publicado via Gateway/Load Balancer | ✅ Validado |
 | Front logística | `http://34.8.17.245/logistica/` | Front publicado via Gateway/Load Balancer | ✅ Validado |
+| Front fornecimentos | `http://34.8.17.245/fornecimentos/` | Front publicado via Gateway/Load Balancer | ✅ Integrado (redirect de /fornecimentos) |
 | PgAdmin | `http://34.8.17.245/pgadmin/` | Ferramenta de apoio via Load Balancer | ✅ Implementado |
 | Uptime Kuma | `http://34.59.229.37:3001` | Painel de status | ✅ Implementado |
 | Status Page | `http://34.59.229.37:3001/status/portal-b2b-status` | Página pública de status | ✅ Implementado |
@@ -112,9 +113,12 @@ http://34.8.17.245/health
 http://34.8.17.245/api/usuarios/health
 http://34.8.17.245/api/produtos/health
 http://34.8.17.245/api/logistica/health
+http://34.8.17.245/api/fornecimentos/health
 http://34.8.17.245/
 http://34.8.17.245/produtos/
 http://34.8.17.245/logistica/
+http://34.8.17.245/fornecimentos/
+http://34.8.17.245/fornecimentos
 http://34.8.17.245/pgadmin/
 ```
 
@@ -129,7 +133,7 @@ http://34.8.17.245/pgadmin/
 | usuarios-service | ✅ Integrado | http://34.8.17.245/api/usuarios/health |
 | produtos-service | ✅ Integrado | http://34.8.17.245/api/produtos/health |
 | logistica-service | ✅ Integrado | http://34.8.17.245/api/logistica/health |
-| fornecimentos-service | ⏳ Aguardando deploy | http://34.8.17.245/api/fornecimentos/health |
+| fornecimentos-service | ✅ Integrado | http://34.8.17.245/api/fornecimentos/health |
 | demanda-service | ✅ Integrado | http://34.8.17.245/api/demandas/health |
 | mercado-service | ⏳ Aguardando deploy | http://34.8.17.245/api/mercado/health |
 | negociacao-service | ⏳ Aguardando deploy | http://34.8.17.245/api/negociacoes/health |
@@ -154,6 +158,7 @@ http://34.8.17.245/pgadmin/
 | Front produtos | 8081 | http://34.8.17.245/produtos/ | ✅ Validado |
 | Front demandas/pedidos (unificados) | 8084 | http://34.8.17.245/demandas/ | ✅ Validado |
 | Front logística | 8088 | http://34.8.17.245/logistica/ | ✅ Validado |
+| fornecimentos-front | 8083 | http://34.8.17.245/fornecimentos/ | ✅ Integrado |
 
 ---
 
@@ -208,10 +213,12 @@ Os seguintes serviços compõem a infraestrutura central:
 - [x] logistica-service validado nas duas VMs
 - [x] demanda-service validado nas duas VMs
 - [x] pedidos-service validado nas duas VMs
+- [x] fornecimentos-service validado nas duas VMs
 - [x] Front principal (portal-front) validado na rota /
 - [x] Front produtos validado na rota /produtos/
 - [x] Front demandas/pedidos (unificados) validado na rota /demandas/
 - [x] Front logística validado na rota /logistica/
+- [x] Front fornecimentos (fornecimentos-front) validado na rota /fornecimentos/
 - [x] Cloud SQL acessível pelas duas VMs
 - [x] sync-redundant.sh validado
 - [x] Deploy redundante documentado

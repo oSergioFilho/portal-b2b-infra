@@ -99,6 +99,7 @@ curl http://localhost/health
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
 curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
 curl http://34.8.17.245/api/demandas/health
 curl http://34.8.17.245/api/mercado/health
 curl http://34.8.17.245/api/negociacoes/health
@@ -112,6 +113,8 @@ curl http://34.8.17.245/api/logistica/health
 curl http://localhost/api/usuarios/health
 curl http://localhost/api/produtos/health
 curl http://localhost/api/logistica/health
+curl http://localhost/api/fornecimentos/health
+curl http://localhost/api/fornecimentos/health/db
 ```
 
 ---
@@ -151,6 +154,7 @@ curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/demandas/
 curl -I http://34.8.17.245/logistica/
+curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 curl -I http://34.8.17.245/pgadmin/
 ```
 
@@ -162,6 +166,7 @@ curl -I http://34.8.17.245/pgadmin/
 | Produtos | http://34.8.17.245/produtos/ |
 | Demandas / Pedidos (unificados) | http://34.8.17.245/demandas/ |
 | Logística | http://34.8.17.245/logistica/ |
+| Fornecimentos | http://34.8.17.245/fornecimentos/ |
 | PgAdmin | http://34.8.17.245/pgadmin/ |
 
 ---
@@ -175,6 +180,7 @@ curl -I http://34.29.84.207:8082   # portal-front
 curl -I http://34.29.84.207:8081   # produtos-front
 curl -I http://34.29.84.207:8084   # demandas-front
 curl -I http://34.29.84.207:8088   # logistica-front
+curl -I http://34.29.84.207:8083   # fornecimentos-front
 ```
 
 **VM standby:**
@@ -184,6 +190,7 @@ curl -I http://34.59.229.37:8082   # portal-front
 curl -I http://34.59.229.37:8081   # produtos-front
 curl -I http://34.59.229.37:8084   # demandas-front
 curl -I http://34.59.229.37:8088   # logistica-front
+curl -I http://34.59.229.37:8083   # fornecimentos-front
 ```
 
 **Tabela de portas dos fronts:**
@@ -192,6 +199,7 @@ curl -I http://34.59.229.37:8088   # logistica-front
 |---|---|
 | portal-front | 8082 |
 | produtos-front | 8081 |
+| fornecimentos-front | 8083 |
 | demandas-front (unificado) | 8084 |
 | logistica-front | 8088 |
 
@@ -223,7 +231,9 @@ docker ps -a
 docker logs --tail=100 usuarios-service
 docker logs --tail=100 produtos-service
 docker logs --tail=100 logistica-service
+docker logs --tail=100 fornecimentos-service
 docker logs --tail=100 logistica-front
+docker logs --tail=100 fornecimentos-front
 docker logs --tail=100 portal-front
 docker logs --tail=100 portal-b2b-nginx-gateway
 docker logs --tail=100 portal-b2b-redpanda
@@ -245,7 +255,9 @@ docker restart portal-b2b-redpanda
 docker restart usuarios-service
 docker restart produtos-service
 docker restart logistica-service
+docker restart fornecimentos-service
 docker restart logistica-front
+docker restart fornecimentos-front
 ```
 
 ---
@@ -321,6 +333,8 @@ curl http://localhost/health
 curl http://localhost/api/usuarios/health
 curl http://localhost/api/produtos/health
 curl http://localhost/api/logistica/health
+curl http://localhost/api/fornecimentos/health
+curl http://localhost/api/fornecimentos/health/db
 '
 ```
 
@@ -344,6 +358,7 @@ docker inspect portal-b2b-redpanda --format '{{.HostConfig.RestartPolicy.Name}}'
 docker inspect portal-b2b-nginx-gateway --format '{{.HostConfig.RestartPolicy.Name}}'
 docker inspect usuarios-service --format '{{.HostConfig.RestartPolicy.Name}}'
 docker inspect logistica-service --format '{{.HostConfig.RestartPolicy.Name}}'
+docker inspect fornecimentos-service --format '{{.HostConfig.RestartPolicy.Name}}'
 ```
 
 > O valor esperado para todos é: `unless-stopped`
@@ -509,9 +524,12 @@ curl http://34.8.17.245/health
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
 curl http://34.8.17.245/api/logistica/health
+curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/logistica/
+curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 curl -I http://34.8.17.245/pgadmin/
 ```
 
@@ -562,6 +580,20 @@ curl -I http://34.8.17.245/logistica/
 ```bash
 curl http://34.8.17.245/api/produtos/health
 curl -I http://34.8.17.245/produtos/
+```
+
+**Deploy fornecimentos-service:**
+
+```bash
+bash scripts/deploy-service-redundant.sh fornecimentos-service https://github.com/theudevs/fornecimentos-service.git
+```
+
+**Testar fornecimentos:**
+
+```bash
+curl http://34.8.17.245/api/fornecimentos/health
+curl http://34.8.17.245/api/fornecimentos/health/db
+curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 ```
 
 ---
