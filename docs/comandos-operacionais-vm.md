@@ -155,6 +155,8 @@ curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/demandas/
 curl -I http://34.8.17.245/logistica/
+curl -I http://34.8.17.245/mercado/
+curl -I http://34.8.17.245/negociacao/
 curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 curl -I http://34.8.17.245/pgadmin/
 ```
@@ -167,6 +169,8 @@ curl -I http://34.8.17.245/pgadmin/
 | Produtos | http://34.8.17.245/produtos/ |
 | Demandas / Pedidos (unificados) | http://34.8.17.245/demandas/ |
 | Logística | http://34.8.17.245/logistica/ |
+| Mercado | http://34.8.17.245/mercado/ |
+| Negociação | http://34.8.17.245/negociacao/ |
 | Fornecimentos | http://34.8.17.245/fornecimentos/ |
 | PgAdmin | http://34.8.17.245/pgadmin/ |
 
@@ -181,6 +185,8 @@ curl -I http://34.29.84.207:8082   # portal-front
 curl -I http://34.29.84.207:8081   # produtos-front
 curl -I http://34.29.84.207:8084   # demandas-front
 curl -I http://34.29.84.207:8088   # logistica-front
+curl -I http://34.29.84.207:8085   # mercado-web
+curl -I http://34.29.84.207:8086   # negociacao-web
 curl -I http://34.29.84.207:8083   # fornecimentos-front
 ```
 
@@ -191,6 +197,8 @@ curl -I http://34.59.229.37:8082   # portal-front
 curl -I http://34.59.229.37:8081   # produtos-front
 curl -I http://34.59.229.37:8084   # demandas-front
 curl -I http://34.59.229.37:8088   # logistica-front
+curl -I http://34.59.229.37:8085   # mercado-web
+curl -I http://34.59.229.37:8086   # negociacao-web
 curl -I http://34.59.229.37:8083   # fornecimentos-front
 ```
 
@@ -202,6 +210,8 @@ curl -I http://34.59.229.37:8083   # fornecimentos-front
 | produtos-front | 8081 |
 | fornecimentos-front | 8083 |
 | demandas-front (unificado) | 8084 |
+| mercado-web | 8085 |
+| negociacao-web | 8086 |
 | logistica-front | 8088 |
 
 ---
@@ -525,11 +535,15 @@ curl http://34.8.17.245/health
 curl http://34.8.17.245/api/usuarios/health
 curl http://34.8.17.245/api/produtos/health
 curl http://34.8.17.245/api/logistica/health
+curl http://34.8.17.245/api/mercado/health
+curl http://34.8.17.245/api/negociacoes/health
 curl http://34.8.17.245/api/fornecimentos/health
 curl http://34.8.17.245/api/fornecimentos/health/db
 curl -I http://34.8.17.245/
 curl -I http://34.8.17.245/produtos/
 curl -I http://34.8.17.245/logistica/
+curl -I http://34.8.17.245/mercado/
+curl -I http://34.8.17.245/negociacao/
 curl -IL --max-redirs 10 http://34.8.17.245/fornecimentos/
 curl -I http://34.8.17.245/pgadmin/
 ```

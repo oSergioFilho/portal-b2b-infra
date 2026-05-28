@@ -16,10 +16,14 @@ VM standby:
 | API Gateway oficial | http://34.8.17.245 |
 | Health oficial | http://34.8.17.245/health |
 | produtos-service oficial | http://34.8.17.245/api/produtos/health |
+| mercado-service oficial | http://34.8.17.245/api/mercado/health |
+| negociacao-service oficial | http://34.8.17.245/api/negociacoes/health |
 | fornecimentos-service oficial | http://34.8.17.245/api/fornecimentos/health |
 | Front produtos oficial | http://34.8.17.245/produtos/ |
 | Front demandas/pedidos (unificados) | http://34.8.17.245/demandas/ |
 | Front logística oficial | http://34.8.17.245/logistica/ |
+| Front mercado oficial | http://34.8.17.245/mercado/ |
+| Front negociação oficial | http://34.8.17.245/negociacao/ |
 | Front fornecimentos oficial | http://34.8.17.245/fornecimentos/ |
 | PgAdmin (Redundante) | http://34.8.17.245/pgadmin/ |
 | Kafka UI principal | http://34.29.84.207:8080 |
