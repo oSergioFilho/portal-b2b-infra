@@ -63,10 +63,12 @@ bash scripts/sync-redundant.sh
 
 Esse script faz:
 
+- `git restore .` (descarta alterações locais para evitar conflito);
 - `git pull` na VM principal;
 - `docker compose up -d --build` na VM principal;
 - `check-infra.sh` na VM principal;
 - SSH na VM standby;
+- `git restore .` (descarta alterações locais na standby);
 - `git pull` na VM standby;
 - `docker compose up -d --build` na VM standby;
 - `check-infra.sh` na VM standby.

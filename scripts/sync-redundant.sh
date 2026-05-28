@@ -29,6 +29,7 @@ cd "$INFRA_DIR"
 echo "VM principal:"
 hostname
 
+git restore . 2>/dev/null || git checkout -- . 2>/dev/null || true
 git pull origin main
 docker compose up -d --build
 bash scripts/check-infra.sh
@@ -53,6 +54,7 @@ cd "$INFRA_DIR"
 echo "VM standby:"
 hostname
 
+git restore . 2>/dev/null || git checkout -- . 2>/dev/null || true
 git pull origin main
 docker compose up -d --build
 bash scripts/check-infra.sh

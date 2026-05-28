@@ -46,6 +46,7 @@ bash scripts/sync-redundant.sh
 ```
 
 > Esse comando atualiza a infraestrutura da VM standby a partir da VM principal. Execute sempre após alterações em `nginx.conf`, `docker-compose.yml` ou qualquer arquivo da infra.
+> **Nota:** Este script descarta automaticamente (via `git restore`) qualquer alteração local não commitada nas VMs antes de atualizar, garantindo que o pull nunca falhe por conflitos.
 
 ---
 
