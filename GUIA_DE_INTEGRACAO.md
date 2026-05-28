@@ -110,6 +110,7 @@ O banco oficial é exclusivamente o Cloud SQL PostgreSQL em `136.114.235.212`. O
 - demanda-service (**integrado**)
 - pedidos-service (**integrado**)
 - fornecimentos-service (**integrado**)
+- vendas-service (bundle especial contendo mercado e negociacao)
 - mercado-service
 - negociacao-service
 
@@ -735,6 +736,16 @@ Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou
 > - Front logística: http://34.8.17.245/logistica/ (Porta front logística: 8088)
 > - API logística: http://34.8.17.245/api/logistica/ (Porta API logística: 5008)
 
+### Vendas (Bundle Especial)
+O `vendas-service` não é um microsserviço isolado, mas sim um monorepo (bundle) especial que consolida serviços e front-ends de Mercado e Negociação no mesmo `docker-compose.yml`. Ele publica:
+
+- `/api/mercado/` -> `mercado-service:5005`
+- `/api/negociacoes/` -> `negociacao-service:5006`
+- `/mercado/` -> `mercado-web:8085`
+- `/negociacao/` -> `negociacao-web:8086`
+
+> **Aviso:** O script de deploy redundante trata o `vendas-service` de forma especial. Ele valida apenas `docker-compose.yml` e `.env.example` na raiz, remove containers antigos (para não dar conflito) e roda `docker compose -f docker-compose.yml up -d --build` para subir os 4 containers na rede oficial.
+
 ---
 
 ## 24. Contrato obrigatório do endpoint /health
@@ -783,7 +794,8 @@ curl http://localhost/api/produtos/health
     ├── mercado-service/
     ├── negociacao-service/
     ├── pedidos-service/
-    └── logistica-service/
+    ├── logistica-service/
+    └── vendas-service/
 ```
 
 Cada equipe deve clonar o próprio repositório dentro de `/opt/portal-b2b/services`.

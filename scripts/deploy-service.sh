@@ -46,6 +46,10 @@ case "$SERVICE_NAME" in
     PORT=5008
     DOMAIN="logistica"
     ;;
+  vendas-service)
+    PORT=""
+    DOMAIN=""
+    ;;
 
   *)
     echo "Serviço inválido: $SERVICE_NAME"
@@ -58,6 +62,7 @@ case "$SERVICE_NAME" in
     echo "  - negociacao-service"
     echo "  - pedidos-service"
     echo "  - logistica-service"
+    echo "  - vendas-service"
 
     exit 1
     ;;
@@ -73,6 +78,8 @@ if [ -z "$(ls -A .)" ]; then
   git clone "$REPO_URL" .
 elif [ -d ".git" ]; then
   echo "Repositório já existe. Atualizando..."
+  git fetch origin
+  git checkout main
   git pull origin main
 else
   echo "A pasta $SERVICE_DIR não está vazia e não é um repositório Git."
@@ -80,37 +87,79 @@ else
   exit 1
 fi
 
-for REQUIRED_FILE in Dockerfile docker-compose.yml .env.example; do
-  if [ ! -f "$REQUIRED_FILE" ]; then
-    echo "Arquivo obrigatório não encontrado: $REQUIRED_FILE"
-    echo "A equipe precisa corrigir o repositório antes da integração."
-    exit 1
-  fi
-done
+docker network inspect portal-b2b-network >/dev/null 2>&1 || docker network create portal-b2b-network
+
+if [ "$SERVICE_NAME" == "vendas-service" ]; then
+  for REQUIRED_FILE in docker-compose.yml .env.example; do
+    if [ ! -f "$REQUIRED_FILE" ]; then
+      echo "Arquivo obrigatório não encontrado: $REQUIRED_FILE"
+      echo "A equipe precisa corrigir o repositório antes da integração."
+      exit 1
+    fi
+  done
+else
+  for REQUIRED_FILE in Dockerfile docker-compose.yml .env.example; do
+    if [ ! -f "$REQUIRED_FILE" ]; then
+      echo "Arquivo obrigatório não encontrado: $REQUIRED_FILE"
+      echo "A equipe precisa corrigir o repositório antes da integração."
+      exit 1
+    fi
+  done
+fi
 
 if [ ! -f ".env" ]; then
   echo "Criando .env a partir de .env.example..."
   cp .env.example .env
 fi
 
+if [ "$SERVICE_NAME" == "vendas-service" ]; then
+  echo "Removendo containers antigos do bundle de vendas (mercado, negociacao, mercado-web, negociacao-web)..."
+  docker rm -f mercado-service negociacao-service mercado-web negociacao-web >/dev/null 2>&1 || true
+fi
+
 echo "Subindo container do serviço $SERVICE_NAME..."
-docker compose up -d --build
+docker compose -f docker-compose.yml up -d --build
 
-echo ""
-echo "Logs recentes:"
-docker logs --tail=50 "$SERVICE_NAME" || true
+if [ "$SERVICE_NAME" == "vendas-service" ]; then
+  echo ""
+  echo "Containers rodando no bundle Vendas:"
+  docker compose -f docker-compose.yml ps
+  
+  echo ""
+  echo "Logs recentes:"
+  docker compose -f docker-compose.yml logs --tail=50 || true
+  
+  echo ""
+  echo "Serviço $SERVICE_NAME (bundle) enviado para deploy."
+  echo ""
+  echo "Testes sugeridos (Validação oficial pelo Load Balancer):"
+  echo "  curl http://$LOAD_BALANCER_IP/api/mercado/health"
+  echo "  curl http://$LOAD_BALANCER_IP/api/negociacoes/health"
+  echo "  curl -I http://$LOAD_BALANCER_IP/mercado/"
+  echo "  curl -I http://$LOAD_BALANCER_IP/negociacao/"
+  echo ""
+  echo "Testes diretos locais (VM):"
+  echo "  curl http://localhost:5005/health"
+  echo "  curl http://localhost:5006/health"
+  echo "  curl -I http://localhost:8085"
+  echo "  curl -I http://localhost:8086"
+else
+  echo ""
+  echo "Logs recentes:"
+  docker logs --tail=50 "$SERVICE_NAME" || true
 
-echo ""
-echo "Serviço $SERVICE_NAME enviado para deploy."
-echo ""
-echo "Testes sugeridos:"
-echo "  curl http://localhost:$PORT/health"
-echo "  curl http://localhost/api/$DOMAIN/health"
-echo ""
-echo "Validação oficial pelo Load Balancer:"
-echo "  curl http://$LOAD_BALANCER_IP/api/$DOMAIN/health"
-echo ""
-echo "Teste direto nesta VM, se necessário:"
-echo "  curl http://$VM_IP/api/$DOMAIN/health"
-echo ""
-echo "Se o endpoint /health responder HTTP 200 pelo Load Balancer, o serviço está integrado ao Gateway redundante."
+  echo ""
+  echo "Serviço $SERVICE_NAME enviado para deploy."
+  echo ""
+  echo "Testes sugeridos:"
+  echo "  curl http://localhost:$PORT/health"
+  echo "  curl http://localhost/api/$DOMAIN/health"
+  echo ""
+  echo "Validação oficial pelo Load Balancer:"
+  echo "  curl http://$LOAD_BALANCER_IP/api/$DOMAIN/health"
+  echo ""
+  echo "Teste direto nesta VM, se necessário:"
+  echo "  curl http://$VM_IP/api/$DOMAIN/health"
+  echo ""
+  echo "Se o endpoint /health responder HTTP 200 pelo Load Balancer, o serviço está integrado ao Gateway redundante."
+fi

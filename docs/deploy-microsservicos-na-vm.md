@@ -33,7 +33,8 @@ Inicialmente, será usado o modelo **controlado pela infraestrutura**:
     ├── mercado-service/
     ├── negociacao-service/
     ├── pedidos-service/
-    └── logistica-service/
+    ├── logistica-service/
+    └── vendas-service/
 
 ```
 
@@ -80,6 +81,7 @@ Exemplos reais:
 bash scripts/deploy-service-redundant.sh usuarios-service https://github.com/guilherme-cognitiva/autenticacao-b2b.git
 bash scripts/deploy-service-redundant.sh logistica-service https://github.com/faculdade-sistemas-distribuidos/b2b_logistica.git
 bash scripts/deploy-service-redundant.sh produtos-service https://github.com/PedroVian9/SDI.Micro.Produto
+bash scripts/deploy-service-redundant.sh vendas-service https://github.com/HenriqueSPaixao/portal-b2b-servico-vendas.git
 ```
 
 O script faz deploy na VM principal e depois na VM standby via SSH.
@@ -123,6 +125,24 @@ cp .env.example .env
 docker compose up -d --build
 docker logs -f produtos-service
 ```
+
+### Subindo o bundle de Vendas manualmente
+
+O caso do `vendas-service` é especial por ser um monorepo. Para ele:
+
+```bash
+cd /opt/portal-b2b/services/vendas-service
+git clone LINK_DO_REPOSITORIO .
+cp .env.example .env
+docker compose -f docker-compose.yml up -d --build
+docker compose -f docker-compose.yml ps
+```
+
+O `vendas-service` é um bundle especial que publica:
+- `/api/mercado/` -> `mercado-service:5005`
+- `/api/negociacoes/` -> `negociacao-service:5006`
+- `/mercado/` -> `mercado-web:8085`
+- `/negociacao/` -> `negociacao-web:8086`
 
 ---
 

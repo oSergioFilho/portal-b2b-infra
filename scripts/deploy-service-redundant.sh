@@ -18,6 +18,7 @@ if [ -z "$SERVICE_NAME" ] || [ -z "$REPO_URL" ]; then
   echo ""
   echo "Exemplo:"
   echo "bash scripts/deploy-service-redundant.sh produtos-service https://github.com/PedroVian9/SDI.Micro.Produto"
+  echo "bash scripts/deploy-service-redundant.sh vendas-service https://github.com/HenriqueSPaixao/portal-b2b-servico-vendas.git"
   exit 1
 fi
 
