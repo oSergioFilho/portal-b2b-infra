@@ -55,6 +55,16 @@ echo "Deploy redundante do serviço $SERVICE_NAME concluído nas duas VMs."
 echo ""
 echo "Validação sugerida pelo Load Balancer:"
 echo "curl http://$LOAD_BALANCER_IP/health"
-echo "curl http://$LOAD_BALANCER_IP/api/produtos/health"
+
+if [ "$SERVICE_NAME" == "vendas-service" ]; then
+  echo "curl http://$LOAD_BALANCER_IP/api/mercado/health"
+  echo "curl http://$LOAD_BALANCER_IP/api/negociacoes/health"
+  echo "curl -I http://$LOAD_BALANCER_IP/mercado/"
+  echo "curl -I http://$LOAD_BALANCER_IP/negociacao/"
+else
+  # Extrai o domínio principal do nome do serviço
+  DOMAIN=$(echo "$SERVICE_NAME" | sed -e 's/-service//')
+  if [ "$DOMAIN" == "negociacao" ]; then DOMAIN="negociacoes"; fi
+  echo "curl http://$LOAD_BALANCER_IP/api/$DOMAIN/health"
+fi
 echo ""
-echo "Se o serviço implantado não for produtos-service, teste o endpoint correspondente no Gateway."

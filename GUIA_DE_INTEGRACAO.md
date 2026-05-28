@@ -226,9 +226,9 @@ KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 A execução do microsserviço é **estritamente via Docker**. A execução direta na VM (com `uvicorn`, `npm start`, `java -jar`) deve ficar apenas como alternativa emergencial.
 
 - **Docker é obrigatório para integração.**
-- Cada equipe deve entregar `Dockerfile`.
-- Cada equipe deve entregar `docker-compose.yml`.
-- Cada equipe deve entregar `.env.example`.
+- Cada equipe deve entregar `Dockerfile` (obrigatório para individuais; para bundles como o `vendas-service`, o Dockerfile fica nas pastas internas e não é exigido na raiz).
+- Cada equipe deve entregar `docker-compose.yml` na raiz.
+- Cada equipe deve entregar `.env.example` na raiz.
 - Cada equipe deve subir seu próprio container na VM.
 - A infraestrutura **não instala dependências manualmente**.
 - A infraestrutura **não roda** `pip install`, `npm install`, `maven`, `gradle` etc. para cada equipe.
@@ -637,9 +637,9 @@ Os eventos consumidos devem ser confirmados entre as equipes de acordo com o map
 Antes de dar seu microsserviço como concluído, valide se a sua equipe preparou esta **lista obrigatória**:
 
 - [ ] Repositório do microsserviço;
-- [ ] `Dockerfile` (obrigatório);
-- [ ] `docker-compose.yml` (obrigatório);
-- [ ] `.env.example` (obrigatório);
+- [ ] `Dockerfile` (obrigatório para microsserviços individuais; exceção para bundle `vendas-service`);
+- [ ] `docker-compose.yml` (obrigatório na raiz);
+- [ ] `.env.example` (obrigatório na raiz);
 - [ ] Porta oficial configurada para rodar e escutar em `0.0.0.0`;
 - [ ] Serviço publica a porta oficial no host da VM;
 - [ ] Serviço entra na rede `portal-b2b-network`;

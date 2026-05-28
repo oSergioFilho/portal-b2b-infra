@@ -14,7 +14,7 @@ Antes de integrar qualquer microsserviço, leia:
 ## Padrão de entrega dos microsserviços
 
 Cada equipe deve entregar seu serviço dockerizado contendo:
-- `Dockerfile`
+- `Dockerfile` (exceto para `vendas-service`, que é um bundle especial)
 - `docker-compose.yml`
 - `.env.example`
 - Endpoint `/health`
@@ -55,7 +55,7 @@ A infraestrutura fornece:
 **Equipes de Microsserviços:**
 - Implementar as APIs, regras de negócio e conectar ao banco de dados com o usuário `svc_portal_b2b`.
 - Rodar seu respectivo microsserviço como container Docker, publicando a porta oficial na VM central e conectando o container à rede externa portal-b2b-network.
-- Entregar Dockerfile.
+- Entregar Dockerfile (obrigatório para individuais; em bundles como vendas-service ficam nas subpastas).
 - Entregar docker-compose.yml.
 - Entregar .env.example.
 - Garantir que o container use a rede portal-b2b-network.
@@ -180,7 +180,7 @@ KAFKA_BOOTSTRAP_SERVERS=10.128.0.2:9092,10.128.0.3:9092,10.128.0.4:9092
 > **Importante:** O host `postgres:5432` do Docker Compose local foi removido. O banco oficial é `136.114.235.212:5432` (Cloud SQL).
 
 **Regras de Integração:**
-- `Dockerfile` é obrigatório.
+- `Dockerfile` é obrigatório para microsserviços individuais (exceção: o bundle especial `vendas-service` valida apenas `docker-compose.yml` e `.env.example` na raiz).
 - `docker-compose.yml` é obrigatório.
 - A rede externa obrigatória é `portal-b2b-network`.
 - A infraestrutura **não** instalará dependências manualmente.

@@ -14,7 +14,7 @@ Inicialmente, será usado o modelo **controlado pela infraestrutura**:
 - As equipes sobem o código no GitHub.
 - As equipes enviam o link do repositório para a infraestrutura.
 - A infraestrutura clona o repositório nas duas VMs.
-- A infraestrutura executa `docker compose up -d --build` nas duas VMs.
+- A infraestrutura executa `docker compose -f docker-compose.yml up -d --build` nas duas VMs.
 - A equipe continua responsável por corrigir erros no próprio código, `Dockerfile`, `docker-compose.yml` e `.env.example`.
 
 ---
@@ -58,9 +58,9 @@ Antes de solicitar o deploy, cada equipe deve enviar ao responsável pela infrae
 - [ ] Link do repositório GitHub
 - [ ] Nome oficial do serviço (ex: `produtos-service`)
 - [ ] Porta oficial usada (ex: `5002`)
-- [ ] Confirmação de que o repositório contém `Dockerfile`
-- [ ] Confirmação de que o repositório contém `docker-compose.yml`
-- [ ] Confirmação de que o repositório contém `.env.example`
+- [ ] Confirmação de que o repositório contém `Dockerfile` na raiz (se for serviço individual)
+- [ ] Confirmação de que o repositório contém `docker-compose.yml` na raiz
+- [ ] Confirmação de que o repositório contém `.env.example` na raiz
 - [ ] Confirmação de que `GET /health` está implementado e retorna HTTP 200
 - [ ] Confirmação de que Swagger/OpenAPI está disponível
 
@@ -107,9 +107,11 @@ O script vai:
 1. Validar o nome e o link.
 2. Criar a pasta se não existir.
 3. Clonar o repositório (ou fazer `git pull` se já existir).
-4. Verificar os arquivos obrigatórios (`Dockerfile`, `docker-compose.yml`, `.env.example`).
+4. Verificar arquivos obrigatórios:
+   - Para serviços individuais: valida `Dockerfile`, `docker-compose.yml`, `.env.example`.
+   - Para `vendas-service`: valida apenas `docker-compose.yml` e `.env.example` na raiz. Remove containers antigos (`mercado-service negociacao-service mercado-web negociacao-web`) antes de subir.
 5. Criar `.env` a partir do `.env.example` se não existir.
-6. Executar `docker compose up -d --build` na VM principal.
+6. Executar `docker compose -f docker-compose.yml up -d --build` na VM principal.
 7. SSH na VM standby e repetir os mesmos passos.
 8. Mostrar logs recentes.
 9. Mostrar os comandos de teste pelo Gateway.
@@ -122,7 +124,7 @@ O script vai:
 cd /opt/portal-b2b/services/produtos-service
 git clone LINK_DO_REPOSITORIO .
 cp .env.example .env
-docker compose up -d --build
+docker compose -f docker-compose.yml up -d --build
 docker logs -f produtos-service
 ```
 
@@ -280,7 +282,7 @@ docker logs -f nome-service
 docker compose ps
 
 # Recriar e subir um serviço
-docker compose up -d --build
+docker compose -f docker-compose.yml up -d --build
 
 # Parar um serviço
 docker compose down
