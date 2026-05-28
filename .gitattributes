@@ -1,0 +1,19 @@
+# Force LF line endings for all text files in this repo.
+# This prevents CRLF issues on Windows and ensures GitHub raw view works correctly.
+* text=auto eol=lf
+
+# Shell scripts must always be LF
+*.sh text eol=lf
+
+# Config files must always be LF
+*.conf text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.env text eol=lf
+.env.example text eol=lf
+
+# Markdown
+*.md text eol=lf
+
+# Docker
+Dockerfile text eol=lf
